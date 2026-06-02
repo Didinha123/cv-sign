@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Assinar Contrato — CredVision</title>
+<style>
+/* ═══════════════════════════ ESTILOS ═══════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#0a0a0a,#141414);
+  min-height:100vh;color:#F0F0F0;padding:20px 16px}
+.card{background:#1E1E1E;border:1px solid rgba(201,164,72,.35);border-radius:18px;
+  max-width:480px;margin:0 auto;padding:28px 24px;box-shadow:0 24px 64px rgba(0,0,0,.7)}
+.hidden{display:none!important}
+/* Logo */
+.logo{text-align:center;margin-bottom:20px}
+.logo h1{font-size:22px;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(180deg,#E8D080,#C9A448,#8A6A1A,#C9A448);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo p{font-size:11px;color:#8b6a20;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+/* Divider */
+.div{height:1px;background:linear-gradient(90deg,transparent,rgba(201,164,72,.4),transparent);margin:16px 0}
+/* Info */
+.info{background:#252525;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
+.row+.row{border-top:1px solid #333}
+.lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.val{font-size:14px;font-weight:700}
+.gold{color:#C9A448}.green{color:#4CAF7D}.red{color:#E05A3A}
+/* Parcelas */
+.sec-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:8px}
+.parc-list{max-height:150px;overflow-y:auto;margin-bottom:14px}
+.parc{display:flex;justify-content:space-between;align-items:center;
+  background:#252525;border-radius:7px;padding:6px 10px;margin-bottom:3px;font-size:12px}
+/* Canvas */
+.sig-wrap{background:#fff;border-radius:12px;border:2px solid rgba(201,164,72,.5);
+  margin:12px 0;touch-action:none;overflow:hidden}
+canvas{display:block;width:100%;height:170px;cursor:crosshair}
+.hint{text-align:center;font-size:11px;color:#888;margin-bottom:10px}
+/* Termos */
+.terms{font-size:11px;color:#666;line-height:1.6;background:#1a1a1a;
+  border-radius:8px;padding:12px;margin-bottom:14px;max-height:80px;overflow-y:auto}
+/* Botões */
+.btns{display:flex;gap:10px}
+.btn{flex:1;padding:14px;border-radius:10px;border:none;font-size:14px;
+  font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .2s}
+.btn:active{opacity:.8}
+.btn-clear{background:#2E2E2E;color:#888;border:1px solid #444}
+.btn-ok{background:linear-gradient(135deg,#C9A448,#9A7A2E);color:#111}
+.btn-ok:disabled{opacity:.45;cursor:not-allowed}
+/* Status */
+.status{text-align:center;padding:11px;border-radius:9px;font-size:13px;
+  font-weight:700;margin-top:12px;display:none}
+.s-ok{background:rgba(76,175,125,.2);color:#4CAF7D;border:1px solid rgba(76,175,125,.4)}
+.s-err{background:rgba(224,90,58,.2);color:#E05A3A;border:1px solid rgba(224,90,58,.4)}
+.s-load{background:rgba(201,164,72,.12);color:#C9A448;border:1px solid rgba(201,164,72,.3)}
+/* Loading spinner */
+.spin{width:38px;height:38px;border:4px solid rgba(201,164,72,.2);
+  border-top-color:#C9A448;border-radius:50%;
+  animation:sp .8s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ══════ LOADING ══════ -->
+<div class="card" id="c-loading">
+  <div class="logo"><h1>CREDVISION</h1></div>
+  <div style="text-align:center;padding:30px 0">
+    <div class="spin"></div>
+    <div style="color:#888;font-size:13px">Carregando contrato...</div>
+  </div>
+</div>
+
+<!-- ══════ ERRO ══════ -->
+<div class="card hidden" id="c-erro">
+  <div class="logo"><h1>CREDVISION</h1></div>
+  <div class="div"></div>
+  <div style="text-align:center;padding:20px 0">
+    <div style="font-size:38px;margin-bottom:10px">⚠️</div>
+    <div style="font-size:15px;font-weight:700;color:#E05A3A" id="err-msg">Link inválido.</div>
+    <div style="font-size:12px;color:#888;margin-top:6px">Solicite um novo link ao credor.</div>
+  </div>
+</div>
+
+<!-- ══════ ASSINATURA ══════ -->
+<div class="card hidden" id="c-main">
+  <div class="logo">
+    <h1>CREDVISION</h1>
+    <p>Assinatura Digital de Contrato</p>
+  </div>
+  <div class="div"></div>
+
+  <div class="info">
+    <div class="row"><span class="lbl">Devedor</span><span class="val" id="s-nome">—</span></div>
+    <div class="row"><span class="lbl">Valor Total</span><span class="val gold" id="s-total">—</span></div>
+    <div class="row"><span class="lbl">Juros</span><span class="val" id="s-juros">—</span></div>
+    <div class="row"><span class="lbl">Parcelas</span><span class="val green" id="s-parc">—</span></div>
+  </div>
+
+  <div class="sec-title">Calendário de pagamentos</div>
+  <div class="parc-list" id="s-lista"></div>
+  <div class="div"></div>
+
+  <div class="terms">
+    Declaro que li e concordo com os termos deste contrato de empréstimo, incluindo
+    valores, prazos e taxa de juros informados acima. Esta assinatura digital tem
+    validade legal como aceite formal dos termos acordados entre as partes.
+  </div>
+
+  <div class="sec-title">Assine no campo abaixo</div>
+  <div class="sig-wrap"><canvas id="sig"></canvas></div>
+  <div class="hint">👆 Use o dedo para assinar</div>
+
+  <div class="btns">
+    <button class="btn btn-clear" onclick="limpar()">🗑 Limpar</button>
+    <button class="btn btn-ok" id="btn-ok" onclick="confirmar()" disabled>✅ Confirmar Assinatura</button>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<!-- ══════ SUCESSO ══════ -->
+<div class="card hidden" id="c-ok">
+  <div style="text-align:center;padding:30px 0">
+    <div style="font-size:52px;margin-bottom:14px">✅</div>
+    <div style="font-size:20px;font-weight:800;color:#4CAF7D;margin-bottom:8px">Assinatura Confirmada!</div>
+    <div style="font-size:13px;color:#888;line-height:1.7">
+      Seu contrato foi assinado com sucesso.<br>Você já pode fechar esta página.
+    </div>
+    <div class="div" style="margin:20px 0"></div>
+    <div style="font-size:11px;color:#555">CredVision — Sistema de Cobrança</div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ⚙️  CONFIGURAÇÃO — preencha após criar o GitHub Pages
+   ═══════════════════════════════════════════════════════════════
+   GAS_URL = URL do seu Web App do Google Apps Script
+   (a mesma URL que você usa para acessar o sistema principal,
+    terminando em /exec)
+   ═══════════════════════════════════════════════════════════════ */
+var GAS_URL = "COLE_AQUI_A_URL_DO_SEU_WEB_APP";
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* ── Utilitários ── */
+function show(id){ document.getElementById(id).classList.remove('hidden') }
+function hide(id){ document.getElementById(id).classList.add('hidden') }
+function brl(n){ return 'R$ '+parseFloat(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2}) }
+function dt(d){ if(!d)return '—'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0] }
+function hoje(){ return new Date().toISOString().slice(0,10) }
+function st(msg,cls){ var e=$('status'); e.textContent=msg; e.className='status '+cls; e.style.display='block' }
+function $(id){ return document.getElementById(id) }
+
+/* ── Lê parâmetros da URL ── */
+function qs(k){
+  var u = new URLSearchParams(window.location.search);
+  return u.get(k)||'';
+}
+
+/* ── Canvas ── */
+var drawing=false, hasMark=false, cv, ctx;
+function initCanvas(){
+  cv=$('sig');
+  var R=window.devicePixelRatio||1;
+  var rect=cv.getBoundingClientRect();
+  cv.width=(rect.width||430)*R; cv.height=(rect.height||170)*R;
+  ctx=cv.getContext('2d');
+  ctx.scale(R,R);
+  ctx.strokeStyle='#111'; ctx.lineWidth=2.5;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  function p(e){ var r=cv.getBoundingClientRect(),s=e.touches?e.touches[0]:e;
+    return{x:(s.clientX-r.left)/r.width*(cv.width/(window.devicePixelRatio||1)),
+           y:(s.clientY-r.top)/r.height*(cv.height/(window.devicePixelRatio||1))}}
+  function mark(){ hasMark=true; $('btn-ok').disabled=false }
+  cv.addEventListener('mousedown',  function(e){drawing=true;var q=p(e);ctx.beginPath();ctx.moveTo(q.x,q.y)});
+  cv.addEventListener('mousemove',  function(e){if(!drawing)return;var q=p(e);ctx.lineTo(q.x,q.y);ctx.stroke();mark()});
+  cv.addEventListener('mouseup',    function(){drawing=false});
+  cv.addEventListener('mouseleave', function(){drawing=false});
+  cv.addEventListener('touchstart', function(e){e.preventDefault();drawing=true;var q=p(e);ctx.beginPath();ctx.moveTo(q.x,q.y)},{passive:false});
+  cv.addEventListener('touchmove',  function(e){e.preventDefault();if(!drawing)return;var q=p(e);ctx.lineTo(q.x,q.y);ctx.stroke();mark()},{passive:false});
+  cv.addEventListener('touchend',   function(){drawing=false});
+}
+function limpar(){
+  if(!ctx)return;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  hasMark=false; $('btn-ok').disabled=true;
+  $('status').style.display='none';
+}
+
+/* ── Salva assinatura via fetch no-cors → GAS doPost ── */
+function confirmar(){
+  if(!hasMark){ st('⚠️ Por favor, assine antes de confirmar.','s-err'); return }
+  var btn=$('btn-ok'); btn.disabled=true;
+  st('⏳ Salvando assinatura...','s-load');
+  var sig=cv.toDataURL('image/png');
+  var body=JSON.stringify({action:'saveSignature', loanId:loan.id, signature:sig});
+  fetch(GAS_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body:body})
+    .then(function(){
+      /* no-cors sempre resolve — assumimos sucesso */
+      hide('c-main'); show('c-ok');
+    })
+    .catch(function(err){
+      st('❌ Falha ao enviar. Verifique sua conexão e tente novamente.','s-err');
+      btn.disabled=false;
+    });
+}
+
+/* ── Inicialização ── */
+var loan = null;
+window.addEventListener('load', function(){
+  var id = qs('id');
+  var d  = qs('d');
+
+  if(!id || !d){
+    hide('c-loading');
+    $('err-msg').textContent = 'Link inválido ou incompleto.';
+    show('c-erro');
+    return;
+  }
+
+  /* Decodifica dados do empréstimo embutidos no link */
+  try{
+    loan = JSON.parse(decodeURIComponent(escape(atob(d))));
+  }catch(e){
+    hide('c-loading');
+    $('err-msg').textContent = 'Não foi possível decodificar os dados do contrato.';
+    show('c-erro');
+    return;
+  }
+
+  /* Já assinado? */
+  if(loan.signature){
+    hide('c-loading'); show('c-ok'); return;
+  }
+
+  /* Preenche dados */
+  $('s-nome').textContent  = loan.debtor  || '—';
+  $('s-total').textContent = brl(loan.totalAmount);
+  $('s-juros').textContent = (loan.interestRate||loan.rate||0)+'% a.m.';
+  var inst = loan.installments||[];
+  $('s-parc').textContent  = inst.length+'x de '+(inst.length?brl(inst[0].amount):'—');
+  $('s-lista').innerHTML   = inst.map(function(p,i){
+    var over = p.dueDate < hoje();
+    return '<div class="parc"><span style="color:#888;font-weight:600;min-width:24px">'+(i+1)+'</span>'
+          +'<span style="color:'+(over?'#E05A3A':'#C9A448')+'">'+dt(p.dueDate)+'</span>'
+          +'<span style="font-weight:600">'+brl(p.amount)+'</span></div>';
+  }).join('');
+
+  hide('c-loading'); show('c-main');
+  initCanvas();
+});
+</script>
+</body>
+</html>
