@@ -135,15 +135,11 @@ canvas{display:block;width:100%;height:170px;cursor:crosshair}
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   ⚙️  CONFIGURAÇÃO — preencha após criar o GitHub Pages
-   ═══════════════════════════════════════════════════════════════
-   GAS_URL = URL do seu Web App do Google Apps Script
-   (a mesma URL que você usa para acessar o sistema principal,
-    terminando em /exec)
-   ═══════════════════════════════════════════════════════════════ */
-var GAS_URL = "https://script.google.com/macros/s/AKfycbzjVSe_te4S1qpjXCO7Ck3YjLsrVFt0sLB6otrVkFFIjjMwxTfk9bUIM_tfNJtMNurW/exec";
-/* ═══════════════════════════════════════════════════════════════ */
+/* ── Query string helper ── */
+function qs(k){ var u=new URLSearchParams(window.location.search); return u.get(k)||''; }
+
+/* GAS_URL vem automaticamente no link (?api=...) — não edite este arquivo */
+var GAS_URL = decodeURIComponent(qs('api') || '');
 
 /* ── Utilitários ── */
 function show(id){ document.getElementById(id).classList.remove('hidden') }
@@ -153,12 +149,6 @@ function dt(d){ if(!d)return '—'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'
 function hoje(){ return new Date().toISOString().slice(0,10) }
 function st(msg,cls){ var e=$('status'); e.textContent=msg; e.className='status '+cls; e.style.display='block' }
 function $(id){ return document.getElementById(id) }
-
-/* ── Lê parâmetros da URL ── */
-function qs(k){
-  var u = new URLSearchParams(window.location.search);
-  return u.get(k)||'';
-}
 
 /* ── Canvas ── */
 var drawing=false, hasMark=false, cv, ctx;
@@ -231,9 +221,17 @@ window.addEventListener('load', function(){
     return;
   }
 
-  /* Já assinado? */
-  if(loan.signature){
-    hide('c-loading'); show('c-ok'); return;
+  /* Link expirado: já assinado anteriormente */
+  if(loan.signature || loan.signedAt){
+    hide('c-loading');
+    document.getElementById('c-ok').innerHTML =
+      '<div style="text-align:center;padding:30px 0">' +
+      '<div style="font-size:48px;margin-bottom:12px">🔒</div>' +
+      '<div style="font-size:18px;font-weight:800;color:#C9A448;margin-bottom:8px">Link Expirado</div>' +
+      '<div style="font-size:13px;color:#888;line-height:1.7">Este contrato já foi assinado.<br>O link não pode ser usado novamente.</div>' +
+      '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,164,72,.3),transparent);margin:20px 0"></div>' +
+      '<div style="font-size:11px;color:#555">CredVision — Sistema de Cobrança</div></div>';
+    show('c-ok'); return;
   }
 
   /* Preenche dados */
