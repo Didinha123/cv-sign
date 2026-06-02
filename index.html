@@ -441,22 +441,6 @@ tr:hover td{background:rgba(201,164,72,.04);}
     <div class="s-card yellow"><div class="s-value" id="sum-pendente">R$ 0</div><div class="s-label">A receber</div></div>
     <div class="s-card red"><div class="s-value" id="sum-vencido">R$ 0</div><div class="s-label">Em atraso</div></div>
   </div>
-  <!-- ════ GRÁFICOS ════ -->
-  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:24px;">
-    <div class="card"><div class="card-header"><h3>💰 Visão Geral do Portfólio</h3></div>
-      <div style="padding:16px 20px;"><div style="position:relative;height:220px;"><canvas id="chartColunas"></canvas></div></div></div>
-    <div class="card"><div class="card-header"><h3>🥧 Distribuição por Status</h3></div>
-      <div style="padding:16px 20px;display:flex;align-items:center;gap:20px;">
-        <div style="position:relative;height:200px;width:200px;flex-shrink:0;"><canvas id="chartRosca"></canvas></div>
-        <div id="chart-rosca-legend" style="font-size:12px;display:flex;flex-direction:column;gap:8px;"></div>
-      </div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:24px;">
-    <div class="card"><div class="card-header"><h3>📈 Recebimentos Mensais</h3></div>
-      <div style="padding:16px 20px;"><div style="position:relative;height:200px;"><canvas id="chartLinha"></canvas></div></div></div>
-    <div class="card"><div class="card-header"><h3>🏆 Top Score — Melhores Clientes</h3></div>
-      <div style="padding:0;" id="chart-score-table"></div></div>
-  </div>
   <div class="card">
     <div class="card-header">
       <h3>Empréstimos ativos</h3>
@@ -864,14 +848,22 @@ var sigModeLoanId  = null;
 var _sigModeEmbeddedLoan = null; /* dados embutidos no link para clientes externos */
 
 function checkSignatureMode() {
-  function parseParams(s){var p={};(s||'').replace(/^[?#]/,'').split('&').forEach(function(part){var kv=part.split('=');if(kv.length>=2)p[kv[0]]=decodeURIComponent(kv.slice(1).join('='));});return p;}
-  var gasSign=(typeof window.__GAS_SIGN__!=='undefined')?window.__GAS_SIGN__:null;
-  var qp=parseParams(window.location.search),hp=parseParams(window.location.hash);
-  var params=(gasSign&&gasSign.sign)?gasSign:(qp['sign']?qp:(hp['sign']?hp:null));
-  if(!params||!params['sign']) return false;
-  sigModeLoanId=params['sign']||null;
-  var dParam=params['d']||'';
-  if(dParam){try{_sigModeEmbeddedLoan=JSON.parse(decodeURIComponent(escape(atob(dParam))));}catch(e){_sigModeEmbeddedLoan=null;}}
+  var hash = window.location.hash;
+  if (!hash || hash.indexOf("sign=") === -1) return false;
+  /* extrai o id do empréstimo */
+  var hashBody = hash.substring(1); // remove o #
+  var params = {};
+  hashBody.split("&").forEach(function(part) {
+    var kv = part.split("=");
+    if (kv.length >= 2) params[kv[0]] = kv.slice(1).join("=");
+  });
+  sigModeLoanId = params["sign"] || null;
+  /* tenta decodificar dados embutidos (&d=BASE64) para clientes externos */
+  if (params["d"]) {
+    try {
+      _sigModeEmbeddedLoan = JSON.parse(decodeURIComponent(escape(atob(params["d"]))));
+    } catch(e) { _sigModeEmbeddedLoan = null; }
+  }
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("sig-mode").style.display    = "block";
   document.getElementById("app-layout-wrap").style.display = "none";
@@ -910,7 +902,7 @@ function initSigModeCanvas() {
   canvas.height = (rect.height || 180) * ratio;
   var ctx = canvas.getContext("2d");
   ctx.scale(ratio, ratio);
-  ctx.strokeStyle = "#1a1a1a";
+  ctx.strokeStyle = "var(--text)";
   ctx.lineWidth   = 3;
   ctx.lineCap     = "round";
   ctx.lineJoin    = "round";
@@ -976,7 +968,6 @@ var STATE_KEY = "cobranca_data";
 var _saveTimer   = null;
 var CV_CACHE_KEY = 'cv_data_v1';
 
-/* Badge de status de sincronização */
 function showSyncStatus(msg, color) {
   var el = document.getElementById('sync-status-badge');
   if (!el) {
@@ -984,45 +975,39 @@ function showSyncStatus(msg, color) {
     el.style.cssText = 'position:fixed;top:12px;right:16px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;z-index:9999;transition:opacity .4s;';
     document.body.appendChild(el);
   }
-  var c = {green:'rgba(76,175,125,.2):#4CAF7D:rgba(76,175,125,.5)', red:'rgba(224,90,58,.2):#E05A3A:rgba(224,90,58,.5)', blue:'rgba(99,102,241,.2):#818cf8:rgba(99,102,241,.5)'}[color]||'rgba(99,102,241,.2):#818cf8:rgba(99,102,241,.5)';
-  var p = c.split(':');
+  var colors = { green:'rgba(76,175,125,.2):#4CAF7D:rgba(76,175,125,.5)', red:'rgba(224,90,58,.2):#E05A3A:rgba(224,90,58,.5)', blue:'rgba(99,102,241,.2):#818cf8:rgba(99,102,241,.5)' };
+  var p = (colors[color] || colors.blue).split(':');
   el.style.background = p[0]; el.style.color = p[1]; el.style.border = '1px solid '+p[2]; el.style.opacity = '1';
-  if (color !== 'blue') setTimeout(function(){ el.style.opacity='0'; }, 4000);
+  if (color !== 'blue') setTimeout(function(){ el.style.opacity = '0'; }, 4000);
 }
 
-/* Atualiza abas formatadas manualmente */
 function syncPlanilhas(btn) {
-  if (btn) { btn.disabled=true; btn.textContent='⏳ Aguarde...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Aguarde...'; }
   google.script.run
     .withSuccessHandler(function(r) {
-      var ok = r && r.ok;
-      if (btn) { btn.textContent=ok?'✅ Atualizado!':'❌ Erro'; btn.disabled=false; setTimeout(function(){ btn.textContent='📊 Atualizar Planilhas'; },3000); }
-      showSyncStatus(ok?'✅ Planilhas atualizadas':'❌ '+(r&&r.error||'erro'), ok?'green':'red');
+      if (btn) { btn.textContent = r && r.ok ? 'Planilhas atualizadas!' : 'Erro'; btn.disabled = false; setTimeout(function(){ btn.textContent = 'Atualizar Planilhas'; }, 3000); }
+      showSyncStatus(r && r.ok ? 'Planilhas atualizadas' : 'Erro', r && r.ok ? 'green' : 'red');
     })
     .withFailureHandler(function(e) {
-      if (btn) { btn.textContent='❌ Falha'; btn.disabled=false; setTimeout(function(){ btn.textContent='📊 Atualizar Planilhas'; },3000); }
-      showSyncStatus('❌ '+String(e), 'red');
+      if (btn) { btn.textContent = 'Falha'; btn.disabled = false; setTimeout(function(){ btn.textContent = 'Atualizar Planilhas'; }, 3000); }
     })
     .syncPlanilhas();
 }
 
 function persist() {
-  /* Cache imediato (sem latência) */
   try { sessionStorage.setItem(CV_CACHE_KEY, JSON.stringify({loans:loans,clients:clients,users:users})); } catch(e){}
-  /* Salva no GAS com debounce de 4s */
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
-    showSyncStatus('💾 Salvando...', 'blue');
+    showSyncStatus('Salvando...', 'blue');
     google.script.run
-      .withSuccessHandler(function(r){ showSyncStatus(r&&r.ok?'✅ Salvo':'❌ '+(r&&r.error||'Erro'), r&&r.ok?'green':'red'); })
-      .withFailureHandler(function(e){ showSyncStatus('❌ '+String(e), 'red'); })
+      .withSuccessHandler(function(r){ showSyncStatus(r&&r.ok?'Salvo':'Erro ao salvar', r&&r.ok?'green':'red'); })
+      .withFailureHandler(function(e){ showSyncStatus('Erro: '+String(e), 'red'); })
       .saveData(JSON.stringify({loans:loans, clients:clients, users:users}));
   }, 4000);
 }
 
 function loadState() {
   if (sigModeLoanId && _sigModeEmbeddedLoan) { fillSigModeInfo(); return; }
-  /* Passo 1: cache local (instantâneo) */
   var fromCache = false;
   try {
     var cached = sessionStorage.getItem(CV_CACHE_KEY);
@@ -1034,8 +1019,7 @@ function loadState() {
       fromCache = true;
     }
   } catch(e){}
-  /* Passo 2: atualiza do GAS em background */
-  showSyncStatus(fromCache?'🔄 Atualizando...':'🔄 Carregando...', 'blue');
+  showSyncStatus(fromCache ? 'Atualizando...' : 'Carregando...', 'blue');
   google.script.run
     .withSuccessHandler(function(res) {
       if (res && res.ok && res.data) {
@@ -1045,11 +1029,11 @@ function loadState() {
         if (Array.isArray(d.users))   users   = d.users;
         try { sessionStorage.setItem(CV_CACHE_KEY, JSON.stringify({loans:loans,clients:clients,users:users})); } catch(e){}
       }
-      showSyncStatus('✅ '+loans.length+' empréstimos', 'green');
+      showSyncStatus(loans.length + ' emprestimos carregados', 'green');
       if (sigModeLoanId) fillSigModeInfo(); else renderAll();
     })
     .withFailureHandler(function(e) {
-      showSyncStatus(fromCache?'⚠️ Dados em cache':'❌ '+String(e), fromCache?'blue':'red');
+      showSyncStatus(fromCache ? 'Usando cache' : 'Erro: '+String(e), fromCache?'blue':'red');
       if (sigModeLoanId) fillSigModeInfo(); else renderAll();
     })
     .getData();
@@ -1305,34 +1289,26 @@ function clearForm() {
 function sendSignatureWhatsApp(loanId) {
   var loan = loans.find(function(l){ return l.id === loanId; });
   if (!loan) return;
-
   showToast('Gerando link...');
   google.script.run
     .withSuccessHandler(function(cfg) {
       var gasUrl   = (cfg && cfg.gasUrl)   || '';
       var signPage = (cfg && cfg.signPage) || '';
       if (!gasUrl || gasUrl.indexOf('COLE_AQUI') >= 0) {
-        toast('Configure GAS_URL no Code.gs com a URL do Web App e reimplante.');
+        showToast('Configure GAS_URL no Code.gs e reimplante');
         return;
       }
-      if (!signPage || signPage.indexOf('SEU_USUARIO') >= 0) {
-        toast('Configure SIGN_PAGE no Code.gs com a URL do GitHub Pages e reimplante.');
-        return;
-      }
-      var snap = {
-        id: loan.id, debtor: loan.debtor, phone: loan.phone,
-        totalAmount: loan.totalAmount, interestRate: loan.interestRate,
-        installments: loan.installments
-      };
-      var snapEnc = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
-      var sigLink = signPage + '?id=' + loan.id + '&d=' + snapEnc + '&api=' + encodeURIComponent(gasUrl);
-      var msg = 'Ola ' + loan.debtor + '!\n'
-              + 'Seu emprestimo de ' + brl(loan.totalAmount) + ' foi aprovado pela CredVision.\n'
-              + 'Clique no link abaixo para assinar digitalmente o contrato:\n'
-              + sigLink;
+      var snap = {id:loan.id, debtor:loan.debtor, phone:loan.phone,
+        totalAmount:loan.totalAmount, interestRate:loan.interestRate,
+        installments:loan.installments};
+      var enc = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
+      var lnk = (signPage && signPage.indexOf('SEU_USUARIO')<0 ? signPage : gasUrl)
+              + '?id=' + loan.id + '&d=' + enc + '&api=' + encodeURIComponent(gasUrl);
+      var msg = 'Ola ' + loan.debtor + '! Seu emprestimo de ' + brl(loan.totalAmount)
+              + ' foi aprovado. Assine o contrato: ' + lnk;
       openExternalLink('https://wa.me/55' + loan.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg));
     })
-    .withFailureHandler(function(e) { toast('Erro ao gerar link: ' + String(e)); })
+    .withFailureHandler(function(){ showToast('Erro ao buscar configuracao'); })
     .getAppConfig();
 }
 
@@ -1611,68 +1587,7 @@ function sendAllWhatsApp() {
   toast("📱 Abrindo WhatsApp para " + due.length + " cliente" + (due.length > 1 ? "s" : "") + "...");
 }
 
-/* ════════════════════════════════════════
-   GRÁFICOS DO DASHBOARD
-════════════════════════════════════════ */
-var _chartColunas=null, _chartRosca=null, _chartLinha=null;
-var CHART_OPTS_BASE={responsive:true,maintainAspectRatio:false,
-  plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a1a',titleColor:'#C9A448',bodyColor:'#ccc',borderColor:'#333',borderWidth:1}},
-  scales:{x:{ticks:{color:'#888',font:{size:11}},grid:{color:'#2a2a2a'}},
-    y:{ticks:{color:'#888',font:{size:11},callback:function(v){return 'R$'+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:0});}},grid:{color:'#2a2a2a'}}}};
-
-function renderDashboardCharts() {
-  updateInstallmentStatuses();
-  var totalEmp=0,totalPago=0,totalPend=0,totalAtraso=0,qtdOk=0,qtdAtraso=0,qtdPend=0;
-  loans.forEach(function(l){
-    totalEmp+=(l.totalAmount||0); totalPago+=loanPaid(l);
-    var st=loanStatus(l),saldo=(l.totalAmount||0)-loanPaid(l);
-    if(st==='ok'){qtdOk++;}else if(st==='overdue'){qtdAtraso++;totalAtraso+=saldo;}else{qtdPend++;totalPend+=saldo;}
-  });
-  /* Colunas */
-  var ctxC=document.getElementById('chartColunas');
-  if(ctxC){if(_chartColunas)_chartColunas.destroy();
-    _chartColunas=new Chart(ctxC.getContext('2d'),{type:'bar',
-      data:{labels:['Emprestado','Recebido','A Receber','Em Atraso'],
-        datasets:[{data:[totalEmp,totalPago,totalPend,totalAtraso],
-          backgroundColor:['rgba(201,164,72,.7)','rgba(76,175,125,.7)','rgba(240,160,48,.7)','rgba(224,90,58,.7)'],
-          borderColor:['#C9A448','#4CAF7D','#F0A030','#E05A3A'],borderWidth:1,borderRadius:6}]},
-      options:JSON.parse(JSON.stringify(CHART_OPTS_BASE))});}
-  /* Rosca */
-  var ctxR=document.getElementById('chartRosca');
-  if(ctxR){if(_chartRosca)_chartRosca.destroy();
-    var tl=loans.length||1;
-    _chartRosca=new Chart(ctxR.getContext('2d'),{type:'doughnut',
-      data:{labels:['Quitados','Em Atraso','Em Dia'],
-        datasets:[{data:[qtdOk,qtdAtraso,qtdPend],backgroundColor:['rgba(76,175,125,.8)','rgba(224,90,58,.8)','rgba(201,164,72,.8)'],borderColor:['#4CAF7D','#E05A3A','#C9A448'],borderWidth:2}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
-        plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a1a',titleColor:'#C9A448',bodyColor:'#ccc',borderColor:'#333',borderWidth:1}}}});
-    var leg=document.getElementById('chart-rosca-legend');
-    if(leg){leg.innerHTML=[{l:'Quitados',v:qtdOk,c:'#4CAF7D'},{l:'Em Atraso',v:qtdAtraso,c:'#E05A3A'},{l:'Em Dia',v:qtdPend,c:'#C9A448'}]
-      .map(function(i){return '<div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:3px;background:'+i.c+';flex-shrink:0;"></div><span style="color:#ccc;">'+i.l+'</span><span style="color:'+i.c+';font-weight:700;margin-left:auto;">'+i.v+' ('+Math.round(i.v/tl*100)+'%)</span></div>';}).join('');}}
-  /* Linha — recebimentos mensais */
-  var ctxL=document.getElementById('chartLinha');
-  if(ctxL){if(_chartLinha)_chartLinha.destroy();
-    var yr=new Date().getFullYear(),rbm=new Array(12).fill(0);
-    loans.forEach(function(l){(l.installments||[]).forEach(function(p){
-      if(p.status==='paid'&&p.paidDate){var d=new Date(p.paidDate+'T12:00:00');
-        if(d.getFullYear()===yr)rbm[d.getMonth()]+=parseFloat(p.paidAmount)||0;}});});
-    var lo=JSON.parse(JSON.stringify(CHART_OPTS_BASE)); lo.plugins.legend={display:false};
-    _chartLinha=new Chart(ctxL.getContext('2d'),{type:'line',
-      data:{labels:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
-        datasets:[{label:'Recebimentos',data:rbm,borderColor:'#C9A448',backgroundColor:'rgba(201,164,72,.12)',
-          fill:true,tension:.4,pointBackgroundColor:'#C9A448',pointRadius:4}]},options:lo});}
-  /* Tabela Score */
-  var tbl=document.getElementById('chart-score-table');
-  if(tbl){var cn={};loans.forEach(function(l){if(!cn[l.debtor])cn[l.debtor]=true;});
-    var sc=Object.keys(cn).map(function(n){return{name:n,score:calcScore(n)};});
-    sc.sort(function(a,b){return ({A:0,B:1,C:2,D:3}[a.score]||3)-({A:0,B:1,C:2,D:3}[b.score]||3);});
-    tbl.innerHTML=sc.length?'<table><thead><tr><th>#</th><th>Cliente</th><th>Score</th></tr></thead><tbody>'
-      +sc.slice(0,8).map(function(c,i){return '<tr><td style="color:var(--text-muted);font-size:12px;">'+(i+1)+'</td><td style="font-weight:600;">'+c.name+'</td><td><span class="score '+c.score+'">'+c.score+'</span></td></tr>';}).join('')+'</tbody></table>'
-      :'<div class="empty"><p>Sem clientes.</p></div>';}
-}
-
 function renderDashboard() {
-  renderDashboardCharts();
   updateInstallmentStatuses();
   var filter     = document.getElementById("filter-status").value;
   var filterNome = (document.getElementById("filter-nome").value || "").trim().toLowerCase();
@@ -2155,7 +2070,7 @@ function showTab(name) {
 }
 
 function renderAll() {
-  if (!userRole) return; /* só renderiza se logado */
+  if (!userRole) return;
   updateInstallmentStatuses();
   renderDashboard();
   renderCadastro();
