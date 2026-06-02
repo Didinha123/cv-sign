@@ -407,6 +407,7 @@ tr:hover td{background:rgba(201,164,72,.04);}
   </nav>
 
   <div class="sidebar-footer" style="padding:14px 18px;">
+    <button id="btn-sync-sheets" onclick="syncPlanilhas(this)" title="Atualiza as abas Emprestimos, Parcelas, Clientes no Sheets" style="width:100%;margin-bottom:10px;background:rgba(201,164,72,.15);border:1px solid rgba(201,164,72,.3);color:var(--gold);padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">📊 Atualizar Planilhas</button>
     <div style="font-size:10px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;text-align:center;">CredVision v1.0</div>
     <div id="sidebar-user-info" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1px solid var(--border-gold);border-radius:10px;padding:8px 12px;">
       <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
@@ -1014,6 +1015,21 @@ var STATE_KEY = "cobranca_data";
 /* ── Persistência via google.script.run (Google Apps Script) ── */
 var _saveTimer = null;
 
+function syncPlanilhas(btn) {
+  if (btn) { btn.disabled=true; btn.textContent='⏳ Aguarde...'; }
+  google.script.run
+    .withSuccessHandler(function(r) {
+      var ok = r && r.ok;
+      if (btn) { btn.textContent = ok ? '✅ Planilhas atualizadas!' : '❌ Erro ao sincronizar'; btn.disabled=false; setTimeout(function(){ btn.textContent='📊 Atualizar Planilhas'; },3000); }
+      showSyncStatus(ok ? '✅ Planilhas sincronizadas!' : '❌ '+(r&&r.error?r.error:'erro'), ok?'green':'red');
+    })
+    .withFailureHandler(function(e) {
+      if (btn) { btn.textContent='❌ Falha'; btn.disabled=false; setTimeout(function(){ btn.textContent='📊 Atualizar Planilhas'; },3000); }
+      showSyncStatus('❌ '+String(e), 'red');
+    })
+    .syncPlanilhas();
+}
+
 function persist() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
@@ -1025,7 +1041,7 @@ function persist() {
       })
       .withFailureHandler(function(e) { showSyncStatus('❌ ' + String(e), 'red'); })
       .saveData(payload);
-  }, 1500);
+  }, 4000);
 }
 
 function loadState() {
