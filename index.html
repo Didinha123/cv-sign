@@ -1306,38 +1306,33 @@ function sendSignatureWhatsApp(loanId) {
   var loan = loans.find(function(l){ return l.id === loanId; });
   if (!loan) return;
 
-  /* Busca URL do servidor via google.script.run — 100% confiável */
   showToast('Gerando link...');
   google.script.run
     .withSuccessHandler(function(cfg) {
-      var gasUrl   = cfg.gasUrl   || '';
-      var signPage = cfg.signPage || '';
+      var gasUrl   = (cfg && cfg.gasUrl)   || '';
+      var signPage = (cfg && cfg.signPage) || '';
       if (!gasUrl || gasUrl.indexOf('COLE_AQUI') >= 0) {
-        alert('Configure a variável GAS_URL no Code.gs com a URL do seu Web App e reimplante.');
+        toast('Configure GAS_URL no Code.gs com a URL do Web App e reimplante.');
         return;
       }
       if (!signPage || signPage.indexOf('SEU_USUARIO') >= 0) {
-        alert('Configure a variável SIGN_PAGE no Code.gs com a URL do seu GitHub Pages e reimplante.');
+        toast('Configure SIGN_PAGE no Code.gs com a URL do GitHub Pages e reimplante.');
         return;
       }
-      var snap = { id:loan.id, debtor:loan.debtor, phone:loan.phone,
-        totalAmount:loan.totalAmount, interestRate:loan.interestRate,
-        installments:loan.installments };
+      var snap = {
+        id: loan.id, debtor: loan.debtor, phone: loan.phone,
+        totalAmount: loan.totalAmount, interestRate: loan.interestRate,
+        installments: loan.installments
+      };
       var snapEnc = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
       var sigLink = signPage + '?id=' + loan.id + '&d=' + snapEnc + '&api=' + encodeURIComponent(gasUrl);
-      var msg = "Ola " + loan.debtor + "!
-"
-              + "Seu emprestimo de " + brl(loan.totalAmount) + " foi aprovado pela CredVision.
-"
-              + "Clique no link abaixo para assinar digitalmente o contrato:
-"
+      var msg = 'Ola ' + loan.debtor + '!\n'
+              + 'Seu emprestimo de ' + brl(loan.totalAmount) + ' foi aprovado pela CredVision.\n'
+              + 'Clique no link abaixo para assinar digitalmente o contrato:\n'
               + sigLink;
-      var waUrl = "https://wa.me/55" + loan.phone.replace(/\D/g,"") + "?text=" + encodeURIComponent(msg);
-      openExternalLink(waUrl);
+      openExternalLink('https://wa.me/55' + loan.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg));
     })
-    .withFailureHandler(function(e) {
-      alert('Erro ao gerar link: ' + String(e));
-    })
+    .withFailureHandler(function(e) { toast('Erro ao gerar link: ' + String(e)); })
     .getAppConfig();
 }
 
