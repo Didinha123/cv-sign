@@ -1289,13 +1289,13 @@ function clearForm() {
 function sendSignatureWhatsApp(loanId) {
   var loan = loans.find(function(l){ return l.id === loanId; });
   if (!loan) return;
-  showToast('Gerando link...');
+  toast('Gerando link...');
   google.script.run
     .withSuccessHandler(function(cfg) {
       var gasUrl   = (cfg && cfg.gasUrl)   || '';
       var signPage = (cfg && cfg.signPage) || '';
       if (!gasUrl || gasUrl.indexOf('COLE_AQUI') >= 0) {
-        showToast('Configure GAS_URL no Code.gs e reimplante');
+        toast('Configure GAS_URL no Code.gs e reimplante');
         return;
       }
       var snap = {id:loan.id, debtor:loan.debtor, phone:loan.phone,
@@ -1308,7 +1308,7 @@ function sendSignatureWhatsApp(loanId) {
               + ' foi aprovado. Assine o contrato: ' + lnk;
       openExternalLink('https://wa.me/55' + loan.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg));
     })
-    .withFailureHandler(function(){ showToast('Erro ao buscar configuracao'); })
+    .withFailureHandler(function(){ toast('Erro ao buscar configuracao'); })
     .getAppConfig();
 }
 
