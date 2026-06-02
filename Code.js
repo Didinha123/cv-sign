@@ -90,6 +90,16 @@ function doPost(e) {
   }
 }
 
+// ── Retorna configuração para o frontend ─────────────────────
+// Chamado via google.script.run.getAppConfig() — 100% confiável
+function getAppConfig() {
+  return {
+    gasUrl:       GAS_URL,
+    signPage:     SIGN_PAGE,
+    contratoPage: CONTRATO_PAGE
+  };
+}
+
 // ── Registra contrato assinado na aba Contratos ──────────────
 // Chamado pelo doPost quando action='saveSignature'
 function registrarContratoAssinado(d) {
