@@ -3,56 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Assinar Contrato - CredVision</title>
+<title>Contrato de Emprestimo - CredVision</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   background:#141414;min-height:100vh;color:#F0F0F0;padding:20px 16px}
-.wrap{max-width:480px;margin:0 auto}
+.wrap{max-width:520px;margin:0 auto}
 .card{background:#1E1E1E;border:1px solid rgba(201,164,72,.4);border-radius:16px;
   padding:24px 20px;margin-bottom:16px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
-.logo{text-align:center;margin-bottom:18px}
+.logo{text-align:center;margin-bottom:16px}
 .logo-txt{font-size:22px;font-weight:900;letter-spacing:3px;
   background:linear-gradient(180deg,#E8D080,#C9A448,#8A6A1A,#C9A448);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .logo-sub{font-size:10px;color:#7a6020;letter-spacing:2px;text-transform:uppercase;margin-top:3px}
-.div{height:1px;background:linear-gradient(90deg,transparent,rgba(201,164,72,.4),transparent);margin:16px 0}
-.info-box{background:#252525;border-radius:10px;padding:12px 14px;margin-bottom:14px}
-.info-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
-.info-row+.info-row{border-top:1px solid #333}
-.info-lbl{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.5px}
-.info-val{font-size:14px;font-weight:700;color:#F0F0F0}
-.gold{color:#C9A448}.grn{color:#4CAF7D}.red{color:#E05A3A}
-.sec{font-size:11px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-.parc-wrap{max-height:140px;overflow-y:auto;margin-bottom:14px}
-.parc-row{display:flex;justify-content:space-between;align-items:center;
-  background:#252525;border-radius:7px;padding:6px 10px;margin-bottom:3px;font-size:12px}
-.terms-box{background:#1a1a1a;border-radius:8px;padding:12px;margin-bottom:14px;
-  font-size:11px;color:#666;line-height:1.7;max-height:80px;overflow-y:auto}
+.div{height:1px;background:linear-gradient(90deg,transparent,rgba(201,164,72,.4),transparent);margin:14px 0}
+.titulo{font-size:15px;font-weight:800;color:#C9A448;text-align:center;
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.sub-titulo{font-size:12px;font-weight:700;color:#C9A448;text-transform:uppercase;
+  letter-spacing:.8px;margin:16px 0 8px;padding-bottom:4px;
+  border-bottom:1px solid rgba(201,164,72,.2)}
+.clausula{font-size:12px;color:#b0b0b0;line-height:1.8;margin-bottom:10px}
+.clausula strong{color:#F0F0F0}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.info-item{background:#252525;border-radius:8px;padding:10px 12px}
+.info-item-lbl{font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-item-val{font-size:13px;font-weight:700;color:#F0F0F0}
+.info-item-val.gold{color:#C9A448}
+.info-item-val.grn{color:#4CAF7D}
+.parc-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.parc-table th{background:#252525;color:#777;padding:7px 10px;text-align:left;
+  font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #333}
+.parc-table td{padding:7px 10px;border-bottom:1px solid #2a2a2a;color:#d0d0d0}
+.parc-table tr:last-child td{border-bottom:none}
+.contrato-texto{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;
+  padding:16px;font-size:11px;color:#888;line-height:1.9;
+  max-height:300px;overflow-y:auto;margin-bottom:14px}
+.aceite-box{background:#252525;border-radius:10px;padding:14px 16px;
+  margin-bottom:16px;border:1px solid #333}
+.aceite-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.aceite-item:last-child{margin-bottom:0}
+.chk{width:22px;height:22px;border-radius:6px;border:2px solid #555;
+  background:transparent;cursor:pointer;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  transition:all .2s;-webkit-appearance:none;appearance:none}
+.chk.marcado{background:linear-gradient(135deg,#C9A448,#9A7A2E);border-color:#C9A448;color:#111}
+.aceite-txt{font-size:12px;color:#b0b0b0;line-height:1.6;cursor:pointer}
+.aceite-txt strong{color:#F0F0F0}
+.sec{font-size:11px;font-weight:700;color:#777;text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:8px}
 .sig-box{background:#fff;border-radius:10px;border:2px solid rgba(201,164,72,.5);
   margin:10px 0;touch-action:none;overflow:hidden}
 canvas{display:block;width:100%;height:160px;cursor:crosshair}
-.hint{text-align:center;font-size:11px;color:#777;margin-bottom:10px}
-.btns{display:flex;gap:10px}
-.btn{flex:1;padding:13px;border-radius:10px;border:none;font-size:14px;
-  font-weight:700;cursor:pointer;transition:opacity .2s}
-.btn:active{opacity:.75}
-.btn-clear{background:#2a2a2a;color:#888;border:1px solid #444}
-.btn-ok{background:linear-gradient(135deg,#C9A448,#9A7A2E);color:#111}
-.btn-ok:disabled{opacity:.4;cursor:not-allowed}
-.msg{text-align:center;padding:11px;border-radius:9px;font-size:13px;font-weight:700;margin-top:12px;display:none}
+.hint{text-align:center;font-size:11px;color:#777;margin-bottom:12px}
+.btn-confirmar{width:100%;padding:15px;border-radius:12px;border:none;
+  font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px;
+  background:linear-gradient(135deg,#C9A448,#9A7A2E);color:#111;
+  transition:opacity .2s;margin-top:6px}
+.btn-confirmar:disabled{opacity:.35;cursor:not-allowed}
+.btn-limpar{width:100%;padding:10px;border-radius:10px;border:1px solid #444;
+  font-size:13px;font-weight:600;cursor:pointer;background:#252525;color:#888;margin-top:8px}
+.msg{text-align:center;padding:12px;border-radius:9px;font-size:13px;
+  font-weight:700;margin-top:12px;display:none}
 .msg-ok{background:rgba(76,175,125,.2);color:#4CAF7D;border:1px solid rgba(76,175,125,.4)}
 .msg-err{background:rgba(224,90,58,.2);color:#E05A3A;border:1px solid rgba(224,90,58,.4)}
 .msg-load{background:rgba(201,164,72,.12);color:#C9A448;border:1px solid rgba(201,164,72,.3)}
 .page{display:none}.page.on{display:block}
-.spin-wrap{text-align:center;padding:50px 20px;color:#888}
 .spin{width:40px;height:40px;border:4px solid rgba(201,164,72,.15);
   border-top-color:#C9A448;border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 16px}
 @keyframes sp{to{transform:rotate(360deg)}}
-.ok-icon{font-size:54px;margin-bottom:14px}
-.ok-title{font-size:19px;font-weight:800;margin-bottom:8px}
-.ok-sub{font-size:13px;color:#888;line-height:1.7}
-.lock-icon{font-size:42px;margin-bottom:12px}
+.progress-bar{width:100%;height:4px;background:#252525;border-radius:2px;
+  margin:12px 0;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#C9A448,#E8D080);
+  border-radius:2px;transition:width .3s}
 </style>
 </head>
 <body>
@@ -63,11 +85,11 @@ canvas{display:block;width:100%;height:160px;cursor:crosshair}
     <div class="card">
       <div class="logo">
         <div class="logo-txt">CREDVISION</div>
-        <div class="logo-sub">Assinatura Digital</div>
+        <div class="logo-sub">Contrato de Emprestimo</div>
       </div>
-      <div class="spin-wrap">
+      <div style="text-align:center;padding:40px 0">
         <div class="spin"></div>
-        <div>Carregando contrato...</div>
+        <div style="color:#888">Carregando contrato...</div>
         <div id="dbg" style="font-size:10px;color:#555;margin-top:8px;word-break:break-all"></div>
       </div>
     </div>
@@ -75,69 +97,138 @@ canvas{display:block;width:100%;height:160px;cursor:crosshair}
 
   <!-- ERRO -->
   <div id="pg-erro" class="page">
-    <div class="card">
-      <div class="logo">
-        <div class="logo-txt">CREDVISION</div>
-      </div>
-      <div class="div"></div>
-      <div style="text-align:center;padding:20px 0">
-        <div style="font-size:36px;margin-bottom:10px">&#9888;&#65039;</div>
-        <div style="font-size:15px;font-weight:700;color:#E05A3A" id="err-txt">Link invalido.</div>
-        <div style="font-size:12px;color:#777;margin-top:6px">Solicite um novo link ao credor.</div>
-      </div>
+    <div class="card" style="text-align:center;padding:36px 20px">
+      <div style="font-size:40px;margin-bottom:12px">&#9888;&#65039;</div>
+      <div style="font-size:15px;font-weight:700;color:#E05A3A" id="err-txt">Link invalido.</div>
+      <div style="font-size:12px;color:#777;margin-top:8px">Solicite um novo link ao credor.</div>
     </div>
   </div>
 
   <!-- EXPIRADO -->
   <div id="pg-exp" class="page">
     <div class="card" style="text-align:center;padding:36px 20px">
-      <div class="lock-icon">&#128274;</div>
-      <div style="font-size:18px;font-weight:800;color:#C9A448;margin-bottom:8px">Link Expirado</div>
-      <div class="ok-sub">Este contrato ja foi assinado.<br>O link nao pode ser usado novamente.</div>
+      <div style="font-size:44px;margin-bottom:14px">&#128274;</div>
+      <div style="font-size:18px;font-weight:800;color:#C9A448;margin-bottom:8px">Contrato ja Assinado</div>
+      <div style="font-size:13px;color:#888;line-height:1.7">
+        Este contrato ja foi assinado e aceito.<br>O link nao pode ser usado novamente.
+      </div>
       <div class="div"></div>
       <div style="font-size:11px;color:#555">CredVision - Sistema de Cobranca</div>
     </div>
   </div>
 
-  <!-- ASSINATURA -->
-  <div id="pg-sign" class="page">
+  <!-- CONTRATO -->
+  <div id="pg-contrato" class="page">
+
+    <!-- Cabecalho -->
     <div class="card">
       <div class="logo">
         <div class="logo-txt">CREDVISION</div>
-        <div class="logo-sub">Assinatura Digital de Contrato</div>
+        <div class="logo-sub">Sistema de Cobranca</div>
       </div>
       <div class="div"></div>
-      <div class="info-box">
-        <div class="info-row"><span class="info-lbl">Devedor</span><span class="info-val" id="s-nome">-</span></div>
-        <div class="info-row"><span class="info-lbl">Valor Total</span><span class="info-val gold" id="s-total">-</span></div>
-        <div class="info-row"><span class="info-lbl">Juros</span><span class="info-val" id="s-juros">-</span></div>
-        <div class="info-row"><span class="info-lbl">Parcelas</span><span class="info-val grn" id="s-parc">-</span></div>
+      <div class="titulo">Contrato de Emprestimo Pessoal</div>
+
+      <!-- Dados do contrato -->
+      <div class="sub-titulo">Dados do Contrato</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-item-lbl">Devedor (Contratante)</div>
+          <div class="info-item-val" id="c-nome">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-item-lbl">Valor Principal</div>
+          <div class="info-item-val gold" id="c-valor">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-item-lbl">Juros ao Mes</div>
+          <div class="info-item-val" id="c-juros">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-item-lbl">Valor Total com Juros</div>
+          <div class="info-item-val gold" id="c-total">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-item-lbl">Numero de Parcelas</div>
+          <div class="info-item-val grn" id="c-nparc">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-item-lbl">Valor de Cada Parcela</div>
+          <div class="info-item-val grn" id="c-vparc">-</div>
+        </div>
       </div>
-      <div class="sec">Calendario de pagamentos</div>
-      <div class="parc-wrap" id="s-lista"></div>
-      <div class="div"></div>
-      <div class="terms-box">
-        Declaro que li e concordo com os termos deste contrato de emprestimo, incluindo
-        valores, prazos e taxa de juros informados acima. Esta assinatura digital tem
-        validade legal como aceite formal dos termos acordados entre as partes.
+
+      <!-- Tabela de parcelas -->
+      <div class="sub-titulo">Calendario de Pagamentos</div>
+      <table class="parc-table">
+        <thead><tr><th>Parc.</th><th>Vencimento</th><th>Valor</th></tr></thead>
+        <tbody id="c-parcelas"></tbody>
+      </table>
+    </div>
+
+    <!-- Texto do contrato -->
+    <div class="card">
+      <div class="sub-titulo">Termos e Condicoes</div>
+      <div class="contrato-texto" id="contrato-texto">
+        <!-- preenchido pelo JS -->
       </div>
-      <div class="sec">Assine no campo abaixo</div>
+
+      <!-- Progresso de leitura -->
+      <div style="font-size:10px;color:#777;margin-bottom:4px">Progresso de leitura do contrato:</div>
+      <div class="progress-bar"><div class="progress-fill" id="leitura-prog" style="width:0%"></div></div>
+      <div style="font-size:10px;color:#555;text-align:right;margin-bottom:8px" id="leitura-pct">0%</div>
+
+      <!-- Aceite -->
+      <div class="sub-titulo">Declaracoes do Contratante</div>
+      <div class="aceite-box">
+        <div class="aceite-item">
+          <div class="chk" id="chk1" onclick="toggleChk('chk1')"></div>
+          <div class="aceite-txt" onclick="toggleChk('chk1')">
+            <strong>Li e estou de acordo</strong> com todas as clausulas e condicoes deste contrato de emprestimo, incluindo valores, prazos e taxas de juros informados.
+          </div>
+        </div>
+        <div class="aceite-item">
+          <div class="chk" id="chk2" onclick="toggleChk('chk2')"></div>
+          <div class="aceite-txt" onclick="toggleChk('chk2')">
+            <strong>Declaro estar ciente</strong> de que o nao pagamento nas datas acordadas pode acarretar em multas, juros adicionais e negativacao do meu nome junto aos orgaos de protecao ao credito.
+          </div>
+        </div>
+        <div class="aceite-item">
+          <div class="chk" id="chk3" onclick="toggleChk('chk3')"></div>
+          <div class="aceite-txt" onclick="toggleChk('chk3')">
+            <strong>Confirmo que os dados</strong> informados neste contrato sao verdadeiros e que sou a pessoa identificada acima.
+          </div>
+        </div>
+      </div>
+
+      <!-- Assinatura -->
+      <div class="sub-titulo">Assinatura Digital</div>
       <div class="sig-box"><canvas id="sig-canvas"></canvas></div>
       <div class="hint">&#128070; Use o dedo para assinar</div>
-      <div class="btns">
-        <button class="btn btn-clear" onclick="limpar()">&#128465; Limpar</button>
-        <button class="btn btn-ok" id="btn-ok" onclick="confirmar()" disabled>&#9989; Confirmar</button>
-      </div>
+
+      <button class="btn-confirmar" id="btn-ok" onclick="confirmar()" disabled>
+        &#9989; Confirmar Leitura e Assinar o Contrato
+      </button>
+      <button class="btn-limpar" onclick="limpar()">&#128465; Limpar Assinatura</button>
       <div class="msg" id="msg-box"></div>
     </div>
-  </div>
+
+  </div><!-- /pg-contrato -->
 
   <!-- SUCESSO -->
   <div id="pg-ok" class="page">
-    <div class="card" style="text-align:center;padding:36px 20px">
-      <div class="ok-icon">&#9989;</div>
-      <div class="ok-title" style="color:#4CAF7D">Assinatura Confirmada!</div>
-      <div class="ok-sub">Seu contrato foi assinado com sucesso.<br>Voce ja pode fechar esta pagina.</div>
+    <div class="card" style="text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px">&#9989;</div>
+      <div style="font-size:20px;font-weight:800;color:#4CAF7D;margin-bottom:10px">
+        Contrato Assinado!
+      </div>
+      <div style="font-size:13px;color:#888;line-height:1.8">
+        Seu contrato foi assinado e registrado com sucesso.<br>
+        Guarde esta confirmacao.<br>
+        Voce ja pode fechar esta pagina.
+      </div>
+      <div class="div"></div>
+      <div style="font-size:12px;color:#C9A448;font-weight:700" id="ok-info"></div>
       <div class="div"></div>
       <div style="font-size:11px;color:#555">CredVision - Sistema de Cobranca</div>
     </div>
@@ -154,58 +245,147 @@ function brl(n){ return 'R$ '+parseFloat(n||0).toLocaleString('pt-BR',{minimumFr
 function dt(d){ if(!d)return '-'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0] }
 function hoje(){ return new Date().toISOString().slice(0,10) }
 function setMsg(msg,cls){ var e=document.getElementById('msg-box'); e.textContent=msg; e.className='msg '+cls; e.style.display='block' }
-function goErr(msg){ hide('pg-load'); document.getElementById('err-txt').textContent=msg||'Link invalido.'; show('pg-erro') }
+function goErr(msg){ hide('pg-load'); document.getElementById('err-txt').textContent=msg; show('pg-erro') }
 
-// ── canvas ───────────────────────────────────────────────────
-var drawing=false, marked=false, cv, ctx;
+// ── texto do contrato ─────────────────────────────────────────
+function gerarTextoContrato(loan){
+  var inst = loan.installments||[];
+  var nparc = inst.length;
+  var vparc = inst.length ? brl(inst[0].amount) : '-';
+  var p1venc = inst.length ? dt(inst[0].dueDate) : '-';
+  var texto =
+    '<strong style="color:#C9A448">CLAUSULA 1 - DAS PARTES</strong>\n\n' +
+    'Pelo presente instrumento particular, o(a) Sr(a). <strong style="color:#fff">'+loan.debtor+'</strong>, ' +
+    'doravante denominado(a) CONTRATANTE, e o Credor (CREDVISION), denominado CONTRATADO, ' +
+    'celebram o presente Contrato de Emprestimo Pessoal, que se rege pelas clausulas a seguir.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 2 - DO OBJETO</strong>\n\n' +
+    'O CONTRATADO empresta ao CONTRATANTE a quantia de <strong style="color:#C9A448">'+brl(loan.totalAmount)+'</strong>, ' +
+    'que sera devolvida conforme o plano de pagamento estabelecido neste instrumento.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 3 - DOS JUROS E ENCARGOS</strong>\n\n' +
+    'Sobre o valor emprestado incidira taxa de juros de <strong style="color:#fff">'+
+    (loan.interestRate||loan.rate||0)+'% ao mes</strong> (juros simples), ' +
+    'totalizando o valor de <strong style="color:#C9A448">'+brl(loan.totalAmount)+'</strong> ' +
+    'a ser pago em <strong style="color:#4CAF7D">'+nparc+' parcela(s)</strong> de <strong style="color:#4CAF7D">'+vparc+'</strong>.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 4 - DO PAGAMENTO</strong>\n\n' +
+    'O pagamento sera realizado em '+nparc+' parcela(s) mensais, com vencimento da primeira ' +
+    'em <strong style="color:#fff">'+p1venc+'</strong>, ' +
+    'conforme o calendario de pagamentos estabelecido neste contrato. ' +
+    'O pagamento devera ser efetuado pontualmente nas datas acordadas.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 5 - DO INADIMPLEMENTO</strong>\n\n' +
+    'Em caso de atraso no pagamento de qualquer parcela, incidira multa de 2% (dois por cento) ' +
+    'sobre o valor da parcela, acrescida de juros moratories de 1% (um por cento) ao mes, ' +
+    'calculados pro rata die. O inadimplemento por mais de 30 (trinta) dias podera acarretar ' +
+    'a negativacao do nome do CONTRATANTE nos orgaos de protecao ao credito.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 6 - DA QUITACAO</strong>\n\n' +
+    'O contrato sera considerado quitado somente apos o pagamento integral de todas as parcelas, ' +
+    'acrescidas de eventuais encargos. Sera emitido comprovante de quitacao ao final do pagamento.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 7 - DA DECLARACAO DO CONTRATANTE</strong>\n\n' +
+    'O CONTRATANTE declara: (a) ter plena capacidade civil para celebrar este contrato; ' +
+    '(b) ter lido e compreendido integralmente todas as clausulas aqui estabelecidas; ' +
+    '(c) estar de livre e espontanea vontade firmando este instrumento; ' +
+    '(d) que os recursos obtidos serao utilizados para fins licitos.\n\n' +
+
+    '<strong style="color:#C9A448">CLAUSULA 8 - DO FORO</strong>\n\n' +
+    'As partes elegem o foro da comarca de seu domicilio para dirimir quaisquer controversias ' +
+    'oriundas do presente contrato, com renuncya expressa a qualquer outro foro, ' +
+    'por mais privilegiado que seja.\n\n' +
+
+    'Ao assinar digitalmente este instrumento, o CONTRATANTE confirma ter lido, ' +
+    'compreendido e aceito todos os termos e condicoes aqui estabelecidos, ' +
+    'bem como declara serem verdadeiras todas as informacoes fornecidas.\n\n' +
+    '<strong style="color:#C9A448">Data de assinatura: '+new Date().toLocaleDateString('pt-BR')+'</strong>';
+  return texto;
+}
+
+// ── checkboxes e validacao ────────────────────────────────────
+var chkState = {chk1:false, chk2:false, chk3:false};
+function toggleChk(id){
+  chkState[id] = !chkState[id];
+  var el = document.getElementById(id);
+  if(chkState[id]){ el.classList.add('marcado'); el.innerHTML='&#10003;'; }
+  else{ el.classList.remove('marcado'); el.innerHTML=''; }
+  verificarBotao();
+}
+var marcado = false;
+function verificarBotao(){
+  var ok = chkState.chk1 && chkState.chk2 && chkState.chk3 && marcado;
+  document.getElementById('btn-ok').disabled = !ok;
+}
+
+// ── progresso de leitura do contrato ─────────────────────────
+function initLeituraTracking(){
+  var box = document.getElementById('contrato-texto');
+  box.addEventListener('scroll', function(){
+    var max = box.scrollHeight - box.clientHeight;
+    var pct = max > 0 ? Math.min(100, Math.round(box.scrollTop / max * 100)) : 100;
+    document.getElementById('leitura-prog').style.width = pct+'%';
+    document.getElementById('leitura-pct').textContent = pct+'%';
+  });
+}
+
+// ── canvas de assinatura ──────────────────────────────────────
+var drawing=false, cv, ctx;
 function initCanvas(){
   cv = document.getElementById('sig-canvas');
   var R = window.devicePixelRatio||1;
-  var w = cv.offsetWidth||430, h = cv.offsetHeight||160;
-  cv.width = w*R; cv.height = h*R;
-  ctx = cv.getContext('2d');
+  var w = cv.offsetWidth||480, h = cv.offsetHeight||160;
+  cv.width=w*R; cv.height=h*R;
+  ctx=cv.getContext('2d');
   ctx.scale(R,R);
   ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
-  function pos(e){
-    var r=cv.getBoundingClientRect(), s=e.touches?e.touches[0]:e;
-    return { x:(s.clientX-r.left)*(w/r.width), y:(s.clientY-r.top)*(h/r.height) };
-  }
-  function onMark(){ marked=true; document.getElementById('btn-ok').disabled=false; }
-  cv.addEventListener('mousedown',  function(e){ drawing=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
-  cv.addEventListener('mousemove',  function(e){ if(!drawing)return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); onMark(); });
-  cv.addEventListener('mouseup',    function(){ drawing=false; });
-  cv.addEventListener('mouseleave', function(){ drawing=false; });
-  cv.addEventListener('touchstart', function(e){ e.preventDefault(); drawing=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); },{passive:false});
-  cv.addEventListener('touchmove',  function(e){ e.preventDefault(); if(!drawing)return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); onMark(); },{passive:false});
-  cv.addEventListener('touchend',   function(){ drawing=false; });
+  function pos(e){ var r=cv.getBoundingClientRect(),s=e.touches?e.touches[0]:e;
+    return{x:(s.clientX-r.left)*(w/r.width),y:(s.clientY-r.top)*(h/r.height)}; }
+  function onMark(){ marcado=true; verificarBotao(); }
+  cv.addEventListener('mousedown',  function(e){drawing=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+  cv.addEventListener('mousemove',  function(e){if(!drawing)return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();onMark()});
+  cv.addEventListener('mouseup',    function(){drawing=false});
+  cv.addEventListener('mouseleave', function(){drawing=false});
+  cv.addEventListener('touchstart', function(e){e.preventDefault();drawing=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
+  cv.addEventListener('touchmove',  function(e){e.preventDefault();if(!drawing)return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();onMark()},{passive:false});
+  cv.addEventListener('touchend',   function(){drawing=false});
 }
 function limpar(){
   if(!ctx)return;
   ctx.clearRect(0,0,cv.width,cv.height);
-  marked=false;
-  document.getElementById('btn-ok').disabled=true;
+  marcado=false; verificarBotao();
   document.getElementById('msg-box').style.display='none';
 }
 
-// ── confirmar assinatura ──────────────────────────────────────
+// ── confirmar ─────────────────────────────────────────────────
 var loanId='', gasUrl='';
 function confirmar(){
-  if(!marked){ setMsg('Por favor, assine antes de confirmar.','msg-err'); return; }
   var btn=document.getElementById('btn-ok');
   btn.disabled=true;
-  setMsg('Salvando assinatura...','msg-load');
+  setMsg('Registrando assinatura...','msg-load');
   var sig=cv.toDataURL('image/png');
-  if(!gasUrl){ setMsg('Erro: URL do servidor nao configurada. Contate o credor.','msg-err'); btn.disabled=false; return; }
-  fetch(gasUrl, {
-    method:'POST', mode:'no-cors',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'saveSignature', loanId:loanId, signature:sig})
-  }).then(function(){
-    hide('pg-sign'); show('pg-ok');
-  }).catch(function(e){
-    setMsg('Falha ao enviar. Verifique sua conexao e tente novamente.','msg-err');
-    btn.disabled=false;
-  });
+  var agora=new Date().toISOString();
+  var payload={
+    action:'saveSignature',
+    loanId:loanId,
+    signature:sig,
+    signedAt:agora,
+    declaracoes:{leuContrato:true, cienteInadimplencia:true, dadosVerdadeiros:true}
+  };
+  if(!gasUrl){
+    setMsg('Erro: servidor nao configurado. Contate o credor.','msg-err');
+    btn.disabled=false; return;
+  }
+  fetch(gasUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .then(function(){
+      document.getElementById('ok-info').textContent =
+        'Assinado em: '+new Date(agora).toLocaleString('pt-BR');
+      hide('pg-contrato'); show('pg-ok');
+    })
+    .catch(function(e){
+      setMsg('Falha ao enviar. Verifique sua conexao e tente novamente.','msg-err');
+      btn.disabled=false;
+    });
 }
 
 // ── init ─────────────────────────────────────────────────────
@@ -213,58 +393,47 @@ window.addEventListener('load', function(){
   var id  = qs('id');
   var d   = qs('d');
   var api = qs('api');
-
-  // debug visivel na tela de loading
   document.getElementById('dbg').textContent =
     'id='+(id?'OK':'vazio')+' | d='+(d?'OK':'vazio')+' | api='+(api?'OK':'vazio');
 
-  if(!id || !d){
-    goErr('Link invalido ou incompleto. Solicite um novo link ao credor.');
-    return;
-  }
-
-  gasUrl  = api ? decodeURIComponent(api) : '';
-  loanId  = id;
+  if(!id||!d){ goErr('Link invalido ou incompleto. Solicite um novo link.'); return; }
+  gasUrl = api ? decodeURIComponent(api) : '';
+  loanId = id;
 
   var loan;
-  try{
-    loan = JSON.parse(decodeURIComponent(escape(atob(d))));
-  }catch(e){
-    goErr('Nao foi possivel decodificar os dados do contrato. Solicite um novo link.');
-    return;
-  }
+  try{ loan=JSON.parse(decodeURIComponent(escape(atob(d)))); }
+  catch(e){ goErr('Nao foi possivel decodificar o contrato. Solicite um novo link.'); return; }
 
-  if(!loan || !loan.id){
-    goErr('Dados do contrato invalidos. Solicite um novo link.');
-    return;
-  }
-
-  // ja assinado?
-  if(loan.signature || loan.signedAt){
-    hide('pg-load'); show('pg-exp');
-    return;
-  }
+  if(!loan||!loan.id){ goErr('Dados invalidos. Solicite um novo link.'); return; }
+  if(loan.signature||loan.signedAt){ hide('pg-load'); show('pg-exp'); return; }
 
   // preenche dados
-  document.getElementById('s-nome').textContent  = loan.debtor  || '-';
-  document.getElementById('s-total').textContent = brl(loan.totalAmount);
-  document.getElementById('s-juros').textContent = (loan.interestRate||loan.rate||0)+'% a.m.';
-  var inst = loan.installments || [];
-  document.getElementById('s-parc').textContent  =
-    inst.length + 'x de ' + (inst.length ? brl(inst[0].amount) : '-');
+  var inst=loan.installments||[];
+  var nparc=inst.length;
+  var vparc=inst.length?brl(inst[0].amount):'-';
 
-  document.getElementById('s-lista').innerHTML = inst.map(function(p,i){
-    var over = p.dueDate < hoje();
-    return '<div class="parc-row">'
-      + '<span style="color:#777;font-weight:600;min-width:22px">'+(i+1)+'</span>'
-      + '<span style="color:'+(over?'#E05A3A':'#C9A448')+'">'+dt(p.dueDate)+'</span>'
-      + '<span style="font-weight:600">'+brl(p.amount)+'</span>'
-      + '</div>';
+  document.getElementById('c-nome').textContent  = loan.debtor||'-';
+  document.getElementById('c-valor').textContent = brl(loan.principal||loan.totalAmount);
+  document.getElementById('c-juros').textContent = (loan.interestRate||loan.rate||0)+'% a.m.';
+  document.getElementById('c-total').textContent = brl(loan.totalAmount);
+  document.getElementById('c-nparc').textContent = nparc+'x';
+  document.getElementById('c-vparc').textContent = vparc;
+
+  document.getElementById('c-parcelas').innerHTML = inst.map(function(p,i){
+    var over=p.dueDate<hoje();
+    return '<tr><td>'+(i+1)+'</td>'
+      +'<td style="color:'+(over?'#E05A3A':'#C9A448')+'">'+dt(p.dueDate)+'</td>'
+      +'<td style="font-weight:600">'+brl(p.amount)+'</td></tr>';
   }).join('');
 
+  // texto do contrato
+  document.getElementById('contrato-texto').innerHTML =
+    gerarTextoContrato(loan).replace(/\n/g,'<br>');
+
   hide('pg-load');
-  show('pg-sign');
+  show('pg-contrato');
   initCanvas();
+  initLeituraTracking();
 });
 </script>
 </body>
