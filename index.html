@@ -624,7 +624,7 @@
             <div id="pixSection" style="display:none">
                 <div class="pix-box">
                     <h3>📲 Pague via PIX</h3>
-                    <img id="pixQRCode" src="" alt="QR Code PIX" class="pix-qr">
+                    <div id="pixQRCode" class="pix-qr-container"></div>
                     <p class="pix-key-label">Chave PIX:</p>
                     <div class="pix-key-value" id="pixKeyDisplay"></div>
                     <button class="btn btn-outline btn-sm" onclick="copyPixKey()">📋 Copiar Chave</button>
@@ -633,8 +633,8 @@
             </div>
 
             <div class="summary-actions">
-                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp()">📱 Enviar Pedido pelo WhatsApp</button>
-                <button class="btn btn-outline btn-full" onclick="closeAllModals()">Fechar</button>
+                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp()">📱 Reenviar pelo WhatsApp</button>
+                <button class="btn btn-outline btn-full" onclick="finishOrder()">✓ Concluir</button>
             </div>
         </div>
     </div>
@@ -696,6 +696,7 @@
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
