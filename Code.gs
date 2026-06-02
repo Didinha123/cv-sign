@@ -19,7 +19,7 @@
 
 // ── URL da página de assinatura no GitHub Pages ───────────────
 // Após criar o GitHub Pages, altere esta linha com a sua URL:
-var SIGN_PAGE_URL = "https://Didinha123.github.io/cv-sign/sign.html.html";
+var SIGN_PAGE_URL = "https://Didinha123.github.io/cv-sign/sign.html";
 
 // ── Serve a interface ────────────────────────────────────────
 // Quando há ?sign=ID na URL (link enviado pelo WhatsApp), serve a
