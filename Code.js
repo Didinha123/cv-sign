@@ -1,15 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
 //  CredVision — Google Apps Script | Code.gs
 //
-//  INSTRUÇÕES:
-//  1. Abra a planilha → Extensões → Apps Script
-//  2. Apague tudo e cole este arquivo como Código.gs
-//  3. Crie um novo arquivo HTML: "+" → HTML → nomeie "index"
-//  4. Cole o conteúdo de CredVision_index.html no arquivo index
-//  5. Salve tudo (Ctrl+S)
-//  6. Implantar → Nova implantação → App da Web
-//     Executar como: Eu mesmo | Acesso: Qualquer pessoa
-//  7. Copie a URL e abra no navegador
+//  CONFIGURAÇÃO — altere apenas esta seção:
+// ═══════════════════════════════════════════════════════════════
+
+// ID da planilha Google Sheets (já configurado com a sua planilha)
+var SHEETS_ID = "1KXZn7qzXoWflF94qjOQMj-FGcImYC7uI0KH90bI6q0c";
+
+// URL das páginas no GitHub Pages — troque SEU_USUARIO pelo seu usuário
+var SIGN_PAGE     = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
+var CONTRATO_PAGE = "https://SEU_USUARIO.github.io/cv-sign/contrato.html";
+
 // ═══════════════════════════════════════════════════════════════
 
 // ── Serve a interface ────────────────────────────────────────
@@ -48,9 +49,72 @@ function doGet(e) {
   }
 
   // ── App principal ──
-  return HtmlService.createHtmlOutputFromFile('index')
+  // Injeta a URL correta do exec no HTML para que a página
+  // de assinatura saiba para onde enviar a assinatura
+  var mainOut = HtmlService.createHtmlOutputFromFile('index')
     .setTitle('CredVision — Sistema de Cobrança')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  // Injeta configurações no HTML — GAS URL + páginas GitHub Pages
+  // Isso resolve o erro "servidor não configurado" nas páginas externas
+  var execUrl = '';
+  try { execUrl = ScriptApp.getService().getUrl(); } catch(ex) {}
+  mainOut.append(
+    '<script>' +
+    'window.__GAS_EXEC_URL__="' + execUrl + '";' +
+    'window.__SIGN_PAGE__="' + SIGN_PAGE + '";' +
+    'window.__CONTRATO_PAGE__="' + CONTRATO_PAGE + '";' +
+    '</script>'
+  );
+  return mainOut;
+}
+
+// ── doPost: aceita chamadas do GitHub Pages (fetch no-cors) ──
+// A página de assinatura externa envia Content-Type: text/plain
+// com JSON no corpo. GAS recebe via e.postData.contents.
+function doPost(e) {
+  try {
+    var body = e && e.postData && e.postData.contents ? e.postData.contents : '{}';
+    var d    = JSON.parse(body);
+    var out  = ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
+
+    if (d.action === 'saveSignature' && d.loanId && d.signature) {
+      // Salva assinatura no empréstimo E registra na aba Contratos
+      var r = saveSignature(d.loanId, d.signature);
+      if (r.ok) registrarContratoAssinado(d);
+      out.setContent(JSON.stringify(r));
+    }
+    return out;
+  } catch(ex) {
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:ex.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ── Registra contrato assinado na aba Contratos ──────────────
+// Chamado pelo doPost quando action='saveSignature'
+function registrarContratoAssinado(d) {
+  try {
+    var ss = SpreadsheetApp.openById(SHEETS_ID);
+    var sh = ss.getSheetByName('Contratos');
+    if (!sh) {
+      sh = ss.insertSheet('Contratos');
+      var h = sh.getRange(1,1,1,8);
+      h.setValues([['Data/Hora','Devedor','Emprestimo ID','Leu Contrato','Ciente Inadimplencia','Dados Verdadeiros','Assinatura','IP/Info']]);
+      h.setBackground('#0d0d0d').setFontColor('#C9A448').setFontWeight('bold');
+      sh.setFrozenRows(1);
+    }
+    var decl = d.declaracoes || {};
+    sh.appendRow([
+      new Date().toLocaleString('pt-BR'),
+      d.debtorName || d.loanId,
+      d.loanId || '',
+      decl.leuContrato     ? 'SIM' : 'NAO',
+      decl.cienteInadimplencia ? 'SIM' : 'NAO',
+      decl.dadosVerdadeiros ? 'SIM' : 'NAO',
+      d.signature ? 'Assinatura registrada' : 'Sem assinatura',
+      d.signedAt || new Date().toISOString()
+    ]);
+  } catch(e) { /* silencioso */ }
 }
 
 // ── Funções chamadas pela página de assinatura ───────────────
@@ -105,7 +169,7 @@ function saveSignature(loanId, signatureBase64) {
 // A4 = assinaturas (base64) separadas por loanId
 // A5 = fotos de clientes (base64) separadas por clientId
 function getSheet() {
-  var ss    = SpreadsheetApp.getActiveSpreadsheet();
+  var ss    = SpreadsheetApp.openById(SHEETS_ID);
   var sheet = ss.getSheetByName('CV_Data');
   if (!sheet) {
     sheet = ss.insertSheet('CV_Data');
@@ -173,12 +237,25 @@ function saveData(payloadStr) {
     sh.getRange('A4').setValue(JSON.stringify(sigs));
     sh.getRange('A5').setValue(JSON.stringify(photos));
 
-    // ── Escreve abas formatadas com os dados completos ──
-    writeFormattedSheets(data);
+    // ── writeFormattedSheets NÃO é chamado aqui ──────────────
+    // Reescrever 4 abas + autoResize leva 10-20s por save.
+    // Use syncPlanilhas() manualmente quando quiser atualizar.
 
     return { ok: true };
   } catch(e) {
     return { ok: false, error: 'saveData: ' + e.message };
+  }
+}
+
+// ── Atualiza abas formatadas (chamado pelo botão no app) ──────
+function syncPlanilhas() {
+  try {
+    var res = getData();
+    if (!res.ok) return { ok: false, error: res.error };
+    writeFormattedSheets(res.data);
+    return { ok: true };
+  } catch(e) {
+    return { ok: false, error: e.message };
   }
 }
 
@@ -189,7 +266,7 @@ function copyObj(obj) {
 
 // ── Escreve abas formatadas ──────────────────────────────────
 function writeFormattedSheets(data) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.openById(SHEETS_ID);
 
   // ── EMPRÉSTIMOS ──
   var loanRows = [];
@@ -317,5 +394,5 @@ function writeSheet(ss, name, headers, rows) {
     }
   }
 
-  sheet.autoResizeColumns(1, headers.length);
+  // autoResizeColumns removido — era a operação mais lenta (~2s por aba)
 }
