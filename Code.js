@@ -10,16 +10,7 @@
 //  6. Implantar → Nova implantação → App da Web
 //     Executar como: Eu mesmo | Acesso: Qualquer pessoa
 //  7. Copie a URL e abra no navegador
-//
-//  PÁGINA DE ASSINATURA (WhatsApp):
-//  8. Siga o guia do arquivo COMO_CONFIGURAR.md para criar o
-//     GitHub Pages e hospedar o sign_githubpages.html
-//  9. Após configurar, altere SIGN_PAGE_URL abaixo
 // ═══════════════════════════════════════════════════════════════
-
-// ── URL da página de assinatura no GitHub Pages ───────────────
-// Após criar o GitHub Pages, altere esta linha com a sua URL:
-var SIGN_PAGE_URL = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
 
 // ── Serve a interface ────────────────────────────────────────
 // Quando há ?sign=ID na URL (link enviado pelo WhatsApp), serve a
@@ -57,36 +48,9 @@ function doGet(e) {
   }
 
   // ── App principal ──
-  // Injeta a URL correta do exec no HTML para que a página
-  // de assinatura saiba para onde enviar a assinatura
-  var mainOut = HtmlService.createHtmlOutputFromFile('index')
+  return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('CredVision — Sistema de Cobrança')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-  try {
-    var execUrl = ScriptApp.getService().getUrl();
-    mainOut.append('<script>window.__GAS_EXEC_URL__="' + execUrl + '";</script>');
-  } catch(ex) { /* continua sem a URL injetada */ }
-  return mainOut;
-}
-
-// ── doPost: aceita chamadas do GitHub Pages (fetch no-cors) ──
-// A página de assinatura externa envia Content-Type: text/plain
-// com JSON no corpo. GAS recebe via e.postData.contents.
-function doPost(e) {
-  try {
-    var body = e && e.postData && e.postData.contents ? e.postData.contents : '{}';
-    var d    = JSON.parse(body);
-    var out  = ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
-
-    if (d.action === 'saveSignature' && d.loanId && d.signature) {
-      var r = saveSignature(d.loanId, d.signature);
-      out.setContent(JSON.stringify(r));
-    }
-    return out;
-  } catch(ex) {
-    return ContentService.createTextOutput(JSON.stringify({ok:false,error:ex.message}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
 }
 
 // ── Funções chamadas pela página de assinatura ───────────────
@@ -209,25 +173,12 @@ function saveData(payloadStr) {
     sh.getRange('A4').setValue(JSON.stringify(sigs));
     sh.getRange('A5').setValue(JSON.stringify(photos));
 
-    // ── writeFormattedSheets NÃO é chamado aqui ──────────────
-    // Reescrever 4 abas + autoResize leva 10-20s por save.
-    // Use syncPlanilhas() manualmente quando quiser atualizar.
+    // ── Escreve abas formatadas com os dados completos ──
+    writeFormattedSheets(data);
 
     return { ok: true };
   } catch(e) {
     return { ok: false, error: 'saveData: ' + e.message };
-  }
-}
-
-// ── Atualiza abas formatadas (chamado pelo botão no app) ──────
-function syncPlanilhas() {
-  try {
-    var res = getData();
-    if (!res.ok) return { ok: false, error: res.error };
-    writeFormattedSheets(res.data);
-    return { ok: true };
-  } catch(e) {
-    return { ok: false, error: e.message };
   }
 }
 
@@ -366,5 +317,5 @@ function writeSheet(ss, name, headers, rows) {
     }
   }
 
-  // autoResizeColumns removido — era a operação mais lenta (~2s por aba)
+  sheet.autoResizeColumns(1, headers.length);
 }
