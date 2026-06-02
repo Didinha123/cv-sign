@@ -482,6 +482,11 @@ section { padding: 100px 0; }
 }
 .pix-box h3 { font-size: 1.1rem; color: #166534; margin-bottom: 14px; }
 .pix-qr { border-radius: var(--radius-sm); border: 3px solid #86efac; margin-bottom: 12px; }
+.pix-qr-container {
+    display: inline-block; border-radius: var(--radius-sm);
+    border: 3px solid #86efac; margin-bottom: 12px; overflow: hidden;
+}
+.pix-qr-container img, .pix-qr-container canvas { display: block; }
 .pix-key-label { font-size: 0.8rem; color: var(--text-light); margin-bottom: 4px; }
 .pix-key-value {
     background: var(--white); border: 1px solid #d1fae5;
