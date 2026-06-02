@@ -483,6 +483,9 @@ function confirmOrder() {
 
     closeModal('modalCheckout');
     showOrderSummary(address, paymentMethod, changeFor);
+
+    // Abre WhatsApp automaticamente
+    setTimeout(() => sendToWhatsApp(false), 400);
 }
 
 // =====================================================
@@ -535,21 +538,27 @@ function showOrderSummary(address, paymentMethod, changeFor) {
 
     // Seção PIX
     const pixSection = document.getElementById('pixSection');
+    const qrContainer = document.getElementById('pixQRCode');
     if (paymentMethod === 'pix') {
+        pixSection.style.display = '';
         if (!settings.pixKey) {
-            pixSection.style.display = '';
-            document.getElementById('pixQRCode').style.display = 'none';
             pixSection.querySelector('.pix-box').innerHTML = `
                 <h3>📲 PIX</h3>
                 <p style="color:#c00">⚠️ Chave PIX não configurada. Fale com o admin.</p>
             `;
         } else {
-            pixSection.style.display = '';
+            // Limpa QR anterior
+            qrContainer.innerHTML = '';
             const pixPayload = buildPixEMV(settings.pixKey, settings.pixName, settings.pixCity, getTotal());
-            const qrUrl      = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(pixPayload)}`;
-
-            document.getElementById('pixQRCode').src      = qrUrl;
-            document.getElementById('pixQRCode').style.display = '';
+            // Gera QR code localmente com qrcodejs
+            new QRCode(qrContainer, {
+                text: pixPayload,
+                width: 220,
+                height: 220,
+                colorDark: '#166534',
+                colorLight: '#f0fdf4',
+                correctLevel: QRCode.CorrectLevel.M
+            });
             document.getElementById('pixKeyDisplay').textContent = settings.pixKey;
             document.getElementById('pixAmount').textContent     = formatCurrency(getTotal());
         }
@@ -557,8 +566,11 @@ function showOrderSummary(address, paymentMethod, changeFor) {
         pixSection.style.display = 'none';
     }
 
-    // Salva dados p/ WhatsApp
-    window._lastOrder = { address, paymentMethod, changeFor };
+    // Salva snapshot do pedido para o WhatsApp (antes de qualquer limpeza de carrinho)
+    window._lastOrder      = { address, paymentMethod, changeFor };
+    window._lastOrderItems = cart.map(i => ({ ...i }));
+    window._lastSubtotal   = getSubtotal();
+    window._lastTotal      = getTotal();
 
     openModal('modalSummary');
 }
@@ -569,7 +581,9 @@ function copyPixKey() {
         .catch(() => showToast('Não foi possível copiar.', 'error'));
 }
 
-function sendToWhatsApp() {
+// autoClose=true: limpa carrinho e fecha modal (botão Concluir)
+// autoClose=false: só abre WA, mantém modal aberto (envio automático e botão Reenviar)
+function sendToWhatsApp(autoClose = true) {
     if (!window._lastOrder) return;
     const { address, paymentMethod, changeFor } = window._lastOrder;
 
@@ -578,7 +592,7 @@ function sendToWhatsApp() {
         credito: 'Cartão de Crédito', dinheiro: 'Dinheiro'
     };
 
-    const itemsText = cart.map(i =>
+    const itemsText = window._lastOrderItems.map(i =>
         `• ${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''} — ${formatCurrency(i.price * i.qty)}`
     ).join('\n');
 
@@ -588,21 +602,26 @@ function sendToWhatsApp() {
     msg += `👤 *Cliente:* ${currentUser.name} (${currentUser.phone})\n`;
     msg += `📍 *Endereço:* ${addressText}\n\n`;
     msg += `🛍️ *Itens:*\n${itemsText}\n\n`;
-    msg += `Subtotal: ${formatCurrency(getSubtotal())}\n`;
+    msg += `Subtotal: ${formatCurrency(window._lastSubtotal)}\n`;
     msg += `Entrega:  ${formatCurrency(settings.deliveryFee)}\n`;
-    msg += `*Total:   ${formatCurrency(getTotal())}*\n\n`;
+    msg += `*Total:   ${formatCurrency(window._lastTotal)}*\n\n`;
     msg += `💳 *Pagamento:* ${paymentLabels[paymentMethod]}`;
     if (paymentMethod === 'dinheiro' && changeFor) msg += `\n💵 Troco para: ${changeFor}`;
 
     const url = `https://wa.me/5519994194916?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
 
-    // Limpa carrinho após envio
+    if (!autoClose) {
+        showToast('WhatsApp aberto! 🎉');
+    }
+}
+
+function finishOrder() {
     cart = [];
     saveCart();
     updateCartBadge();
     closeAllModals();
-    showToast('Pedido enviado pelo WhatsApp! 🎉');
+    showToast('Pedido concluído! 🌿');
 }
 
 // =====================================================
