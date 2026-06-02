@@ -1326,7 +1326,6 @@ function sendSignatureWhatsApp(loanId) {
     installments:loan.installments };
   var snapEnc  = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
   var gasExec  = window.__GAS_EXEC_URL__ || '';
-  if (!gasExec) { alert('Reimplante o Apps Script para gerar o link. Ver instrucoes.'); return; }
   var sigLink  = SIGN_PAGE + '?id=' + loan.id + '&d=' + snapEnc
                + '&api=' + encodeURIComponent(gasExec);
   var msg = "Olá " + loan.debtor + "! 😊\n"
