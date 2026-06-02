@@ -1305,35 +1305,40 @@ function clearForm() {
 function sendSignatureWhatsApp(loanId) {
   var loan = loans.find(function(l){ return l.id === loanId; });
   if (!loan) return;
-  /* embute dados essenciais do empréstimo no link (base64) para funcionar
-     mesmo quando o destinatário não tiver acesso ao Grid SDK */
-  var loanSnap = {
-    id: loan.id,
-    debtor: loan.debtor,
-    phone: loan.phone,
-    principal: loan.principal,
-    totalAmount: loan.totalAmount,
-    installments: loan.installments,
-    rate: loan.rate,
-    createdAt: loan.createdAt
-  };
-  var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(loanSnap))));
-  /* GitHub Pages — não sofre com redirects do GAS no WhatsApp */
-  /* SIGN_PAGE vem do doGet() — configurado em Code.gs */
-  var SIGN_PAGE = window.__SIGN_PAGE__ || "https://SEU_USUARIO.github.io/cv-sign/sign.html";
-  var snap = { id:loan.id, debtor:loan.debtor, phone:loan.phone,
-    totalAmount:loan.totalAmount, interestRate:loan.interestRate,
-    installments:loan.installments };
-  var snapEnc  = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
-  var gasExec  = window.__GAS_EXEC_URL__ || '';
-  var sigLink  = SIGN_PAGE + '?id=' + loan.id + '&d=' + snapEnc
-               + '&api=' + encodeURIComponent(gasExec);
-  var msg = "Olá " + loan.debtor + "! 😊\n"
-          + "Seu empréstimo de " + brl(loan.totalAmount) + " foi aprovado pela CredVision.\n"
-          + "Por favor, clique no link abaixo para assinar digitalmente o contrato:\n"
-          + sigLink;
-  var waUrl = "https://wa.me/55" + loan.phone.replace(/\D/g,"") + "?text=" + encodeURIComponent(msg);
-  openExternalLink(waUrl);
+
+  /* Busca URL do servidor via google.script.run — 100% confiável */
+  showToast('Gerando link...');
+  google.script.run
+    .withSuccessHandler(function(cfg) {
+      var gasUrl   = cfg.gasUrl   || '';
+      var signPage = cfg.signPage || '';
+      if (!gasUrl || gasUrl.indexOf('COLE_AQUI') >= 0) {
+        alert('Configure a variável GAS_URL no Code.gs com a URL do seu Web App e reimplante.');
+        return;
+      }
+      if (!signPage || signPage.indexOf('SEU_USUARIO') >= 0) {
+        alert('Configure a variável SIGN_PAGE no Code.gs com a URL do seu GitHub Pages e reimplante.');
+        return;
+      }
+      var snap = { id:loan.id, debtor:loan.debtor, phone:loan.phone,
+        totalAmount:loan.totalAmount, interestRate:loan.interestRate,
+        installments:loan.installments };
+      var snapEnc = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
+      var sigLink = signPage + '?id=' + loan.id + '&d=' + snapEnc + '&api=' + encodeURIComponent(gasUrl);
+      var msg = "Ola " + loan.debtor + "!
+"
+              + "Seu emprestimo de " + brl(loan.totalAmount) + " foi aprovado pela CredVision.
+"
+              + "Clique no link abaixo para assinar digitalmente o contrato:
+"
+              + sigLink;
+      var waUrl = "https://wa.me/55" + loan.phone.replace(/\D/g,"") + "?text=" + encodeURIComponent(msg);
+      openExternalLink(waUrl);
+    })
+    .withFailureHandler(function(e) {
+      alert('Erro ao gerar link: ' + String(e));
+    })
+    .getAppConfig();
 }
 
 function showSignaturePrompt(loan) {
