@@ -286,7 +286,7 @@ tr:hover td{background:rgba(201,164,72,.04);}
 <body>
 
 <!-- ══════════════════ TELA DE LOGIN ══════════════════ -->
-<div id="login-screen" style="display:flex;">
+<div id="login-screen">
 
   <!-- Painel: Entrar -->
   <div class="login-card" id="login-panel">
@@ -407,7 +407,6 @@ tr:hover td{background:rgba(201,164,72,.04);}
   </nav>
 
   <div class="sidebar-footer" style="padding:14px 18px;">
-    <button id="btn-sync-sheets" onclick="syncPlanilhas(this)" title="Atualiza as abas Emprestimos, Parcelas, Clientes no Sheets" style="width:100%;margin-bottom:10px;background:rgba(201,164,72,.15);border:1px solid rgba(201,164,72,.3);color:var(--gold);padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">📊 Atualizar Planilhas</button>
     <div style="font-size:10px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;text-align:center;">CredVision v1.0</div>
     <div id="sidebar-user-info" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1px solid var(--border-gold);border-radius:10px;padding:8px 12px;">
       <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
@@ -663,16 +662,6 @@ tr:hover td{background:rgba(201,164,72,.04);}
 /* ════════════════════════════════════════
    LOGIN & CONTROLE DE ACESSO
 ════════════════════════════════════════ */
-/* ════════════════════════════════════════
-   LOGIN GUARD — executado imediatamente
-   Garante que a tela de login esteja visível
-   antes de qualquer render
-════════════════════════════════════════ */
-(function(){
-  var ls = document.getElementById('login-screen');
-  if (ls && !userRole) ls.style.display = 'flex';
-})();
-
 var userRole    = null; /* null | "admin" | "user" */
 var currentUser = null; /* username string */
 
@@ -1025,29 +1014,7 @@ var STATE_KEY = "cobranca_data";
 /* ── Persistência via google.script.run (Google Apps Script) ── */
 var _saveTimer = null;
 
-function syncPlanilhas(btn) {
-  if (btn) { btn.disabled=true; btn.textContent='⏳ Aguarde...'; }
-  google.script.run
-    .withSuccessHandler(function(r) {
-      var ok = r && r.ok;
-      if (btn) { btn.textContent = ok ? '✅ Planilhas atualizadas!' : '❌ Erro ao sincronizar'; btn.disabled=false; setTimeout(function(){ btn.textContent='📊 Atualizar Planilhas'; },3000); }
-      showSyncStatus(ok ? '✅ Planilhas sincronizadas!' : '❌ '+(r&&r.error?r.error:'erro'), ok?'green':'red');
-    })
-    .withFailureHandler(function(e) {
-      if (btn) { btn.textContent='❌ Falha'; btn.disabled=false; setTimeout(function(){ btn.textContent='📊 Atualizar Planilhas'; },3000); }
-      showSyncStatus('❌ '+String(e), 'red');
-    })
-    .syncPlanilhas();
-}
-
-var CV_CACHE_KEY = 'cv_data_cache';
-
 function persist() {
-  /* Salva no sessionStorage imediatamente (sem espera) */
-  try {
-    sessionStorage.setItem(CV_CACHE_KEY, JSON.stringify({loans:loans, clients:clients, users:users}));
-  } catch(e) {}
-  /* Salva no GAS com debounce de 4 segundos */
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
     showSyncStatus('💾 Salvando...', 'blue');
@@ -1058,27 +1025,16 @@ function persist() {
       })
       .withFailureHandler(function(e) { showSyncStatus('❌ ' + String(e), 'red'); })
       .saveData(payload);
-  }, 4000);
+  }, 1500);
 }
 
 function loadState() {
-  if (sigModeLoanId && _sigModeEmbeddedLoan) { fillSigModeInfo(); return; }
-
-  /* ── Passo 1: carrega do cache local (instantâneo) ── */
-  var fromCache = false;
-  try {
-    var cached = sessionStorage.getItem(CV_CACHE_KEY);
-    if (cached) {
-      var d = JSON.parse(cached);
-      if (Array.isArray(d.loans))   loans   = d.loans;
-      if (Array.isArray(d.clients)) clients = d.clients;
-      if (Array.isArray(d.users))   users   = d.users;
-      fromCache = true;
-    }
-  } catch(e) {}
-
-  /* ── Passo 2: atualiza do GAS em background ── */
-  showSyncStatus(fromCache ? '🔄 Atualizando...' : '🔄 Carregando...', 'blue');
+  /* Se estiver em modo assinatura com dados embutidos, não bloqueia esperando GAS */
+  if (sigModeLoanId && _sigModeEmbeddedLoan) {
+    fillSigModeInfo();
+    return;
+  }
+  showSyncStatus('🔄 Carregando...', 'blue');
   google.script.run
     .withSuccessHandler(function(res) {
       if (res && res.ok && res.data) {
@@ -1086,14 +1042,13 @@ function loadState() {
         if (Array.isArray(d.loans))   loans   = d.loans;
         if (Array.isArray(d.clients)) clients = d.clients;
         if (Array.isArray(d.users))   users   = d.users;
-        /* Atualiza cache com dados frescos */
-        try { sessionStorage.setItem(CV_CACHE_KEY, JSON.stringify({loans:loans,clients:clients,users:users})); } catch(e) {}
       }
+      var total = loans.reduce(function(s,l){return s+(l.installments||[]).length;},0);
       showSyncStatus('✅ ' + loans.length + ' empréstimos', 'green');
       if (sigModeLoanId) fillSigModeInfo(); else renderAll();
     })
     .withFailureHandler(function(e) {
-      showSyncStatus(fromCache ? '⚠️ Usando cache local' : '❌ ' + String(e), fromCache ? 'blue' : 'red');
+      showSyncStatus('❌ ' + String(e), 'red');
       if (sigModeLoanId) fillSigModeInfo(); else renderAll();
     })
     .getData();
@@ -1384,20 +1339,9 @@ function sendSignatureWhatsApp(loanId) {
     createdAt: loan.createdAt
   };
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(loanSnap))));
-  /* URL do GitHub Pages — evita problemas de redirect do GAS no WhatsApp */
-  var SIGN_PAGE = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
-  /* Dados do empréstimo (campos essenciais) */
-  var snap = {
-    id: loan.id, debtor: loan.debtor, phone: loan.phone,
-    totalAmount: loan.totalAmount, interestRate: loan.interestRate,
-    installments: loan.installments
-  };
-  var encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
-  /* window.__GAS_EXEC_URL__ é injetado pelo doGet() com a URL correta do /exec
-     Isso garante que o sign.html saiba para onde enviar a assinatura */
-  var gasExec = window.__GAS_EXEC_URL__ || '';
-  var sigLink = SIGN_PAGE + '?id=' + loan.id + '&d=' + encoded
-              + (gasExec ? '&api=' + encodeURIComponent(gasExec) : '');
+  /* URL curta — dados são buscados pelo servidor em doGet */
+  var base = window.location.href.split('?')[0].split('#')[0];
+  var sigLink = base + '?sign=' + loan.id;
   var msg = "Olá " + loan.debtor + "! 😊\n"
           + "Seu empréstimo de " + brl(loan.totalAmount) + " foi aprovado pela CredVision.\n"
           + "Por favor, clique no link abaixo para assinar digitalmente o contrato:\n"
@@ -2320,8 +2264,6 @@ function showTab(name) {
 }
 
 function renderAll() {
-  /* Só renderiza se o usuário estiver logado */
-  if (!userRole) return;
   updateInstallmentStatuses();
   renderDashboard();
   renderCadastro();
