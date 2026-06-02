@@ -1319,14 +1319,16 @@ function sendSignatureWhatsApp(loanId) {
   };
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(loanSnap))));
   /* GitHub Pages — não sofre com redirects do GAS no WhatsApp */
-  var SIGN_PAGE = "https://Didinha123.github.io/cv-sign/sign.html";
+  /* SIGN_PAGE vem do doGet() — configurado em Code.gs */
+  var SIGN_PAGE = window.__SIGN_PAGE__ || "https://SEU_USUARIO.github.io/cv-sign/sign.html";
   var snap = { id:loan.id, debtor:loan.debtor, phone:loan.phone,
     totalAmount:loan.totalAmount, interestRate:loan.interestRate,
     installments:loan.installments };
   var snapEnc  = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
   var gasExec  = window.__GAS_EXEC_URL__ || '';
+  if (!gasExec) { alert('Reimplante o Apps Script para gerar o link. Ver instrucoes.'); return; }
   var sigLink  = SIGN_PAGE + '?id=' + loan.id + '&d=' + snapEnc
-               + (gasExec ? '&api=' + encodeURIComponent(gasExec) : '');
+               + '&api=' + encodeURIComponent(gasExec);
   var msg = "Olá " + loan.debtor + "! 😊\n"
           + "Seu empréstimo de " + brl(loan.totalAmount) + " foi aprovado pela CredVision.\n"
           + "Por favor, clique no link abaixo para assinar digitalmente o contrato:\n"
