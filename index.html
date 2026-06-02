@@ -1340,7 +1340,7 @@ function sendSignatureWhatsApp(loanId) {
   };
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(loanSnap))));
   /* URL do GitHub Pages — evita problemas de redirect do GAS no WhatsApp */
-  var SIGN_PAGE = "https://Didinha123.github.io/cv-sign/sign.html";
+  var SIGN_PAGE = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
   /* Dados do empréstimo (campos essenciais) */
   var snap = {
     id: loan.id, debtor: loan.debtor, phone: loan.phone,
@@ -1348,9 +1348,11 @@ function sendSignatureWhatsApp(loanId) {
     installments: loan.installments
   };
   var encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(snap)))));
-  /* &api= passa a URL do GAS automaticamente — cliente não precisa configurar nada */
-  var gasApi = encodeURIComponent(window.location.href.split('?')[0].split('#')[0]);
-  var sigLink = SIGN_PAGE + '?id=' + loan.id + '&d=' + encoded + '&api=' + gasApi;
+  /* window.__GAS_EXEC_URL__ é injetado pelo doGet() com a URL correta do /exec
+     Isso garante que o sign.html saiba para onde enviar a assinatura */
+  var gasExec = window.__GAS_EXEC_URL__ || '';
+  var sigLink = SIGN_PAGE + '?id=' + loan.id + '&d=' + encoded
+              + (gasExec ? '&api=' + encodeURIComponent(gasExec) : '');
   var msg = "Olá " + loan.debtor + "! 😊\n"
           + "Seu empréstimo de " + brl(loan.totalAmount) + " foi aprovado pela CredVision.\n"
           + "Por favor, clique no link abaixo para assinar digitalmente o contrato:\n"
