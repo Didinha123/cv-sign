@@ -286,7 +286,7 @@ tr:hover td{background:rgba(201,164,72,.04);}
 <body>
 
 <!-- ══════════════════ TELA DE LOGIN ══════════════════ -->
-<div id="login-screen">
+<div id="login-screen" style="display:flex;">
 
   <!-- Painel: Entrar -->
   <div class="login-card" id="login-panel">
@@ -663,6 +663,16 @@ tr:hover td{background:rgba(201,164,72,.04);}
 /* ════════════════════════════════════════
    LOGIN & CONTROLE DE ACESSO
 ════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   LOGIN GUARD — executado imediatamente
+   Garante que a tela de login esteja visível
+   antes de qualquer render
+════════════════════════════════════════ */
+(function(){
+  var ls = document.getElementById('login-screen');
+  if (ls && !userRole) ls.style.display = 'flex';
+})();
+
 var userRole    = null; /* null | "admin" | "user" */
 var currentUser = null; /* username string */
 
@@ -1030,7 +1040,14 @@ function syncPlanilhas(btn) {
     .syncPlanilhas();
 }
 
+var CV_CACHE_KEY = 'cv_data_cache';
+
 function persist() {
+  /* Salva no sessionStorage imediatamente (sem espera) */
+  try {
+    sessionStorage.setItem(CV_CACHE_KEY, JSON.stringify({loans:loans, clients:clients, users:users}));
+  } catch(e) {}
+  /* Salva no GAS com debounce de 4 segundos */
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
     showSyncStatus('💾 Salvando...', 'blue');
@@ -1045,12 +1062,23 @@ function persist() {
 }
 
 function loadState() {
-  /* Se estiver em modo assinatura com dados embutidos, não bloqueia esperando GAS */
-  if (sigModeLoanId && _sigModeEmbeddedLoan) {
-    fillSigModeInfo();
-    return;
-  }
-  showSyncStatus('🔄 Carregando...', 'blue');
+  if (sigModeLoanId && _sigModeEmbeddedLoan) { fillSigModeInfo(); return; }
+
+  /* ── Passo 1: carrega do cache local (instantâneo) ── */
+  var fromCache = false;
+  try {
+    var cached = sessionStorage.getItem(CV_CACHE_KEY);
+    if (cached) {
+      var d = JSON.parse(cached);
+      if (Array.isArray(d.loans))   loans   = d.loans;
+      if (Array.isArray(d.clients)) clients = d.clients;
+      if (Array.isArray(d.users))   users   = d.users;
+      fromCache = true;
+    }
+  } catch(e) {}
+
+  /* ── Passo 2: atualiza do GAS em background ── */
+  showSyncStatus(fromCache ? '🔄 Atualizando...' : '🔄 Carregando...', 'blue');
   google.script.run
     .withSuccessHandler(function(res) {
       if (res && res.ok && res.data) {
@@ -1058,13 +1086,14 @@ function loadState() {
         if (Array.isArray(d.loans))   loans   = d.loans;
         if (Array.isArray(d.clients)) clients = d.clients;
         if (Array.isArray(d.users))   users   = d.users;
+        /* Atualiza cache com dados frescos */
+        try { sessionStorage.setItem(CV_CACHE_KEY, JSON.stringify({loans:loans,clients:clients,users:users})); } catch(e) {}
       }
-      var total = loans.reduce(function(s,l){return s+(l.installments||[]).length;},0);
       showSyncStatus('✅ ' + loans.length + ' empréstimos', 'green');
       if (sigModeLoanId) fillSigModeInfo(); else renderAll();
     })
     .withFailureHandler(function(e) {
-      showSyncStatus('❌ ' + String(e), 'red');
+      showSyncStatus(fromCache ? '⚠️ Usando cache local' : '❌ ' + String(e), fromCache ? 'blue' : 'red');
       if (sigModeLoanId) fillSigModeInfo(); else renderAll();
     })
     .getData();
@@ -2291,6 +2320,8 @@ function showTab(name) {
 }
 
 function renderAll() {
+  /* Só renderiza se o usuário estiver logado */
+  if (!userRole) return;
   updateInstallmentStatuses();
   renderDashboard();
   renderCadastro();
