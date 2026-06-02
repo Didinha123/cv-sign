@@ -209,12 +209,25 @@ function saveData(payloadStr) {
     sh.getRange('A4').setValue(JSON.stringify(sigs));
     sh.getRange('A5').setValue(JSON.stringify(photos));
 
-    // ── Escreve abas formatadas com os dados completos ──
-    writeFormattedSheets(data);
+    // ── writeFormattedSheets NÃO é chamado aqui ──────────────
+    // Reescrever 4 abas + autoResize leva 10-20s por save.
+    // Use syncPlanilhas() manualmente quando quiser atualizar.
 
     return { ok: true };
   } catch(e) {
     return { ok: false, error: 'saveData: ' + e.message };
+  }
+}
+
+// ── Atualiza abas formatadas (chamado pelo botão no app) ──────
+function syncPlanilhas() {
+  try {
+    var res = getData();
+    if (!res.ok) return { ok: false, error: res.error };
+    writeFormattedSheets(res.data);
+    return { ok: true };
+  } catch(e) {
+    return { ok: false, error: e.message };
   }
 }
 
@@ -353,5 +366,5 @@ function writeSheet(ss, name, headers, rows) {
     }
   }
 
-  sheet.autoResizeColumns(1, headers.length);
+  // autoResizeColumns removido — era a operação mais lenta (~2s por aba)
 }
