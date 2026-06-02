@@ -7,11 +7,11 @@ var SHEETS_ID = "1KXZn7qzXoWflF94qjOQMj-FGcImYC7uI0KH90bI6q0c";
 
 // 2. URL do Web App (copie de: Implantar → Gerenciar implantações → copiar URL)
 //    Exemplo: https://script.google.com/macros/s/AKfycb.../exec
-var GAS_URL = "COLE_AQUI_A_URL_DO_SEU_WEB_APP";
+var GAS_URL = "https://script.google.com/macros/s/AKfycbzjVSe_te4S1qpjXCO7Ck3YjLsrVFt0sLB6otrVkFFIjjMwxTfk9bUIM_tfNJtMNurW/exec";
 
 // 3. Páginas no GitHub Pages — troque SEU_USUARIO pelo seu usuário GitHub
-var SIGN_PAGE     = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
-var CONTRATO_PAGE = "https://SEU_USUARIO.github.io/cv-sign/contrato.html";
+var SIGN_PAGE     = "https://Didinha123.github.io/cv-sign/sign.html";
+var CONTRATO_PAGE = "https://Didinha123.github.io/cv-sign/contrato.html";
 
 // ═══════════════════════════════════════════════════════════════
 
