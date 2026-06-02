@@ -1,13 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-//  CredVision — Google Apps Script | Code.gs
-//
-//  CONFIGURAÇÃO — altere apenas esta seção:
+//  CredVision — CONFIGURAÇÃO (altere só aqui)
 // ═══════════════════════════════════════════════════════════════
 
-// ID da planilha Google Sheets (já configurado com a sua planilha)
+// 1. ID da sua planilha Google Sheets
 var SHEETS_ID = "1KXZn7qzXoWflF94qjOQMj-FGcImYC7uI0KH90bI6q0c";
 
-// URL das páginas no GitHub Pages — troque SEU_USUARIO pelo seu usuário
+// 2. URL do Web App (copie de: Implantar → Gerenciar implantações → copiar URL)
+//    Exemplo: https://script.google.com/macros/s/AKfycb.../exec
+var GAS_URL = "COLE_AQUI_A_URL_DO_SEU_WEB_APP";
+
+// 3. Páginas no GitHub Pages — troque SEU_USUARIO pelo seu usuário GitHub
 var SIGN_PAGE     = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
 var CONTRATO_PAGE = "https://SEU_USUARIO.github.io/cv-sign/contrato.html";
 
@@ -54,13 +56,11 @@ function doGet(e) {
   var mainOut = HtmlService.createHtmlOutputFromFile('index')
     .setTitle('CredVision — Sistema de Cobrança')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-  // Injeta configurações no HTML — GAS URL + páginas GitHub Pages
-  // Isso resolve o erro "servidor não configurado" nas páginas externas
-  var execUrl = '';
-  try { execUrl = ScriptApp.getService().getUrl(); } catch(ex) {}
+  // Injeta as URLs configuradas diretamente no HTML
+  // GAS_URL é a constante definida na seção de configuração acima
   mainOut.append(
     '<script>' +
-    'window.__GAS_EXEC_URL__="' + execUrl + '";' +
+    'window.__GAS_EXEC_URL__="' + GAS_URL + '";' +
     'window.__SIGN_PAGE__="' + SIGN_PAGE + '";' +
     'window.__CONTRATO_PAGE__="' + CONTRATO_PAGE + '";' +
     '</script>'
