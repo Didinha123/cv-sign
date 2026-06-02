@@ -19,7 +19,7 @@
 
 // ── URL da página de assinatura no GitHub Pages ───────────────
 // Após criar o GitHub Pages, altere esta linha com a sua URL:
-var SIGN_PAGE_URL = "https://Didinha123.github.io/cv-sign/sign.html";
+var SIGN_PAGE_URL = "https://SEU_USUARIO.github.io/cv-sign/sign.html";
 
 // ── Serve a interface ────────────────────────────────────────
 // Quando há ?sign=ID na URL (link enviado pelo WhatsApp), serve a
@@ -57,9 +57,16 @@ function doGet(e) {
   }
 
   // ── App principal ──
-  return HtmlService.createHtmlOutputFromFile('index')
+  // Injeta a URL correta do exec no HTML para que a página
+  // de assinatura saiba para onde enviar a assinatura
+  var mainOut = HtmlService.createHtmlOutputFromFile('index')
     .setTitle('CredVision — Sistema de Cobrança')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  try {
+    var execUrl = ScriptApp.getService().getUrl();
+    mainOut.append('<script>window.__GAS_EXEC_URL__="' + execUrl + '";</script>');
+  } catch(ex) { /* continua sem a URL injetada */ }
+  return mainOut;
 }
 
 // ── doPost: aceita chamadas do GitHub Pages (fetch no-cors) ──
