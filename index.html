@@ -37,6 +37,9 @@
                         <span class="user-icon">👤</span>
                         <span class="user-label" id="userLabel">Entrar</span>
                     </button>
+                    <button class="btn-track" id="btnTrack" onclick="openTracking()" title="Meus Pedidos" style="display:none">
+                        📦
+                    </button>
                     <button class="btn-cart" id="btnCart" onclick="openCart()">
                         🛒
                         <span class="cart-badge" id="cartBadge" style="display:none">0</span>
@@ -624,11 +627,15 @@
             <div id="pixSection" style="display:none">
                 <div class="pix-box">
                     <h3>📲 Pague via PIX</h3>
-                    <div id="pixQRCode" class="pix-qr-container"></div>
+                    <canvas id="pixQRCode" class="pix-qr-canvas"></canvas>
                     <p class="pix-key-label">Chave PIX:</p>
                     <div class="pix-key-value" id="pixKeyDisplay"></div>
                     <button class="btn btn-outline btn-sm" onclick="copyPixKey()">📋 Copiar Chave</button>
                     <p class="pix-amount-label">Valor a pagar: <strong id="pixAmount"></strong></p>
+                    <div class="pix-comprovante-notice">
+                        📩 <strong>Após o pagamento</strong>, envie o comprovante para o nosso WhatsApp:
+                        <a href="https://wa.me/5519994194916" target="_blank" class="pix-wa-link">📱 (19) 99419-4916</a>
+                    </div>
                 </div>
             </div>
 
@@ -636,6 +643,17 @@
                 <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp()">📱 Reenviar pelo WhatsApp</button>
                 <button class="btn btn-outline btn-full" onclick="finishOrder()">✓ Concluir</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: ACOMPANHAR PEDIDO -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modalTracking" onclick="closeModalOnOverlay(event, 'modalTracking')">
+        <div class="modal modal--tracking">
+            <button class="modal-close" onclick="closeModal('modalTracking')">✕</button>
+            <h2 class="modal-title">📦 Meus Pedidos</h2>
+            <div id="trackingContent"></div>
         </div>
     </div>
 
@@ -656,6 +674,15 @@
             </div>
 
             <div id="adminPanel" style="display:none">
+
+                <!-- Abas do admin -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" id="adminTabConfig" onclick="switchAdminTab('config')">⚙️ Configurações</button>
+                    <button class="admin-tab" id="adminTabOrders" onclick="switchAdminTab('orders')">📋 Pedidos</button>
+                </div>
+
+                <!-- Painel Configurações -->
+                <div id="adminPanelConfig">
                 <div class="admin-section">
                     <h3>🚚 Taxa de Entrega</h3>
                     <div class="form-group">
@@ -689,6 +716,13 @@
                 </div>
 
                 <button class="btn btn-primary btn-full" onclick="saveAdminSettings()">💾 Salvar Configurações</button>
+                </div><!-- fim adminPanelConfig -->
+
+                <!-- Painel Pedidos -->
+                <div id="adminPanelOrders" style="display:none">
+                    <div id="adminOrdersList"></div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -696,7 +730,7 @@
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
