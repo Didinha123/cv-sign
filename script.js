@@ -16,6 +16,7 @@ const TAXA_ENTREGA_FIXA = 2;    // ex: 5.00 — usa 0 para ler do Admin
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
 
+
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -164,10 +165,22 @@ function aplicarPrecos(produtos) {
         prod.sizes.forEach(size => {
             const chave = (prod.name+'-'+size.label).toLowerCase().trim();
             if (mapa[chave]) {
-                if (mapa[chave].preco > 0)         size.price = mapa[chave].preco;
-                // Só atualiza originalPrice se a planilha tiver um valor definido
-                // Se a planilha não tem promo (0), mantém o que está no script.js
-                if (mapa[chave].precoOriginal > 0)  size.originalPrice = mapa[chave].precoOriginal;
+                const sheets = mapa[chave];
+
+                if (sheets.precoOriginal > 0) {
+                    // Planilha tem promoção definida → usa tudo da planilha
+                    size.price         = sheets.preco;
+                    size.originalPrice = sheets.precoOriginal;
+                } else if (sheets.preco > 0) {
+                    // Planilha só tem preço sem promo
+                    if (size.originalPrice) {
+                        // JS já tem promoção ativa → NÃO sobrescreve o preço
+                        // (senão price viraria igual ao originalPrice e a promo sumia)
+                    } else {
+                        // Sem promoção → atualiza preço normalmente
+                        size.price = sheets.preco;
+                    }
+                }
             }
         });
     });
