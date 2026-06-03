@@ -1,16 +1,66 @@
 /**
  * TDA Açaí — Script Principal
- * Inclui: Menu, FAQ, Scroll, WhatsApp + Sistema de Pedidos completo
+ * Layout: App delivery (estilo cardapioweb)
  */
 
-// =====================================================
-// ESTADO DA APLICAÇÃO
-// =====================================================
+// ─────────────────────────────────────────────────────────────
+// DADOS DOS PRODUTOS
+// ─────────────────────────────────────────────────────────────
 
-let cart        = JSON.parse(localStorage.getItem('tda_cart')     || '[]');
-let currentUser = JSON.parse(localStorage.getItem('tda_user')    || 'null');
-let settings    = JSON.parse(localStorage.getItem('tda_settings') || 'null');
-let adminAuth   = false;
+const PRODUCTS = {
+    diego: {
+        id: 'diego', name: 'Copo Diego', cat: 'copos', image: './Copo1.png',
+        desc: 'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas. Uma explosão de sabor a cada colherada.',
+        sizes: [
+            { label: '300ml', price: 21.00 },
+            { label: '500ml', price: 26.00 },
+            { label: '700ml', price: 30.00 },
+        ]
+    },
+    arthur: {
+        id: 'arthur', name: 'Copo Arthur', cat: 'copos', image: './Copo2.png',
+        desc: 'Morango fresco, creme de avelã e leite Ninho em um açaí super cremoso e irresistível.',
+        sizes: [
+            { label: '300ml', price: 22.00 },
+            { label: '500ml', price: 27.00 },
+            { label: '700ml', price: 31.00 },
+        ]
+    },
+    thaina: {
+        id: 'thaina', name: 'Copo Thaina', cat: 'copos', image: './Copo3.png',
+        desc: 'Morango fresco, leite condensado e amendoim crocante em um açaí cremoso e irresistível.',
+        sizes: [
+            { label: '300ml', price: 21.00 },
+            { label: '500ml', price: 26.00 },
+            { label: '700ml', price: 30.00 },
+        ]
+    },
+    davi: {
+        id: 'davi', name: 'Copo Davi', cat: 'copos', image: './Copo4.png',
+        desc: 'Banana fresca, leite condensado e granola crocante em um açaí cremoso e refrescante.',
+        sizes: [
+            { label: '300ml', price: 21.00 },
+            { label: '500ml', price: 26.00 },
+            { label: '700ml', price: 30.00 },
+        ]
+    },
+    tda: {
+        id: 'tda', name: 'Copo TDA', cat: 'copos', image: './Diego max.png',
+        desc: 'Uva, banana, leite em pó e creme de avelã — o equilíbrio perfeito entre sabor e intensidade.',
+        sizes: [
+            { label: '300ml', price: 22.00 },
+            { label: '500ml', price: 27.00 },
+            { label: '700ml', price: 31.00 },
+        ]
+    },
+    combo: {
+        id: 'combo', name: 'Combo Família', cat: 'combos', image: './4-copos.jpeg',
+        desc: '4 copos com açaí, frutas frescas, leite condensado, paçoca, creme de avelã, Ninho e granola. Para compartilhar momentos especiais!',
+        sizes: [
+            { label: 'Único', price: 69.90 },
+        ]
+    },
+};
 
 const ORDER_STATUSES = {
     pending:   { label: '⏳ Aguardando confirmação', color: '#f59e0b', bg: '#fef3c7' },
@@ -20,7 +70,20 @@ const ORDER_STATUSES = {
     cancelled: { label: '❌ Cancelado',               color: '#dc2626', bg: '#fee2e2' },
 };
 
-// Configurações padrão
+// ─────────────────────────────────────────────────────────────
+// ESTADO
+// ─────────────────────────────────────────────────────────────
+
+let cart        = JSON.parse(localStorage.getItem('tda_cart')     || '[]');
+let currentUser = JSON.parse(localStorage.getItem('tda_user')    || 'null');
+let settings    = JSON.parse(localStorage.getItem('tda_settings') || 'null');
+let adminAuth   = false;
+
+// Produto selecionado no modal
+let _selectedProduct = null;
+let _selectedSizeIdx = 0;
+let _selectedQty     = 1;
+
 if (!settings) {
     settings = {
         deliveryFee: 5.00,
@@ -36,143 +99,63 @@ function saveSettings() {
     localStorage.setItem('tda_settings', JSON.stringify(settings));
 }
 
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 // DOM READY
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', function () {
-
-    initNav();
-    initScrollLinks();
-    initFAQ();
-    initHeaderScroll();
-    initAnimations();
-    initWhatsApp();
+document.addEventListener('DOMContentLoaded', () => {
     updateUserUI();
     updateCartBadge();
-
+    checkStoreOpen();
+    initWhatsApp();
+    setInterval(checkStoreOpen, 60000); // atualiza a cada minuto
 });
 
-// =====================================================
-// 1. MENU MOBILE
-// =====================================================
+// ─────────────────────────────────────────────────────────────
+// STATUS DA LOJA
+// ─────────────────────────────────────────────────────────────
 
-function initNav() {
-    const navToggle = document.getElementById('navToggle');
-    const navMenu   = document.getElementById('navMenu');
+function checkStoreOpen() {
+    const el = document.getElementById('storeStatus');
+    if (!el) return;
 
-    if (!navToggle || !navMenu) return;
+    const now   = new Date();
+    const day   = now.getDay();   // 0=dom, 1=seg…5=sex, 6=sab
+    const hour  = now.getHours();
+    const min   = now.getMinutes();
+    const time  = hour * 60 + min; // minutos desde 00:00
 
-    navToggle.addEventListener('click', function () {
-        navToggle.classList.toggle('active');
-        navMenu.classList.toggle('active');
-    });
+    let open = false;
 
-    navMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            navToggle.classList.remove('active');
-            navMenu.classList.remove('active');
-        });
-    });
+    if (day === 5) {
+        // Sexta: aberto 10h–17h30, fechado após 17h45
+        open = time >= 10 * 60 && time < 17 * 60 + 30;
+    } else if (day === 6) {
+        // Sábado: aberto a partir de 18h
+        open = time >= 18 * 60;
+    } else {
+        // Dom–Qui: 14h–23h30
+        open = time >= 14 * 60 && time < 23 * 60 + 30;
+    }
 
-    document.addEventListener('click', function (e) {
-        if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-            navToggle.classList.remove('active');
-            navMenu.classList.remove('active');
-        }
-    });
+    el.textContent = open ? '● Aberto agora' : '● Fechado';
+    el.className   = 'store-status ' + (open ? 'open' : 'closed');
 }
 
-// =====================================================
-// 2. SCROLL SUAVE
-// =====================================================
-
-function initScrollLinks() {
-    document.querySelectorAll('a[href^="#"]').forEach(link => {
-        link.addEventListener('click', function (e) {
-            const href = this.getAttribute('href');
-            if (href !== '#') {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    const headerHeight  = document.querySelector('.header').offsetHeight;
-                    const targetPosition = target.offsetTop - headerHeight;
-                    window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-                }
-            }
-        });
-    });
-}
-
-// =====================================================
-// 3. FAQ ACORDEÃO
-// =====================================================
-
-function initFAQ() {
-    document.querySelectorAll('.faq-item').forEach(item => {
-        item.querySelector('.faq-question').addEventListener('click', function () {
-            const isActive = item.classList.contains('active');
-            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-            if (!isActive) item.classList.add('active');
-        });
-    });
-}
-
-// =====================================================
-// 4. HEADER SCROLL EFFECT
-// =====================================================
-
-function initHeaderScroll() {
-    const header = document.getElementById('header');
-    window.addEventListener('scroll', function () {
-        header.style.boxShadow = window.pageYOffset > 100
-            ? '0 4px 20px rgba(0,0,0,0.15)'
-            : '0 4px 20px rgba(0,0,0,0.1)';
-    });
-}
-
-// =====================================================
-// 5. ANIMAÇÕES DE ENTRADA
-// =====================================================
-
-function initAnimations() {
-    const elements = document.querySelectorAll(
-        '.servico-card, .destaque-card, .beneficio-card, .faq-item, .feature'
-    );
-
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity  = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1 });
-
-    elements.forEach(el => {
-        el.style.opacity   = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(el);
-    });
-}
-
-// =====================================================
-// 6. WHATSAPP MENSAGEM PADRÃO
-// =====================================================
+// ─────────────────────────────────────────────────────────────
+// WHATSAPP
+// ─────────────────────────────────────────────────────────────
 
 function initWhatsApp() {
     const msg = encodeURIComponent('Olá! Gostaria de fazer um pedido.');
     document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
-        if (!link.href.includes('text=')) {
-            link.href += `?text=${msg}`;
-        }
+        if (!link.href.includes('text=')) link.href += `?text=${msg}`;
     });
 }
 
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 // UTILITÁRIOS UI
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
@@ -192,9 +175,7 @@ function closeModal(id) {
 }
 
 function closeAllModals() {
-    document.querySelectorAll('.modal-overlay').forEach(m => {
-        m.classList.remove('active');
-    });
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
     document.body.style.overflow = '';
 }
 
@@ -202,13 +183,252 @@ function closeModalOnOverlay(event, id) {
     if (event.target.id === id) closeModal(id);
 }
 
-function formatCurrency(value) {
-    return 'R$ ' + parseFloat(value).toFixed(2).replace('.', ',');
+function formatCurrency(v) {
+    return 'R$ ' + parseFloat(v).toFixed(2).replace('.', ',');
 }
 
-// =====================================================
+// ─────────────────────────────────────────────────────────────
+// INFO DA LOJA
+// ─────────────────────────────────────────────────────────────
+
+function openStoreInfo() {
+    openModal('modalStoreInfo');
+}
+
+// ─────────────────────────────────────────────────────────────
+// FILTRO POR CATEGORIA
+// ─────────────────────────────────────────────────────────────
+
+function filterCat(cat, btn) {
+    // Atualiza pills
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    // Limpa busca
+    const input = document.getElementById('searchInput');
+    if (input) input.value = '';
+
+    // Mostra/oculta seções
+    document.querySelectorAll('.prod-section').forEach(sec => {
+        sec.classList.toggle('hidden', cat !== 'all' && sec.dataset.cat !== cat);
+    });
+
+    document.getElementById('emptySearch').style.display = 'none';
+}
+
+// ─────────────────────────────────────────────────────────────
+// BUSCA
+// ─────────────────────────────────────────────────────────────
+
+function filterSearch(query) {
+    query = query.toLowerCase().trim();
+
+    // Reset pills
+    document.querySelectorAll('.cat-pill').forEach((p, i) => {
+        p.classList.toggle('active', i === 0);
+    });
+
+    if (!query) {
+        filterCat('all', null);
+        return;
+    }
+
+    let anyVisible = false;
+
+    document.querySelectorAll('.prod-section').forEach(sec => {
+        let secHasMatch = false;
+        sec.querySelectorAll('.product-card').forEach(card => {
+            const name = card.querySelector('.product-name')?.textContent.toLowerCase() || '';
+            const desc = card.querySelector('.product-desc')?.textContent.toLowerCase() || '';
+            const match = name.includes(query) || desc.includes(query);
+            card.style.display = match ? '' : 'none';
+            if (match) secHasMatch = true;
+        });
+        sec.classList.toggle('hidden', !secHasMatch);
+        if (secHasMatch) anyVisible = true;
+    });
+
+    document.getElementById('emptySearch').style.display = anyVisible ? 'none' : '';
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    filterCat('all', document.querySelector('.cat-pill'));
+}
+
+// ─────────────────────────────────────────────────────────────
+// MODAL DO PRODUTO
+// ─────────────────────────────────────────────────────────────
+
+function openProductModal(productId) {
+    const product = PRODUCTS[productId];
+    if (!product) return;
+
+    _selectedProduct = product;
+    _selectedSizeIdx = 0;
+    _selectedQty     = 1;
+
+    document.getElementById('prodModalImg').src         = product.image;
+    document.getElementById('prodModalImg').alt         = product.name;
+    document.getElementById('prodModalName').textContent = product.name;
+    document.getElementById('prodModalDesc').textContent = product.desc;
+    document.getElementById('prodQtyVal').textContent   = '1';
+
+    const sizesEl    = document.getElementById('prodModalSizes');
+    const titleEl    = document.getElementById('prodSizesTitle');
+    const multiSize  = product.sizes.length > 1;
+
+    titleEl.style.display = multiSize ? '' : 'none';
+
+    sizesEl.innerHTML = product.sizes.map((s, i) => `
+        <div class="prod-size-opt ${i === 0 ? 'selected' : ''}"
+             onclick="selectSize(${i})"
+             data-idx="${i}">
+            <span class="pso-label">${s.label}</span>
+            <span class="pso-price">${formatCurrency(s.price)}</span>
+        </div>
+    `).join('');
+
+    updateProdAddBtn();
+    openModal('modalProduct');
+}
+
+function selectSize(idx) {
+    _selectedSizeIdx = idx;
+    document.querySelectorAll('.prod-size-opt').forEach((el, i) => {
+        el.classList.toggle('selected', i === idx);
+    });
+    updateProdAddBtn();
+}
+
+function prodQtyChange(delta) {
+    _selectedQty = Math.max(1, _selectedQty + delta);
+    document.getElementById('prodQtyVal').textContent = _selectedQty;
+    updateProdAddBtn();
+}
+
+function updateProdAddBtn() {
+    if (!_selectedProduct) return;
+    const price = _selectedProduct.sizes[_selectedSizeIdx].price * _selectedQty;
+    document.getElementById('prodAddPrice').textContent = formatCurrency(price);
+}
+
+function addSelectedToCart() {
+    if (!currentUser) {
+        closeModal('modalProduct');
+        openModal('modalAuth');
+        showToast('Faça login para adicionar ao carrinho.', 'info');
+        return;
+    }
+
+    const p    = _selectedProduct;
+    const size = p.sizes[_selectedSizeIdx];
+    const key  = p.sizes.length > 1 ? `${p.id}-${size.label}` : p.id;
+
+    const existing = cart.find(i => i.key === key);
+    if (existing) {
+        existing.qty += _selectedQty;
+    } else {
+        cart.push({
+            key, productId: p.id, productName: p.name,
+            size: p.sizes.length > 1 ? size.label : null,
+            price: size.price, qty: _selectedQty, image: p.image
+        });
+    }
+
+    saveCart();
+    updateCartBadge();
+    closeModal('modalProduct');
+    showToast(`${p.name}${size.label !== 'Único' ? ` (${size.label})` : ''} adicionado! 🛒`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// CARRINHO
+// ─────────────────────────────────────────────────────────────
+
+function saveCart() {
+    localStorage.setItem('tda_cart', JSON.stringify(cart));
+}
+
+function getSubtotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
+function getTotal()    { return getSubtotal() + settings.deliveryFee; }
+
+function updateCartBadge() {
+    const total  = cart.reduce((s, i) => s + i.qty, 0);
+    const fc     = document.getElementById('floatingCart');
+    const fcCnt  = document.getElementById('fcCount');
+    const fcTot  = document.getElementById('fcTotal');
+
+    if (fc) {
+        fc.style.display = total > 0 ? 'flex' : 'none';
+        if (fcCnt) fcCnt.textContent = total;
+        if (fcTot) fcTot.textContent = formatCurrency(getTotal());
+    }
+}
+
+function openCart() {
+    renderCart();
+    openModal('modalCart');
+}
+
+function renderCart() {
+    const empty = document.getElementById('cartEmpty');
+    const items = document.getElementById('cartItems');
+    const list  = document.getElementById('cartItemsList');
+
+    if (cart.length === 0) {
+        empty.style.display = '';
+        items.style.display = 'none';
+        return;
+    }
+
+    empty.style.display = 'none';
+    items.style.display = '';
+
+    list.innerHTML = cart.map(item => `
+        <div class="cart-item">
+            <img src="${item.image}" alt="${item.productName}" class="cart-item-img"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2252%22 height=%2252%22><rect fill=%22%23f0f0f0%22 width=%2252%22 height=%2252%22/></svg>'">
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.productName}${item.size ? ` <small>(${item.size})</small>` : ''}</div>
+                <div class="cart-item-price">${formatCurrency(item.price)}</div>
+            </div>
+            <div class="cart-item-qty">
+                <button onclick="changeQty('${item.key}', -1)">−</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty('${item.key}', 1)">+</button>
+            </div>
+            <button class="cart-item-remove" onclick="removeFromCart('${item.key}')">🗑</button>
+        </div>
+    `).join('');
+
+    document.getElementById('cartSubtotal').textContent = formatCurrency(getSubtotal());
+    document.getElementById('cartDelivery').textContent  = formatCurrency(settings.deliveryFee);
+    document.getElementById('cartTotal').textContent     = formatCurrency(getTotal());
+}
+
+function removeFromCart(key) {
+    cart = cart.filter(i => i.key !== key);
+    saveCart(); updateCartBadge(); renderCart();
+}
+
+function changeQty(key, delta) {
+    const item = cart.find(i => i.key === key);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) { removeFromCart(key); return; }
+    saveCart(); renderCart(); updateCartBadge();
+}
+
+function clearCart() {
+    if (!confirm('Esvaziar o carrinho?')) return;
+    cart = [];
+    saveCart(); updateCartBadge(); renderCart();
+}
+
+// ─────────────────────────────────────────────────────────────
 // AUTENTICAÇÃO
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 
 function openAuthModal() {
     if (currentUser) {
@@ -224,9 +444,9 @@ function openAuthModal() {
 }
 
 function switchTab(tab) {
-    document.getElementById('panelLogin').style.display   = tab === 'login'    ? '' : 'none';
+    document.getElementById('panelLogin').style.display    = tab === 'login'    ? '' : 'none';
     document.getElementById('panelCadastro').style.display = tab === 'cadastro' ? '' : 'none';
-    document.getElementById('tabLogin').classList.toggle('active',   tab === 'login');
+    document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
     document.getElementById('tabCadastro').classList.toggle('active', tab === 'cadastro');
 }
 
@@ -261,11 +481,10 @@ function doRegister() {
     const city         = document.getElementById('regCity').value.trim();
 
     if (!name || !phone || !street || !number || !neighborhood || !city) {
-        showToast('Preencha todos os campos obrigatórios.', 'error');
-        return;
+        showToast('Preencha todos os campos obrigatórios.', 'error'); return;
     }
 
-    const user = { name, phone, street, number, neighborhood, complement, city };
+    const user  = { name, phone, street, number, neighborhood, complement, city };
     const users = JSON.parse(localStorage.getItem('tda_users') || '{}');
     users[phone] = user;
     localStorage.setItem('tda_users', JSON.stringify(users));
@@ -274,173 +493,24 @@ function doRegister() {
     localStorage.setItem('tda_user', JSON.stringify(user));
     updateUserUI();
     closeModal('modalAuth');
-    showToast(`Conta criada! Bem-vindo(a), ${name}! 🌿`);
+    showToast(`Bem-vindo(a), ${name}! 🌿`);
 }
 
 function updateUserUI() {
-    const label   = document.getElementById('userLabel');
+    const label    = document.getElementById('userLabel');
     const btnTrack = document.getElementById('btnTrack');
     if (label)    label.textContent = currentUser ? currentUser.name.split(' ')[0] : 'Entrar';
-    if (btnTrack) btnTrack.style.display = currentUser ? 'flex' : 'none';
+    if (btnTrack) btnTrack.style.display = currentUser ? 'block' : 'none';
 }
 
-// =====================================================
-// CARRINHO
-// =====================================================
-
-function addToCart(productId, productName, selectId, image) {
-    if (!currentUser) {
-        openModal('modalAuth');
-        showToast('Faça login para adicionar ao carrinho.', 'info');
-        return;
-    }
-
-    const select  = document.getElementById(selectId);
-    const price   = parseFloat(select.value);
-    const sizeLabel = select.options[select.selectedIndex].text.split(' — ')[0];
-
-    const key = `${productId}-${sizeLabel}`;
-    const existing = cart.find(i => i.key === key);
-
-    if (existing) {
-        existing.qty++;
-    } else {
-        cart.push({ key, productId, productName, size: sizeLabel, price, qty: 1, image });
-    }
-
-    saveCart();
-    updateCartBadge();
-    showToast(`${productName} (${sizeLabel}) adicionado! 🛒`);
-}
-
-function addToCartFixed(productId, productName, price, image) {
-    if (!currentUser) {
-        openModal('modalAuth');
-        showToast('Faça login para adicionar ao carrinho.', 'info');
-        return;
-    }
-
-    const key = productId;
-    const existing = cart.find(i => i.key === key);
-
-    if (existing) {
-        existing.qty++;
-    } else {
-        cart.push({ key, productId, productName, size: null, price, qty: 1, image });
-    }
-
-    saveCart();
-    updateCartBadge();
-    showToast(`${productName} adicionado! 🛒`);
-}
-
-function saveCart() {
-    localStorage.setItem('tda_cart', JSON.stringify(cart));
-}
-
-function clearCart() {
-    if (!confirm('Esvaziar o carrinho?')) return;
-    cart = [];
-    saveCart();
-    updateCartBadge();
-    renderCart();
-}
-
-function removeFromCart(key) {
-    cart = cart.filter(i => i.key !== key);
-    saveCart();
-    updateCartBadge();
-    renderCart();
-}
-
-function changeQty(key, delta) {
-    const item = cart.find(i => i.key === key);
-    if (!item) return;
-    item.qty += delta;
-    if (item.qty <= 0) {
-        removeFromCart(key);
-        return;
-    }
-    saveCart();
-    renderCart();
-}
-
-function getSubtotal() {
-    return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-}
-
-function getTotal() {
-    return getSubtotal() + settings.deliveryFee;
-}
-
-function updateCartBadge() {
-    const total = cart.reduce((sum, i) => sum + i.qty, 0);
-    const badge = document.getElementById('cartBadge');
-    if (!badge) return;
-    if (total > 0) {
-        badge.style.display = 'flex';
-        badge.textContent   = total;
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-function openCart() {
-    renderCart();
-    openModal('modalCart');
-}
-
-function renderCart() {
-    const empty = document.getElementById('cartEmpty');
-    const items = document.getElementById('cartItems');
-    const list  = document.getElementById('cartItemsList');
-
-    if (cart.length === 0) {
-        empty.style.display = '';
-        items.style.display = 'none';
-        return;
-    }
-
-    empty.style.display = 'none';
-    items.style.display = '';
-
-    list.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <img src="${item.image}" alt="${item.productName}" class="cart-item-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect fill=%22%23f0f0f0%22 width=%2260%22 height=%2260%22/></svg>'">
-            <div class="cart-item-info">
-                <div class="cart-item-name">${item.productName}${item.size ? ` <small>(${item.size})</small>` : ''}</div>
-                <div class="cart-item-price">${formatCurrency(item.price)}</div>
-            </div>
-            <div class="cart-item-qty">
-                <button onclick="changeQty('${item.key}', -1)">−</button>
-                <span>${item.qty}</span>
-                <button onclick="changeQty('${item.key}', 1)">+</button>
-            </div>
-            <button class="cart-item-remove" onclick="removeFromCart('${item.key}')">🗑</button>
-        </div>
-    `).join('');
-
-    document.getElementById('cartSubtotal').textContent = formatCurrency(getSubtotal());
-    document.getElementById('cartDelivery').textContent  = formatCurrency(settings.deliveryFee);
-    document.getElementById('cartTotal').textContent     = formatCurrency(getTotal());
-}
-
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 // CHECKOUT
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 
 function openCheckout() {
-    if (!currentUser) {
-        closeModal('modalCart');
-        openModal('modalAuth');
-        return;
-    }
-    if (cart.length === 0) {
-        showToast('Carrinho vazio!', 'error');
-        return;
-    }
+    if (!currentUser) { closeModal('modalCart'); openModal('modalAuth'); return; }
+    if (cart.length === 0) { showToast('Carrinho vazio!', 'error'); return; }
 
-    // Preenche endereço com dados do usuário
     document.getElementById('chkStreet').value       = currentUser.street       || '';
     document.getElementById('chkNumber').value       = currentUser.number       || '';
     document.getElementById('chkNeighborhood').value = currentUser.neighborhood || '';
@@ -448,7 +518,6 @@ function openCheckout() {
     document.getElementById('chkCity').value         = currentUser.city         || '';
     document.getElementById('chkTotal').textContent  = formatCurrency(getTotal());
 
-    // Reset pagamento
     document.querySelectorAll('input[name="payment"]').forEach(r => r.checked = false);
     document.getElementById('paymentNoticeCard').style.display  = 'none';
     document.getElementById('paymentNoticeMoney').style.display = 'none';
@@ -472,26 +541,19 @@ function confirmOrder() {
     const payment      = document.querySelector('input[name="payment"]:checked');
 
     if (!street || !number || !neighborhood || !city) {
-        showToast('Preencha o endereço completo.', 'error');
-        return;
+        showToast('Preencha o endereço completo.', 'error'); return;
     }
-    if (!payment) {
-        showToast('Escolha uma forma de pagamento.', 'error');
-        return;
-    }
+    if (!payment) { showToast('Escolha uma forma de pagamento.', 'error'); return; }
 
     const address = {
         street, number, neighborhood,
-        complement: document.getElementById('chkComplement').value.trim(),
-        city
+        complement: document.getElementById('chkComplement').value.trim(), city
     };
-
     const paymentMethod = payment.value;
-    const changeFor     = document.getElementById('changeFor').value.trim();
+    const changeFor     = document.getElementById('changeFor')?.value.trim() || '';
 
     closeModal('modalCheckout');
 
-    // Salva snapshots antes de mostrar o resumo
     window._lastOrderItems = cart.map(i => ({ ...i }));
     window._lastSubtotal   = getSubtotal();
     window._lastTotal      = getTotal();
@@ -499,37 +561,27 @@ function confirmOrder() {
 
     saveOrder(address, paymentMethod, changeFor);
     showOrderSummary(address, paymentMethod, changeFor);
-    // Abre WhatsApp depois que o modal já abriu (600ms dá tempo pro QR também renderizar)
+
     setTimeout(() => sendToWhatsApp(false), 600);
 }
 
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 // RESUMO DO PEDIDO
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 
 function showOrderSummary(address, paymentMethod, changeFor) {
-    // Usa sempre o snapshot salvo (imune a limpeza de carrinho)
     const items    = window._lastOrderItems || [];
     const subtotal = window._lastSubtotal   || 0;
     const total    = window._lastTotal      || 0;
 
-    const paymentLabels = {
-        pix:      '📲 PIX',
-        debito:   '💳 Cartão de Débito',
-        credito:  '💳 Cartão de Crédito',
-        dinheiro: '💵 Dinheiro'
-    };
-
+    const payLabels = { pix: '📲 PIX', debito: '💳 Débito', credito: '💳 Crédito', dinheiro: '💵 Dinheiro' };
     const addressStr = `${address.street}, ${address.number}${address.complement ? ' – ' + address.complement : ''}, ${address.neighborhood} – ${address.city}`;
 
-    const itemsHtml = items.map(i =>
-        `<div class="summary-item">
-            <span>${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}</span>
-            <span>${formatCurrency(i.price * i.qty)}</span>
-        </div>`
+    const itemsHtml  = items.map(i =>
+        `<div class="summary-item"><span>${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}</span><span>${formatCurrency(i.price * i.qty)}</span></div>`
     ).join('');
 
-    const changeNote = (paymentMethod === 'dinheiro' && changeFor)
+    const changeNote = paymentMethod === 'dinheiro' && changeFor
         ? `<p class="summary-note">💵 Troco para: ${changeFor}</p>` : '';
 
     const cardNote = (paymentMethod === 'debito' || paymentMethod === 'credito')
@@ -537,7 +589,7 @@ function showOrderSummary(address, paymentMethod, changeFor) {
 
     document.getElementById('summaryContent').innerHTML = `
         <div class="summary-section">
-            <h4>🛍️ Itens do Pedido</h4>
+            <h4>🛍️ Itens</h4>
             ${itemsHtml}
             <div class="summary-divider"></div>
             <div class="summary-item"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
@@ -550,40 +602,31 @@ function showOrderSummary(address, paymentMethod, changeFor) {
         </div>
         <div class="summary-section">
             <h4>💳 Pagamento</h4>
-            <p class="summary-text">${paymentLabels[paymentMethod]}</p>
-            ${changeNote}
-            ${cardNote}
+            <p class="summary-text">${payLabels[paymentMethod]}</p>
+            ${changeNote}${cardNote}
         </div>
     `;
 
-    // Seção PIX
     const pixSection = document.getElementById('pixSection');
     if (paymentMethod === 'pix') {
         pixSection.style.display = '';
         if (!settings.pixKey) {
-            pixSection.querySelector('.pix-box').innerHTML = `
-                <h3>📲 PIX</h3>
-                <p style="color:#c00">⚠️ Chave PIX não configurada. Configure no painel Admin.</p>
-            `;
+            pixSection.querySelector('.pix-box').innerHTML =
+                `<h3>📲 PIX</h3><p style="color:#dc2626">⚠️ Chave PIX não configurada. Configure no Admin.</p>`;
         } else {
             document.getElementById('pixKeyDisplay').textContent = settings.pixKey;
             document.getElementById('pixAmount').textContent     = formatCurrency(total);
-            // Gera QR após o modal abrir (garante que o canvas está no DOM visível)
             try {
-                const pixPayload = buildPixEMV(settings.pixKey, settings.pixName, settings.pixCity, total);
-                setTimeout(() => renderPixQR(pixPayload), 150);
-            } catch(e) {
-                console.error('Erro PIX payload:', e);
-            }
+                const payload = buildPixEMV(settings.pixKey, settings.pixName, settings.pixCity, total);
+                setTimeout(() => renderPixQR(payload), 150);
+            } catch(e) { console.error('PIX error:', e); }
         }
     } else {
         pixSection.style.display = 'none';
     }
 
-    // Abre o modal PRIMEIRO — depois o WA (evita que erros impeçam a abertura)
     openModal('modalSummary');
 
-    // Ajusta botão Concluir para PIX
     const btnFinish = document.getElementById('btnFinishOrder');
     if (btnFinish) {
         btnFinish.textContent = paymentMethod === 'pix'
@@ -598,39 +641,30 @@ function copyPixKey() {
         .catch(() => showToast('Não foi possível copiar.', 'error'));
 }
 
-// autoClose=true: limpa carrinho e fecha modal (botão Concluir)
-// autoClose=false: só abre WA, mantém modal aberto (envio automático e botão Reenviar)
 function sendToWhatsApp(autoClose = true) {
     if (!window._lastOrder) return;
     const { address, paymentMethod, changeFor } = window._lastOrder;
 
-    const paymentLabels = {
-        pix: 'PIX', debito: 'Cartão de Débito',
-        credito: 'Cartão de Crédito', dinheiro: 'Dinheiro'
-    };
+    const payLabels = { pix: 'PIX', debito: 'Débito', credito: 'Crédito', dinheiro: 'Dinheiro' };
 
-    const itemsText = window._lastOrderItems.map(i =>
+    const itemsText = (window._lastOrderItems || []).map(i =>
         `• ${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''} — ${formatCurrency(i.price * i.qty)}`
     ).join('\n');
 
     const addressText = `${address.street}, ${address.number}${address.complement ? ' – ' + address.complement : ''}, ${address.neighborhood} – ${address.city}`;
 
     let msg = `🌿 *Novo Pedido — TDA Açaí*\n\n`;
-    msg += `👤 *Cliente:* ${currentUser.name} (${currentUser.phone})\n`;
+    msg += `👤 *Cliente:* ${currentUser?.name} (${currentUser?.phone})\n`;
     msg += `📍 *Endereço:* ${addressText}\n\n`;
     msg += `🛍️ *Itens:*\n${itemsText}\n\n`;
-    msg += `Subtotal: ${formatCurrency(window._lastSubtotal)}\n`;
+    msg += `Subtotal: ${formatCurrency(window._lastSubtotal || 0)}\n`;
     msg += `Entrega:  ${formatCurrency(settings.deliveryFee)}\n`;
-    msg += `*Total:   ${formatCurrency(window._lastTotal)}*\n\n`;
-    msg += `💳 *Pagamento:* ${paymentLabels[paymentMethod]}`;
+    msg += `*Total:   ${formatCurrency(window._lastTotal || 0)}*\n\n`;
+    msg += `💳 *Pagamento:* ${payLabels[paymentMethod] || paymentMethod}`;
     if (paymentMethod === 'dinheiro' && changeFor) msg += `\n💵 Troco para: ${changeFor}`;
 
-    const url = `https://wa.me/5519994194916?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
-
-    if (!autoClose) {
-        showToast('WhatsApp aberto! 🎉');
-    }
+    window.open(`https://wa.me/5519994194916?text=${encodeURIComponent(msg)}`, '_blank');
+    if (!autoClose) showToast('WhatsApp aberto! 🎉');
 }
 
 function finishOrder() {
@@ -641,79 +675,90 @@ function finishOrder() {
     showToast('Pedido concluído! 🌿');
 }
 
-// =====================================================
-// QR CODE — renderiza no canvas com qrcode-generator
-// =====================================================
+// ─────────────────────────────────────────────────────────────
+// QR CODE PIX
+// ─────────────────────────────────────────────────────────────
 
 function renderPixQR(text) {
     const canvas = document.getElementById('pixQRCode');
     if (!canvas) return;
-
     try {
-        // Tenta com qrcode-generator (CDN)
         if (typeof qrcode !== 'undefined') {
-            const qr = qrcode(0, 'M');
+            const qr      = qrcode(0, 'M');
             qr.addData(text, 'Alphanumeric');
             qr.make();
-
-            const size    = 220;
+            const size    = 200;
             const modules = qr.getModuleCount();
             const cell    = Math.floor(size / modules);
             const offset  = Math.floor((size - cell * modules) / 2);
-
             canvas.width  = size;
             canvas.height = size;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#f0fdf4';
-            ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = '#f0fdf4'; ctx.fillRect(0, 0, size, size);
             ctx.fillStyle = '#166534';
             for (let r = 0; r < modules; r++) {
                 for (let c = 0; c < modules; c++) {
-                    if (qr.isDark(r, c)) {
-                        ctx.fillRect(offset + c * cell, offset + r * cell, cell, cell);
-                    }
+                    if (qr.isDark(r, c)) ctx.fillRect(offset + c * cell, offset + r * cell, cell, cell);
                 }
             }
             return;
         }
-    } catch(e) { console.warn('qrcode-generator falhou, usando fallback:', e); }
-
-    // Fallback: imagem via API externa
+    } catch(e) { console.warn('qrcode-generator falhou:', e); }
+    // fallback
     try {
         const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(text)}`;
-        img.alt = 'QR Code PIX';
+        img.src   = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
         img.className = 'pix-qr-canvas';
-        img.onerror = () => { img.alt = '⚠️ QR indisponível. Use a chave copiada acima.'; };
         canvas.replaceWith(img);
-    } catch(e2) { console.error('Fallback QR também falhou:', e2); }
+    } catch(e2) { console.error(e2); }
 }
 
-// =====================================================
+function buildPixEMV(pixKey, merchantName, merchantCity, amount) {
+    function field(id, value) {
+        return `${id}${String(value.length).padStart(2, '0')}${value}`;
+    }
+    const gui          = field('00', 'br.gov.bcb.pix') + field('01', pixKey);
+    const merchantInfo = field('26', gui);
+    const amountField  = amount > 0 ? field('54', parseFloat(amount).toFixed(2)) : '';
+    const additional   = field('62', field('05', '***'));
+    const payload      = field('00', '01') + field('01', '12') + merchantInfo +
+                         field('52', '0000') + field('53', '986') + amountField +
+                         field('58', 'BR') +
+                         field('59', (merchantName || 'Comercio').substring(0, 25)) +
+                         field('60', (merchantCity  || 'Brasil').substring(0, 15)) +
+                         additional + '6304';
+    return payload + crc16(payload);
+}
+
+function crc16(str) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) { crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1; crc &= 0xFFFF; }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+// ─────────────────────────────────────────────────────────────
 // PEDIDOS — salvar e rastrear
-// =====================================================
+// ─────────────────────────────────────────────────────────────
 
 function saveOrder(address, paymentMethod, changeFor) {
     const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
-    const order = {
+    const order  = {
         id: Date.now(),
-        customer: { name: currentUser.name, phone: currentUser.phone },
-        items: window._lastOrderItems,
-        address,
-        paymentMethod,
-        changeFor,
+        customer:    { name: currentUser?.name, phone: currentUser?.phone },
+        items:       window._lastOrderItems,
+        address, paymentMethod, changeFor,
         subtotal:    window._lastSubtotal,
         deliveryFee: settings.deliveryFee,
         total:       window._lastTotal,
         status:      'pending',
         createdAt:   new Date().toISOString(),
     };
-    orders.unshift(order); // mais recente primeiro
+    orders.unshift(order);
     localStorage.setItem('tda_orders', JSON.stringify(orders));
-    return order.id;
 }
-
-// ---- Rastreamento (visão do cliente) ----
 
 function openTracking() {
     renderTracking();
@@ -725,7 +770,7 @@ function renderTracking() {
     if (!currentUser) { el.innerHTML = '<p>Faça login para ver seus pedidos.</p>'; return; }
 
     const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]')
-        .filter(o => o.customer.phone === currentUser.phone);
+        .filter(o => o.customer?.phone === currentUser.phone);
 
     if (orders.length === 0) {
         el.innerHTML = '<div class="tracking-empty"><p>📦</p><p>Nenhum pedido encontrado.</p></div>';
@@ -733,8 +778,8 @@ function renderTracking() {
     }
 
     el.innerHTML = orders.map(o => {
-        const st    = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
-        const date  = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        const st   = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
+        const date = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
         const items = o.items.map(i => `${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}`).join(', ');
         const payLabels = { pix:'PIX', debito:'Débito', credito:'Crédito', dinheiro:'Dinheiro' };
         return `
@@ -748,16 +793,13 @@ function renderTracking() {
                 <span>${formatCurrency(o.total)}</span>
                 <span>${payLabels[o.paymentMethod] || o.paymentMethod}</span>
             </div>
-            <!-- Linha do tempo -->
-            <div class="status-timeline">
-                ${renderTimeline(o.status)}
-            </div>
+            <div class="status-timeline">${renderTimeline(o.status)}</div>
         </div>`;
     }).join('');
 }
 
 function renderTimeline(currentStatus) {
-    const steps = [
+    const steps  = [
         { key: 'pending',   icon: '⏳', label: 'Confirmado' },
         { key: 'preparing', icon: '👨‍🍳', label: 'Em preparo' },
         { key: 'delivery',  icon: '🛵', label: 'Saiu p/ entrega' },
@@ -771,16 +813,62 @@ function renderTimeline(currentStatus) {
         return `<div class="tl-step ${done ? 'tl-done' : ''} ${active ? 'tl-active' : ''}">
             <div class="tl-icon">${s.icon}</div>
             <div class="tl-label">${s.label}</div>
-        </div>`;
-    }).join('<div class="tl-line"></div>');
+        </div>${i < steps.length - 1 ? '<div class="tl-line"></div>' : ''}`;
+    }).join('');
 }
 
-// ---- Admin — gestão de pedidos ----
+// ─────────────────────────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────────────────────────
+
+function openAdminModal() {
+    adminAuth = false;
+    document.getElementById('adminLoginPanel').style.display = '';
+    document.getElementById('adminPanel').style.display      = 'none';
+    document.getElementById('adminPassword').value           = '';
+    openModal('modalAdmin');
+}
+
+function checkAdminPass() {
+    if (document.getElementById('adminPassword').value === settings.adminPass) {
+        adminAuth = true;
+        document.getElementById('adminLoginPanel').style.display = 'none';
+        document.getElementById('adminPanel').style.display      = '';
+        document.getElementById('adminDeliveryFee').value = settings.deliveryFee;
+        document.getElementById('adminPixKey').value      = settings.pixKey;
+        document.getElementById('adminPixName').value     = settings.pixName;
+        document.getElementById('adminPixCity').value     = settings.pixCity;
+        document.getElementById('adminNewPass').value     = '';
+    } else {
+        showToast('Senha incorreta!', 'error');
+    }
+}
+
+function saveAdminSettings() {
+    if (!adminAuth) return;
+    const fee     = parseFloat(document.getElementById('adminDeliveryFee').value);
+    const key     = document.getElementById('adminPixKey').value.trim();
+    const name    = document.getElementById('adminPixName').value.trim();
+    const city    = document.getElementById('adminPixCity').value.trim();
+    const newPass = document.getElementById('adminNewPass').value.trim();
+
+    if (isNaN(fee) || fee < 0) { showToast('Taxa inválida.', 'error'); return; }
+
+    settings.deliveryFee = fee;
+    if (key)     settings.pixKey   = key;
+    if (name)    settings.pixName  = name;
+    if (city)    settings.pixCity  = city;
+    if (newPass) settings.adminPass = newPass;
+
+    saveSettings();
+    closeModal('modalAdmin');
+    showToast('Configurações salvas! ✓');
+}
 
 function switchAdminTab(tab) {
     const isConfig = tab === 'config';
-    document.getElementById('adminPanelConfig').style.display  = isConfig ? '' : 'none';
-    document.getElementById('adminPanelOrders').style.display  = isConfig ? 'none' : '';
+    document.getElementById('adminPanelConfig').style.display = isConfig ? '' : 'none';
+    document.getElementById('adminPanelOrders').style.display = isConfig ? 'none' : '';
     document.getElementById('adminTabConfig').classList.toggle('active',  isConfig);
     document.getElementById('adminTabOrders').classList.toggle('active', !isConfig);
     if (!isConfig) renderAdminOrders();
@@ -799,9 +887,8 @@ function renderAdminOrders() {
         const st   = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
         const date = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
         const items = o.items.map(i => `${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}`).join('<br>');
-        const addr  = `${o.address.street}, ${o.address.number} – ${o.address.neighborhood}, ${o.address.city}`;
+        const addr  = `${o.address?.street}, ${o.address?.number} – ${o.address?.neighborhood}`;
         const payLabels = { pix:'PIX', debito:'Débito', credito:'Crédito', dinheiro:'Dinheiro' };
-
         const statusOptions = Object.entries(ORDER_STATUSES).map(([k, v]) =>
             `<option value="${k}" ${o.status === k ? 'selected' : ''}>${v.label}</option>`
         ).join('');
@@ -814,10 +901,10 @@ function renderAdminOrders() {
                 <span class="tracking-status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
             </div>
             <div class="admin-order-info">
-                <p><strong>👤</strong> ${o.customer.name} — ${o.customer.phone}</p>
-                <p><strong>📍</strong> ${addr}</p>
-                <p><strong>🛍️</strong> ${items}</p>
-                <p><strong>💳</strong> ${payLabels[o.paymentMethod] || o.paymentMethod} — <strong>${formatCurrency(o.total)}</strong></p>
+                <p>👤 ${o.customer?.name} — ${o.customer?.phone}</p>
+                <p>📍 ${addr}</p>
+                <p>🛍️ ${items}</p>
+                <p>💳 ${payLabels[o.paymentMethod] || o.paymentMethod} — <strong>${formatCurrency(o.total)}</strong></p>
             </div>
             <div class="admin-order-status">
                 <label>Atualizar status:</label>
@@ -835,97 +922,4 @@ function updateOrderStatus(orderId, newStatus) {
     localStorage.setItem('tda_orders', JSON.stringify(orders));
     showToast(`Status atualizado: ${ORDER_STATUSES[newStatus].label}`);
     renderAdminOrders();
-}
-
-// =====================================================
-// PIX — Gerador de payload EMV (BR Code)
-// =====================================================
-
-function buildPixEMV(pixKey, merchantName, merchantCity, amount) {
-    function field(id, value) {
-        const len = String(value.length).padStart(2, '0');
-        return `${id}${len}${value}`;
-    }
-
-    const gui            = field('00', 'br.gov.bcb.pix') + field('01', pixKey);
-    const merchantInfo   = field('26', gui);
-    const mcc            = field('52', '0000');
-    const currency       = field('53', '986');
-    const amountField    = amount > 0 ? field('54', parseFloat(amount).toFixed(2)) : '';
-    const country        = field('58', 'BR');
-    const nameField      = field('59', (merchantName || 'Comercio').substring(0, 25).padEnd(1, ' ').trimEnd());
-    const cityField      = field('60', (merchantCity  || 'Brasil').substring(0, 15).padEnd(1, ' ').trimEnd());
-    const additional     = field('62', field('05', '***'));
-
-    const payload = field('00', '01') + field('01', '12') +
-                    merchantInfo + mcc + currency + amountField +
-                    country + nameField + cityField + additional + '6304';
-
-    return payload + crc16(payload);
-}
-
-function crc16(str) {
-    let crc = 0xFFFF;
-    for (let i = 0; i < str.length; i++) {
-        crc ^= str.charCodeAt(i) << 8;
-        for (let j = 0; j < 8; j++) {
-            crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
-            crc &= 0xFFFF;
-        }
-    }
-    return crc.toString(16).toUpperCase().padStart(4, '0');
-}
-
-// =====================================================
-// ADMIN
-// =====================================================
-
-function openAdminModal() {
-    adminAuth = false;
-    document.getElementById('adminLoginPanel').style.display = '';
-    document.getElementById('adminPanel').style.display      = 'none';
-    document.getElementById('adminPassword').value          = '';
-    openModal('modalAdmin');
-}
-
-function checkAdminPass() {
-    const pass = document.getElementById('adminPassword').value;
-    if (pass === settings.adminPass) {
-        adminAuth = true;
-        document.getElementById('adminLoginPanel').style.display = 'none';
-        document.getElementById('adminPanel').style.display      = '';
-        // Preenche valores atuais
-        document.getElementById('adminDeliveryFee').value = settings.deliveryFee;
-        document.getElementById('adminPixKey').value      = settings.pixKey;
-        document.getElementById('adminPixName').value     = settings.pixName;
-        document.getElementById('adminPixCity').value     = settings.pixCity;
-        document.getElementById('adminNewPass').value     = '';
-    } else {
-        showToast('Senha incorreta!', 'error');
-    }
-}
-
-function saveAdminSettings() {
-    if (!adminAuth) return;
-
-    const fee  = parseFloat(document.getElementById('adminDeliveryFee').value);
-    const key  = document.getElementById('adminPixKey').value.trim();
-    const name = document.getElementById('adminPixName').value.trim();
-    const city = document.getElementById('adminPixCity').value.trim();
-    const newPass = document.getElementById('adminNewPass').value.trim();
-
-    if (isNaN(fee) || fee < 0) {
-        showToast('Taxa de entrega inválida.', 'error');
-        return;
-    }
-
-    settings.deliveryFee = fee;
-    if (key)  settings.pixKey  = key;
-    if (name) settings.pixName = name;
-    if (city) settings.pixCity = city;
-    if (newPass) settings.adminPass = newPass;
-
-    saveSettings();
-    closeModal('modalAdmin');
-    showToast('Configurações salvas! ✓');
 }
