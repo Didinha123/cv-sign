@@ -4,6 +4,13 @@
  */
 
 // ─────────────────────────────────────────────────────────────
+// ⚠️  COLE AQUI A URL DO SEU APPS SCRIPT
+//     Assim funciona em TODOS os dispositivos automaticamente.
+//     Exemplo: 'https://script.google.com/macros/s/ABC.../exec'
+// ─────────────────────────────────────────────────────────────
+const SHEETS_URL_FIXO = 'https://script.google.com/macros/s/AKfycbxf5daPyGcKXVhtn3n2zBmCSmzao5FdrdZ4feVwu-H5rIYxV3sHubHzFVTh-3y_9eLf/exec';
+
+// ─────────────────────────────────────────────────────────────
 // DADOS DOS PRODUTOS
 // ─────────────────────────────────────────────────────────────
 
@@ -768,23 +775,17 @@ function saveOrder(address, paymentMethod, changeFor) {
 // INTEGRAÇÃO GOOGLE SHEETS
 // ─────────────────────────────────────────────────────────────
 
-async function enviarParaSheets(order) {
-    const url = settings.sheetsUrl;
-    if (!url || url.trim() === '') return; // não configurado ainda
-
-    const payload = {
+function montarPayloadPedido(order) {
+    return {
         tipo: 'pedido',
         pedido: {
-            cliente: {
-                nome:     order.customer.name,
-                telefone: order.customer.phone,
-            },
+            cliente:  { nome: order.customer?.name || '', telefone: order.customer?.phone || '' },
             endereco: {
-                rua:          order.address.street,
-                numero:       order.address.number,
-                bairro:       order.address.neighborhood,
-                complemento:  order.address.complement || '',
-                cidade:       order.address.city,
+                rua:         order.address.street,
+                numero:      order.address.number,
+                bairro:      order.address.neighborhood,
+                complemento: order.address.complement || '',
+                cidade:      order.address.city,
             },
             itens:       order.items,
             pagamento:   order.paymentMethod,
@@ -796,22 +797,29 @@ async function enviarParaSheets(order) {
             criadoEm:    order.createdAt,
         }
     };
+}
+
+async function enviarParaSheets(order) {
+    // SHEETS_URL_FIXO tem prioridade (funciona em qualquer dispositivo)
+    // Se não estiver preenchido, usa o salvo no Admin
+    const url = (SHEETS_URL_FIXO || settings.sheetsUrl || '').trim();
+    if (!url) return;
+
+    const payload  = montarPayloadPedido(order);
+    const encoded  = encodeURIComponent(JSON.stringify(payload));
+    const getUrl   = `${url}?d=${encoded}`;
 
     try {
-        // Envia via POST (fire-and-forget, não bloqueia o fluxo)
-        fetch(url, {
-            method: 'POST',
-            mode:   'no-cors', // evita bloqueio de CORS no navegador
-            body:   JSON.stringify(payload)
-        });
-        console.log('📊 Pedido enviado para Google Sheets');
-    } catch (e) {
-        console.warn('Google Sheets sync falhou:', e);
-        // Tenta via GET como fallback
-        try {
-            const data = encodeURIComponent(JSON.stringify(payload));
-            fetch(`${url}?d=${data}`, { method: 'GET', mode: 'no-cors' });
-        } catch(e2) { /* silencia */ }
+        // GET — Apps Script retorna CORS automático para GET
+        const res  = await fetch(getUrl);
+        const json = await res.json();
+        if (json.status === 'ok') {
+            console.log('✅ Pedido salvo no Google Sheets:', json.msg);
+        } else {
+            console.warn('⚠️ Sheets respondeu:', json.msg);
+        }
+    } catch(e) {
+        console.warn('❌ Falha ao salvar no Sheets:', e.message);
     }
 }
 
@@ -933,7 +941,7 @@ function atualizarStatusSheets() {
         el.textContent = '⚪ Não configurado';
         el.style.color = '#9ca3af';
     } else {
-        el.textContent = '🟢 Configurado — pedidos vão para a planilha automaticamente';
+        el.textContent = '🟢 URL salva — pedidos vão para a planilha';
         el.style.color = '#16a34a';
     }
 }
@@ -941,59 +949,40 @@ function atualizarStatusSheets() {
 async function testarConexaoSheets() {
     const urlInput = document.getElementById('adminSheetsUrl');
     const el       = document.getElementById('sheetsStatus');
-    const url      = urlInput ? urlInput.value.trim() : '';
+    const url      = (urlInput ? urlInput.value.trim() : '');
 
     if (!url) {
         showToast('Cole a URL do Apps Script primeiro!', 'error');
-        if (el) { el.textContent = '⚠️ URL não informada'; el.style.color = '#f59e0b'; }
+        if (el) { el.textContent = '⚠️ Cole a URL acima'; el.style.color = '#f59e0b'; }
         return;
     }
 
-    showToast('⏳ Testando conexão com Google Sheets...', 'info');
     if (el) { el.textContent = '⏳ Testando...'; el.style.color = '#6b7280'; }
+    showToast('⏳ Testando conexão...', 'info');
 
-    // Payload de teste (via GET — funciona sem CORS)
-    const payload = {
-        tipo: 'pedido',
-        pedido: {
-            cliente:  { nome: 'TESTE TDA', telefone: '(00) 00000-0000' },
-            endereco: { rua: 'Rua Teste', numero: '0', bairro: 'Teste', complemento: '', cidade: 'Teste' },
-            itens:    [{ qty: 1, productName: 'TESTE — pode apagar', size: null, price: 0 }],
-            pagamento: 'pix', troco: '',
-            subtotal: 0, taxaEntrega: 0, total: 0,
-            status: 'pending', criadoEm: new Date().toISOString()
-        }
-    };
+    // Envia payload de teste via GET (Apps Script aceita sem CORS)
+    const payload  = { tipo: 'teste' };
+    const getUrl   = `${url}?d=${encodeURIComponent(JSON.stringify(payload))}`;
 
     try {
-        // GET funciona sem problemas de CORS com Apps Script implantado como "Qualquer pessoa"
-        const params   = new URLSearchParams({ d: JSON.stringify(payload) });
-        const response = await fetch(`${url}?${params}`, { method: 'GET' });
-        const text     = await response.text();
+        const res  = await fetch(getUrl);
+        const json = await res.json();
 
-        let json = {};
-        try { json = JSON.parse(text); } catch(_) {}
-
-        if (response.ok && (json.status === 'ok' || text.includes('ok'))) {
-            showToast('✅ Conexão OK! Verifique a planilha.', 'success');
-            if (el) { el.textContent = '✅ Conexão OK! Uma linha de teste foi adicionada na planilha.'; el.style.color = '#16a34a'; }
+        if (json.status === 'ok') {
+            showToast('✅ ' + json.msg, 'success');
+            if (el) { el.textContent = '✅ ' + json.msg; el.style.color = '#16a34a'; }
             settings.sheetsUrl = url;
             saveSettings();
         } else {
-            showToast('⚠️ Servidor respondeu mas com erro. Verifique as permissões.', 'error');
-            if (el) { el.textContent = '⚠️ Resposta inesperada: ' + text.substring(0, 80); el.style.color = '#f59e0b'; }
+            showToast('⚠️ Erro do script: ' + json.msg, 'error');
+            if (el) { el.textContent = '⚠️ ' + json.msg; el.style.color = '#f59e0b'; }
         }
     } catch(e) {
-        // Se GET falhou, tenta POST no-cors (fire-and-forget)
-        try {
-            fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            showToast('📤 Enviado! Verifique em 5 segundos se apareceu na planilha.', 'info');
-            if (el) { el.textContent = '📤 Enviado via POST. Verifique a planilha em instantes.'; el.style.color = '#2563eb'; }
-            settings.sheetsUrl = url;
-            saveSettings();
-        } catch(e2) {
-            showToast('❌ Falha. Verifique se a URL está correta e se está implantado como "Qualquer pessoa".', 'error');
-            if (el) { el.textContent = '❌ Falha na conexão: ' + e.message; el.style.color = '#dc2626'; }
+        showToast('❌ Não conectou. Veja as instruções abaixo.', 'error');
+        if (el) {
+            el.innerHTML = '❌ Falha: <strong>' + e.message + '</strong><br>' +
+                '<small>Verifique: 1) URL copiada corretamente 2) "Quem tem acesso: Qualquer pessoa" 3) Clicou em Implantar (não só Salvar)</small>';
+            el.style.color = '#dc2626';
         }
     }
 }
