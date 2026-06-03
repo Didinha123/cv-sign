@@ -19,6 +19,13 @@ const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', '
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
 
+
+// ─────────────────────────────────────────────────────────────
+// Para colocar preço RISCADO (promoção), adicione originalPrice
+// em qualquer tamanho. Exemplo:
+//   { label: '300ml', price: 18.00, originalPrice: 21.00 }
+//                              ↑ preço novo   ↑ preço antigo (aparece riscado)
+// ─────────────────────────────────────────────────────────────
 const PRODUCTS = {
     diego:  { id:'diego',  name:'Copo Diego',    cat:'copos',  image:'./Copo1.png',      desc:'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas.',           sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
     arthur: { id:'arthur', name:'Copo Arthur',   cat:'copos',  image:'./Copo2.png',      desc:'Morango fresco, creme de avelã e leite Ninho em açaí cremoso.',                   sizes:[{label:'300ml',price:22},{label:'500ml',price:27},{label:'700ml',price:31}] },
@@ -90,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartBadge();
     checkStoreOpen();
     initWhatsApp();
-    carregarPrecosDoSheets();
-    // Atualiza taxa exibida no modal de info
+    atualizarTodosOsCards();   // renderiza preços riscados do JS imediatamente
+    carregarPrecosDoSheets();  // depois sobrescreve com dados do Sheets (se configurado)
     const el = document.getElementById('siTaxaEntrega');
     if (el) el.textContent = formatCurrency(getTaxaEntrega());
     setInterval(checkStoreOpen, 60000);
