@@ -144,6 +144,18 @@ button { cursor:pointer; font-family:inherit; }
 .price-new { color:var(--pink)!important; }
 .discount-badge { display:inline-block; background:var(--pink); color:#fff; font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; vertical-align:middle; }
 
+/* Pill de promoção */
+.cat-pill--promo { background:linear-gradient(135deg,var(--pink),#ff8c00); color:#fff!important; border-color:transparent!important; animation:pulse-promo 2s ease-in-out infinite; }
+.cat-pill--promo.active { background:linear-gradient(135deg,#c1121f,#d97706); box-shadow:0 0 0 3px rgba(230,57,70,.3); }
+@keyframes pulse-promo { 0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,.4)} 50%{box-shadow:0 0 0 6px rgba(230,57,70,0)} }
+
+/* Título da seção promoções */
+.promo-section-title { background:linear-gradient(135deg,#fff1f2,#fff7ed)!important; color:var(--pink)!important; border-left:4px solid var(--pink); }
+
+/* Card de promoção em destaque */
+.promo-destaque { border-left:3px solid var(--pink); }
+.promo-destaque .product-name { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+
 .empty-search { text-align:center; padding:60px 20px; color:var(--text-light); }
 .empty-search .empty-icon { font-size:3rem; margin-bottom:12px; }
 .btn-clear-search { background:none; border:1.5px solid var(--purple); color:var(--purple); padding:8px 20px; border-radius:50px; font-weight:600; font-size:0.9rem; cursor:pointer; }
