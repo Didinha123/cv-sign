@@ -13,7 +13,7 @@ const SHEETS_URL_FIXO   = 'https://script.google.com/macros/s/AKfycbzMkdRxMa5ECA
 const TAXA_ENTREGA_FIXA = 2;    // ex: 5.00 — usa 0 para ler do Admin
 
 // Bairros/condomínios com frete grátis (sem acento, minúsculas)
-const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas'];
+const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
