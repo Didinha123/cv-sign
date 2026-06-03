@@ -496,12 +496,68 @@ section { padding: 100px 0; }
 }
 .pix-amount-label { font-size: 0.875rem; color: var(--text-light); margin: 10px 0 0; }
 .pix-amount-label strong { color: #166534; font-size: 1rem; }
+.pix-qr-canvas { border-radius: var(--radius-sm); border: 3px solid #86efac; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
+.pix-comprovante-notice {
+    margin-top: 14px; background: #ecfdf5; border: 1px solid #6ee7b7;
+    border-radius: 8px; padding: 12px 14px; font-size: 0.875rem;
+    color: #065f46; line-height: 1.5; text-align: left;
+}
+.pix-wa-link { display: inline-block; margin-top: 6px; color: #128c7e; font-weight: 700; text-decoration: underline; }
+
+/* ---- TRACKING MODAL ---- */
+.modal--tracking { max-width: 500px; }
+.tracking-empty { text-align: center; padding: 40px 0; color: var(--text-light); }
+.tracking-empty p:first-child { font-size: 3rem; }
+.tracking-card {
+    border: 1px solid #e0e0e0; border-radius: var(--radius);
+    padding: 16px; margin-bottom: 14px; background: var(--bg);
+}
+.tracking-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.tracking-date { font-size: 0.8rem; color: var(--text-light); flex: 1; }
+.tracking-status-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 50px;
+    font-size: 0.8rem; font-weight: 700;
+}
+.tracking-items { font-size: 0.875rem; color: var(--text); margin-bottom: 8px; line-height: 1.5; }
+.tracking-footer { display: flex; justify-content: space-between; font-size: 0.875rem; font-weight: 600; color: var(--purple); margin-bottom: 12px; }
+
+/* Linha do tempo */
+.status-timeline { display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; margin-top: 12px; }
+.tl-step { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 0 0 auto; }
+.tl-icon { width: 36px; height: 36px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: var(--transition); }
+.tl-label { font-size: 0.7rem; color: var(--text-light); text-align: center; max-width: 60px; line-height: 1.2; }
+.tl-done .tl-icon { background: #dcfce7; }
+.tl-active .tl-icon { background: var(--purple); font-size: 1.1rem; box-shadow: 0 0 0 4px rgba(110,44,124,0.2); }
+.tl-active .tl-label { color: var(--purple); font-weight: 700; }
+.tl-line { flex: 1; height: 2px; background: #e0e0e0; min-width: 12px; max-width: 30px; }
 
 /* ---- ADMIN MODAL ---- */
-.modal--admin { max-width: 460px; }
+.modal--admin { max-width: 500px; }
 .admin-section { margin-bottom: 24px; border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; }
 .admin-section:last-of-type { border-bottom: none; }
 .admin-section h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+.admin-tabs { display: flex; gap: 4px; background: #f0f0f0; border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px; }
+.admin-tab {
+    flex: 1; padding: 10px; border: none; background: none;
+    border-radius: 8px; font-weight: 600; cursor: pointer;
+    color: var(--text-light); transition: var(--transition); font-size: 0.9rem;
+}
+.admin-tab.active { background: var(--white); color: var(--purple); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.admin-order-card { border: 1px solid #e0e0e0; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 12px; }
+.admin-order-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.85rem; }
+.admin-order-head strong { font-size: 0.9rem; color: var(--purple); }
+.admin-order-info p { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
+.admin-order-status { margin-top: 10px; }
+.admin-order-status label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 4px; }
+
+/* Nav track button */
+.btn-track {
+    background: linear-gradient(135deg, var(--purple), var(--primary));
+    color: var(--white); border: none; border-radius: 50px;
+    padding: 8px 14px; font-size: 1.1rem; cursor: pointer;
+    transition: var(--transition); align-items: center; justify-content: center;
+}
+.btn-track:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(110,44,124,0.4); }
 
 /* ---- TOAST ---- */
 .toast {
