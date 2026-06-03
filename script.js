@@ -19,7 +19,6 @@ const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', '
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
 
-
 // ─────────────────────────────────────────────────────────────
 // Para colocar preço RISCADO (promoção), adicione originalPrice
 // em qualquer tamanho. Exemplo:
@@ -27,7 +26,11 @@ const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', '
 //                              ↑ preço novo   ↑ preço antigo (aparece riscado)
 // ─────────────────────────────────────────────────────────────
 const PRODUCTS = {
-    diego:  { id:'diego',  name:'Copo Diego',    cat:'copos',  image:'./Copo1.png',      desc:'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas.',           sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
+    // 👇 EXEMPLO DE PROMOÇÃO — Copo Diego com desconto:
+    //    price = preço NOVO (com desconto)
+    //    originalPrice = preço ANTIGO (aparece riscado)
+    //    Para remover a promoção, apague o ", originalPrice: 21" de cada tamanho
+    diego:  { id:'diego',  name:'Copo Diego',    cat:'copos',  image:'./Copo1.png',      desc:'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas.',           sizes:[{label:'300ml',price:18, originalPrice:21},{label:'500ml',price:22, originalPrice:26},{label:'700ml',price:26, originalPrice:30}] },
     arthur: { id:'arthur', name:'Copo Arthur',   cat:'copos',  image:'./Copo2.png',      desc:'Morango fresco, creme de avelã e leite Ninho em açaí cremoso.',                   sizes:[{label:'300ml',price:22},{label:'500ml',price:27},{label:'700ml',price:31}] },
     thaina: { id:'thaina', name:'Copo Thaina',   cat:'copos',  image:'./Copo3.png',      desc:'Morango fresco, leite condensado e amendoim crocante em açaí cremoso.',           sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
     davi:   { id:'davi',   name:'Copo Davi',     cat:'copos',  image:'./Copo4.png',      desc:'Banana fresca, leite condensado e granola crocante em açaí refrescante.',         sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
@@ -97,8 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartBadge();
     checkStoreOpen();
     initWhatsApp();
-    atualizarTodosOsCards();   // renderiza preços riscados do JS imediatamente
-    carregarPrecosDoSheets();  // depois sobrescreve com dados do Sheets (se configurado)
+    atualizarTodosOsCards();  // preços do JS
+    renderPromocoes();         // aba promoções
+    carregarPrecosDoSheets();  // sobrescreve com Sheets se configurado
     const el = document.getElementById('siTaxaEntrega');
     if (el) el.textContent = formatCurrency(getTaxaEntrega());
     setInterval(checkStoreOpen, 60000);
@@ -166,6 +170,7 @@ function aplicarPrecos(produtos) {
         });
     });
     atualizarTodosOsCards();
+    renderPromocoes();
 }
 
 function atualizarTodosOsCards() {
@@ -174,16 +179,85 @@ function atualizarTodosOsCards() {
     });
 }
 
+// ─────────────────────────────────────────────────────────────
+// ABA PROMOÇÕES — gerada automaticamente
+// ─────────────────────────────────────────────────────────────
+
+function renderPromocoes() {
+    const sec  = document.getElementById('sec-promocoes');
+    const pill = document.querySelector('.cat-pill[data-cat="promocoes"]');
+
+    // Filtra produtos que têm originalPrice maior que price em algum tamanho
+    const promos = Object.values(PRODUCTS).filter(prod =>
+        prod.sizes.some(s => s.originalPrice && s.originalPrice > s.price)
+    );
+
+    if (promos.length === 0) {
+        if (sec)  sec.style.display  = 'none';
+        if (pill) pill.style.display = 'none';
+        return;
+    }
+
+    // Mostra a pill e a seção
+    if (pill) pill.style.display = '';
+    if (!sec) return;
+    sec.style.display = '';
+
+    sec.innerHTML = `
+        <h2 class="prod-section-title promo-section-title">🔥 Promoções</h2>
+        ${promos.map(prod => {
+            // Tamanho com menor preço que tem promoção
+            const sizesComPromo = prod.sizes.filter(s => s.originalPrice && s.originalPrice > s.price);
+            const menorPromo    = sizesComPromo.reduce((a,b) => a.price <= b.price ? a : b);
+            const precoNovo     = menorPromo.price;
+            const precoAntigo   = menorPromo.originalPrice;
+            const pct           = Math.round((1 - precoNovo / precoAntigo) * 100);
+            const prefixo       = prod.sizes.length > 1 ? 'a partir de ' : '';
+
+            return `
+            <div class="product-card promo-destaque" data-product="${prod.id}" onclick="openProductModal('${prod.id}')">
+                <div class="product-info">
+                    <div class="product-name">
+                        ${prod.name}
+                        <span class="discount-badge">-${pct}%</span>
+                    </div>
+                    <div class="product-desc">${prod.desc}</div>
+                    <div class="product-price">
+                        <span class="price-old">${formatCurrency(precoAntigo)}</span>
+                        <strong class="price-new">${prefixo}${formatCurrency(precoNovo)}</strong>
+                    </div>
+                </div>
+                <div class="product-img-wrap">
+                    <img src="${prod.image}" alt="${prod.name}" class="product-img" loading="lazy">
+                    <div class="product-add-btn">+</div>
+                </div>
+            </div>`;
+        }).join('')}
+    `;
+}
+
 function atualizarPrecoCard(card, prod) {
-    const priceEl = card.querySelector('.product-price'); if (!priceEl) return;
-    const minPrice    = Math.min(...prod.sizes.map(s=>s.price));
-    const temPromocao = prod.sizes.some(s=>s.originalPrice&&s.originalPrice>s.price);
+    const priceEl = card.querySelector('.product-price');
+    if (!priceEl) return;
+
+    const minPrice    = Math.min(...prod.sizes.map(s => s.price));
+    const temPromocao = prod.sizes.some(s => s.originalPrice && s.originalPrice > s.price);
+
     if (temPromocao) {
-        const maxOrig = Math.max(...prod.sizes.map(s=>s.originalPrice||0));
-        const pct     = Math.round((1-minPrice/maxOrig)*100);
-        priceEl.innerHTML = `<span class="price-old">${formatCurrency(maxOrig)}</span> <strong class="price-new">${prod.sizes.length>1?'a partir de ':''}${formatCurrency(minPrice)}</strong> <span class="discount-badge">-${pct}%</span>`;
+        // Pega o originalPrice do tamanho de menor preço (para o "a partir de")
+        const menorSize   = prod.sizes.reduce((a, b) => a.price <= b.price ? a : b);
+        const precoOrig   = menorSize.originalPrice || Math.max(...prod.sizes.map(s => s.originalPrice || 0));
+        const pct         = precoOrig > 0 ? Math.round((1 - minPrice / precoOrig) * 100) : 0;
+        const prefixo     = prod.sizes.length > 1 ? 'a partir de ' : '';
+
+        priceEl.innerHTML =
+            `<span class="price-old">${formatCurrency(precoOrig)}</span> ` +
+            `<strong class="price-new">${prefixo}${formatCurrency(minPrice)}</strong> ` +
+            `<span class="discount-badge">-${pct}%</span>`;
     } else {
-        priceEl.innerHTML = prod.sizes.length>1 ? `A partir de <strong>${formatCurrency(minPrice)}</strong>` : `<strong>${formatCurrency(minPrice)}</strong>`;
+        priceEl.innerHTML = prod.sizes.length > 1
+            ? `A partir de <strong>${formatCurrency(minPrice)}</strong>`
+            : `<strong>${formatCurrency(minPrice)}</strong>`;
     }
 }
 
