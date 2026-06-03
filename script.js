@@ -8,7 +8,7 @@
 //     Assim funciona em TODOS os dispositivos automaticamente.
 //     Exemplo: 'https://script.google.com/macros/s/ABC.../exec'
 // ─────────────────────────────────────────────────────────────
-const SHEETS_URL_FIXO = 'https://script.google.com/macros/s/AKfycbxf5daPyGcKXVhtn3n2zBmCSmzao5FdrdZ4feVwu-H5rIYxV3sHubHzFVTh-3y_9eLf/exec';
+const SHEETS_URL_FIXO = 'https://script.google.com/macros/s/AKfycbynxjnxCyXE9huzTWHkr1H7Um6uKcRl0mRRmzL2OE7AM3gJ2tJowbSieck5L_hVXX4E/exec';
 
 // ─────────────────────────────────────────────────────────────
 // DADOS DOS PRODUTOS
@@ -116,7 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartBadge();
     checkStoreOpen();
     initWhatsApp();
-    setInterval(checkStoreOpen, 60000); // atualiza a cada minuto
+    carregarPrecosDoSheets();          // carrega preços da planilha
+    setInterval(checkStoreOpen, 60000);
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -774,6 +775,63 @@ function saveOrder(address, paymentMethod, changeFor) {
 // ─────────────────────────────────────────────────────────────
 // INTEGRAÇÃO GOOGLE SHEETS
 // ─────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────
+// CARREGAR PREÇOS DO GOOGLE SHEETS
+// ─────────────────────────────────────────────────────────────
+
+async function carregarPrecosDoSheets() {
+    const url = (SHEETS_URL_FIXO || settings.sheetsUrl || '').trim();
+    if (!url) return; // URL não configurada — usa preços do JS
+
+    try {
+        const payload = encodeURIComponent(JSON.stringify({ tipo: 'cardapio' }));
+        const res     = await fetch(`${url}?d=${payload}`);
+        const json    = await res.json();
+
+        if (json.status === 'ok' && Array.isArray(json.produtos)) {
+            aplicarPrecos(json.produtos);
+        }
+    } catch(e) {
+        console.warn('Preços do Sheets indisponíveis, usando valores padrão.', e.message);
+    }
+}
+
+function aplicarPrecos(produtos) {
+    // Mapa: "copo diego-300ml" → preço
+    const mapa = {};
+    produtos.forEach(p => {
+        const chave = (p.produto + '-' + p.tamanho).toLowerCase().trim();
+        mapa[chave] = p.preco;
+    });
+
+    // Atualiza o objeto PRODUCTS em memória
+    Object.values(PRODUCTS).forEach(prod => {
+        prod.sizes.forEach(size => {
+            const chave = (prod.name + '-' + size.label).toLowerCase().trim();
+            if (mapa[chave] !== undefined && mapa[chave] > 0) {
+                size.price = mapa[chave];
+            }
+        });
+    });
+
+    // Atualiza os preços exibidos nos cards da página
+    document.querySelectorAll('.product-card[data-product]').forEach(card => {
+        const prodId  = card.dataset.product;
+        const prod    = PRODUCTS[prodId];
+        if (!prod) return;
+
+        const minPrice = Math.min(...prod.sizes.map(s => s.price));
+        const priceEl  = card.querySelector('.product-price');
+        if (priceEl) {
+            priceEl.innerHTML = prod.sizes.length > 1
+                ? `A partir de <strong>${formatCurrency(minPrice)}</strong>`
+                : `<strong>${formatCurrency(minPrice)}</strong>`;
+        }
+    });
+
+    console.log('✅ Preços atualizados do Google Sheets');
+}
 
 function montarPayloadPedido(order) {
     return {
