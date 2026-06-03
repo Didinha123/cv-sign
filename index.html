@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +7,6 @@
     <title>🌿 TDA Açaí</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <!-- ===== TOPBAR ===== -->
@@ -20,8 +18,7 @@
                     <span class="tb-user-icon">👤</span>
                     <span id="userLabel">Entrar</span>
                 </button>
-                <button class="tb-btn-track" id="btnTrack" onclick="openTracking()" title="Meus Pedidos"
-                    style="display:none">📦</button>
+                <button class="tb-btn-track" id="btnTrack" onclick="openTracking()" title="Meus Pedidos" style="display:none">📦</button>
             </div>
         </div>
     </header>
@@ -35,8 +32,7 @@
     <!-- ===== STORE INFO ===== -->
     <div class="store-info-bar">
         <div class="store-logo-wrap">
-            <img src="./Copo_thaina.png" alt="Logo TDA Açaí" class="store-logo-img"
-                onerror="this.style.background='var(--purple)'">
+            <img src="./Copo_thaina.png" alt="Logo TDA Açaí" class="store-logo-img" onerror="this.style.background='var(--purple)'">
         </div>
         <div class="store-details">
             <h1 class="store-name">TDA Açaí</h1>
@@ -55,8 +51,7 @@
     <div class="sticky-nav" id="stickyNav">
         <div class="search-wrap">
             <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" class="search-input" placeholder="Buscar no cardápio..."
-                oninput="filterSearch(this.value)">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar no cardápio..." oninput="filterSearch(this.value)">
         </div>
         <div class="cat-bar" id="catBar">
             <button class="cat-pill active" data-cat="all" onclick="filterCat('all',this)">Todos</button>
@@ -72,7 +67,7 @@
         <div class="prod-section" data-cat="copos" id="sec-copos">
             <h2 class="prod-section-title">🌴 Nossos Copos</h2>
 
-            <div class="product-card" onclick="openProductModal('diego')">
+            <div class="product-card" data-product="diego" onclick="openProductModal('diego')">
                 <div class="product-info">
                     <div class="product-name">Copo Diego</div>
                     <div class="product-desc">Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas</div>
@@ -84,7 +79,7 @@
                 </div>
             </div>
 
-            <div class="product-card" onclick="openProductModal('arthur')">
+            <div class="product-card" data-product="arthur" onclick="openProductModal('arthur')">
                 <div class="product-info">
                     <div class="product-name">Copo Arthur</div>
                     <div class="product-desc">Morango fresco, creme de avelã e leite Ninho em açaí super cremoso</div>
@@ -96,7 +91,7 @@
                 </div>
             </div>
 
-            <div class="product-card" onclick="openProductModal('thaina')">
+            <div class="product-card" data-product="thaina" onclick="openProductModal('thaina')">
                 <div class="product-info">
                     <div class="product-name">Copo Thaina</div>
                     <div class="product-desc">Morango fresco, leite condensado e amendoim crocante em açaí cremoso</div>
@@ -108,11 +103,10 @@
                 </div>
             </div>
 
-            <div class="product-card" onclick="openProductModal('davi')">
+            <div class="product-card" data-product="davi" onclick="openProductModal('davi')">
                 <div class="product-info">
                     <div class="product-name">Copo Davi</div>
-                    <div class="product-desc">Banana fresca, leite condensado e granola crocante em açaí refrescante
-                    </div>
+                    <div class="product-desc">Banana fresca, leite condensado e granola crocante em açaí refrescante</div>
                     <div class="product-price">A partir de <strong>R$ 21,00</strong></div>
                 </div>
                 <div class="product-img-wrap">
@@ -121,11 +115,10 @@
                 </div>
             </div>
 
-            <div class="product-card" onclick="openProductModal('tda')">
+            <div class="product-card" data-product="tda" onclick="openProductModal('tda')">
                 <div class="product-info">
                     <div class="product-name">Copo TDA</div>
-                    <div class="product-desc">Uva, banana, leite em pó e creme de avelã — equilíbrio perfeito de sabor
-                    </div>
+                    <div class="product-desc">Uva, banana, leite em pó e creme de avelã — equilíbrio perfeito de sabor</div>
                     <div class="product-price">A partir de <strong>R$ 22,00</strong></div>
                 </div>
                 <div class="product-img-wrap">
@@ -139,11 +132,10 @@
         <div class="prod-section" data-cat="combos" id="sec-combos">
             <h2 class="prod-section-title">👨‍👩‍👧 Combos</h2>
 
-            <div class="product-card" onclick="openProductModal('combo')">
+            <div class="product-card" data-product="combo" onclick="openProductModal('combo')">
                 <div class="product-info">
                     <div class="product-name">Combo Família</div>
-                    <div class="product-desc">4 copos com açaí, frutas frescas, leite condensado, paçoca, creme de avelã
-                        e granola</div>
+                    <div class="product-desc">4 copos com açaí, frutas frescas, leite condensado, paçoca, creme de avelã e granola</div>
                     <div class="product-price"><strong>R$ 69,90</strong></div>
                 </div>
                 <div class="product-img-wrap">
@@ -166,20 +158,15 @@
         <div class="store-footer-inner">
             <div class="footer-block">
                 <h4>🕐 Horários</h4>
-                <p>Dom: 13h às 18h00</p>
-                <p>Seg: 13h às 23h30</p>
-                <p>Ter: 13h às 23h30</p>
-                <p>Qua: 13h às 18h00</p>
-                <p>Qui: 13h às 23h30</p>
-                <p>Sex: 13h às 17h00</p>
+                <p>Dom – Qui: 14h às 23h30</p>
+                <p>Sex: 10h às 17h30</p>
                 <p>Sáb: 18h às 23h30</p>
             </div>
             <div class="footer-block">
                 <h4>📍 Endereço</h4>
                 <p>Rua Maria Magdalena Urban, 17</p>
                 <p>Recanto Di Verona — Mogi Mirim, SP</p>
-                <a href="https://maps.google.com/?q=Rua+Maria+Magdalena+Urban+17+Mogi+Mirim+SP" target="_blank"
-                    class="footer-link">Ver no mapa ›</a>
+                <a href="https://maps.google.com/?q=Rua+Maria+Magdalena+Urban+17+Mogi+Mirim+SP" target="_blank" class="footer-link">Ver no mapa ›</a>
             </div>
             <div class="footer-block">
                 <h4>📱 Contato</h4>
@@ -238,8 +225,7 @@
         <div class="modal modal--storeinfo">
             <button class="modal-close" onclick="closeModal('modalStoreInfo')">✕</button>
             <h2 class="modal-title">🌿 TDA Açaí</h2>
-            <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:20px">A experiência mais completa da região
-            </p>
+            <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:20px">A experiência mais completa da região</p>
 
             <div class="si-block">
                 <h4>🕐 Horários de Funcionamento</h4>
@@ -252,8 +238,7 @@
             <div class="si-block">
                 <h4>📍 Endereço</h4>
                 <p>Rua Maria Magdalena Urban, 17 — Recanto Di Verona<br>Mogi Mirim – SP, 13803-382</p>
-                <a href="https://maps.google.com/?q=Rua+Maria+Magdalena+Urban+17+Mogi+Mirim+SP" target="_blank"
-                    class="btn btn-outline btn-sm">Ver no Google Maps</a>
+                <a href="https://maps.google.com/?q=Rua+Maria+Magdalena+Urban+17+Mogi+Mirim+SP" target="_blank" class="btn btn-outline btn-sm">Ver no Google Maps</a>
             </div>
 
             <div class="si-block">
@@ -266,8 +251,7 @@
                 </div>
             </div>
 
-            <a href="https://wa.me/5519994194916" target="_blank" class="btn btn-whatsapp btn-full">📱 Falar no
-                WhatsApp</a>
+            <a href="https://wa.me/5519994194916" target="_blank" class="btn btn-whatsapp btn-full">📱 Falar no WhatsApp</a>
         </div>
     </div>
 
@@ -347,8 +331,7 @@
                 <div class="cart-summary">
                     <div class="summary-row"><span>Subtotal</span><span id="cartSubtotal">R$ 0,00</span></div>
                     <div class="summary-row"><span>Taxa de entrega</span><span id="cartDelivery">R$ 0,00</span></div>
-                    <div class="summary-row summary-row--total"><span>Total</span><span id="cartTotal">R$ 0,00</span>
-                    </div>
+                    <div class="summary-row summary-row--total"><span>Total</span><span id="cartTotal">R$ 0,00</span></div>
                 </div>
                 <button class="btn btn-primary btn-full" onclick="openCheckout()">Finalizar Pedido →</button>
                 <button class="btn btn-outline btn-full" onclick="clearCart()">Esvaziar carrinho</button>
@@ -366,39 +349,23 @@
             <div class="checkout-section">
                 <h3>📍 Endereço de Entrega</h3>
                 <div class="form-row">
-                    <div class="form-group"><label>Rua *</label><input type="text" id="chkStreet" class="form-input">
-                    </div>
-                    <div class="form-group form-group--sm"><label>Número *</label><input type="text" id="chkNumber"
-                            class="form-input"></div>
+                    <div class="form-group"><label>Rua *</label><input type="text" id="chkStreet" class="form-input"></div>
+                    <div class="form-group form-group--sm"><label>Número *</label><input type="text" id="chkNumber" class="form-input"></div>
                 </div>
-                <div class="form-group"><label>Bairro *</label><input type="text" id="chkNeighborhood"
-                        class="form-input"></div>
-                <div class="form-group"><label>Complemento</label><input type="text" id="chkComplement"
-                        class="form-input" placeholder="Apto, bloco..."></div>
+                <div class="form-group"><label>Bairro *</label><input type="text" id="chkNeighborhood" class="form-input"></div>
+                <div class="form-group"><label>Complemento</label><input type="text" id="chkComplement" class="form-input" placeholder="Apto, bloco..."></div>
                 <div class="form-group"><label>Cidade *</label><input type="text" id="chkCity" class="form-input"></div>
             </div>
             <div class="checkout-section">
                 <h3>💳 Forma de Pagamento</h3>
                 <div class="payment-options">
-                    <label class="payment-opt"><input type="radio" name="payment" value="pix"
-                            onchange="onPaymentChange('pix')"><span class="payment-opt-box"><span
-                                class="payment-icon">📲</span><span>PIX</span></span></label>
-                    <label class="payment-opt"><input type="radio" name="payment" value="debito"
-                            onchange="onPaymentChange('debito')"><span class="payment-opt-box"><span
-                                class="payment-icon">💳</span><span>Débito</span></span></label>
-                    <label class="payment-opt"><input type="radio" name="payment" value="credito"
-                            onchange="onPaymentChange('credito')"><span class="payment-opt-box"><span
-                                class="payment-icon">💳</span><span>Crédito</span></span></label>
-                    <label class="payment-opt"><input type="radio" name="payment" value="dinheiro"
-                            onchange="onPaymentChange('dinheiro')"><span class="payment-opt-box"><span
-                                class="payment-icon">💵</span><span>Dinheiro</span></span></label>
+                    <label class="payment-opt"><input type="radio" name="payment" value="pix" onchange="onPaymentChange('pix')"><span class="payment-opt-box"><span class="payment-icon">📲</span><span>PIX</span></span></label>
+                    <label class="payment-opt"><input type="radio" name="payment" value="debito" onchange="onPaymentChange('debito')"><span class="payment-opt-box"><span class="payment-icon">💳</span><span>Débito</span></span></label>
+                    <label class="payment-opt"><input type="radio" name="payment" value="credito" onchange="onPaymentChange('credito')"><span class="payment-opt-box"><span class="payment-icon">💳</span><span>Crédito</span></span></label>
+                    <label class="payment-opt"><input type="radio" name="payment" value="dinheiro" onchange="onPaymentChange('dinheiro')"><span class="payment-opt-box"><span class="payment-icon">💵</span><span>Dinheiro</span></span></label>
                 </div>
-                <div id="paymentNoticeCard" class="payment-notice payment-notice--card" style="display:none">🛵
-                    <strong>Atenção:</strong> Levaremos a maquininha no momento da entrega. Tenha seu cartão em mãos!
-                </div>
-                <div id="paymentNoticeMoney" class="payment-notice payment-notice--money" style="display:none">💵
-                    <strong>Dinheiro:</strong> Precisa de troco?<input type="text" id="changeFor" class="form-input"
-                        placeholder="Troco para R$..." style="margin-top:8px"></div>
+                <div id="paymentNoticeCard" class="payment-notice payment-notice--card" style="display:none">🛵 <strong>Atenção:</strong> Levaremos a maquininha no momento da entrega. Tenha seu cartão em mãos!</div>
+                <div id="paymentNoticeMoney" class="payment-notice payment-notice--money" style="display:none">💵 <strong>Dinheiro:</strong> Precisa de troco?<input type="text" id="changeFor" class="form-input" placeholder="Troco para R$..." style="margin-top:8px"></div>
             </div>
             <div class="checkout-total"><span>Total do pedido:</span><strong id="chkTotal">R$ 0,00</strong></div>
             <button class="btn btn-primary btn-full" onclick="confirmOrder()">Confirmar Pedido ✓</button>
@@ -425,16 +392,12 @@
                     <div class="pix-key-value" id="pixKeyDisplay"></div>
                     <button class="btn btn-outline btn-sm" onclick="copyPixKey()">📋 Copiar Chave</button>
                     <p class="pix-amount-label">Valor a pagar: <strong id="pixAmount"></strong></p>
-                    <div class="pix-comprovante-notice">📩 <strong>Após o pagamento</strong>, envie o comprovante para:
-                        <a href="https://wa.me/5519994194916" target="_blank" class="pix-wa-link">📱 (19) 99419-4916</a>
-                    </div>
+                    <div class="pix-comprovante-notice">📩 <strong>Após o pagamento</strong>, envie o comprovante para: <a href="https://wa.me/5519994194916" target="_blank" class="pix-wa-link">📱 (19) 99419-4916</a></div>
                 </div>
             </div>
             <div class="summary-actions" id="summaryActions">
-                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp(false)">📱 Reenviar pelo
-                    WhatsApp</button>
-                <button class="btn btn-outline btn-full" id="btnFinishOrder" onclick="finishOrder()">✓ Concluir
-                    pedido</button>
+                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp(false)">📱 Reenviar pelo WhatsApp</button>
+                <button class="btn btn-outline btn-full" id="btnFinishOrder" onclick="finishOrder()">✓ Concluir pedido</button>
             </div>
         </div>
     </div>
@@ -459,49 +422,39 @@
             <h2 class="modal-title">⚙️ Configurações Admin</h2>
             <div id="adminLoginPanel">
                 <p>Digite a senha de administrador:</p>
-                <div class="form-group"><input type="password" id="adminPassword" class="form-input" placeholder="Senha"
-                        onkeydown="if(event.key==='Enter')checkAdminPass()"></div>
+                <div class="form-group"><input type="password" id="adminPassword" class="form-input" placeholder="Senha" onkeydown="if(event.key==='Enter')checkAdminPass()"></div>
                 <button class="btn btn-primary btn-full" onclick="checkAdminPass()">Entrar</button>
             </div>
             <div id="adminPanel" style="display:none">
                 <div class="admin-tabs">
-                    <button class="admin-tab active" id="adminTabConfig" onclick="switchAdminTab('config')">⚙️
-                        Config</button>
+                    <button class="admin-tab active" id="adminTabConfig" onclick="switchAdminTab('config')">⚙️ Config</button>
                     <button class="admin-tab" id="adminTabOrders" onclick="switchAdminTab('orders')">📋 Pedidos</button>
                 </div>
                 <div id="adminPanelConfig">
                     <div class="admin-section">
                         <h3>🚚 Taxa de Entrega</h3>
-                        <div class="form-group"><label>Valor (R$)</label><input type="number" id="adminDeliveryFee"
-                                class="form-input" placeholder="5.00" step="0.50" min="0"></div>
+                        <div class="form-group"><label>Valor (R$)</label><input type="number" id="adminDeliveryFee" class="form-input" placeholder="5.00" step="0.50" min="0"></div>
                     </div>
                     <div class="admin-section">
                         <h3>📲 Dados do PIX</h3>
-                        <div class="form-group"><label>Chave PIX</label><input type="text" id="adminPixKey"
-                                class="form-input" placeholder="CPF, telefone, e-mail ou chave aleatória"></div>
-                        <div class="form-group"><label>Nome do recebedor (máx. 25 chars)</label><input type="text"
-                                id="adminPixName" class="form-input" placeholder="TDA Acai" maxlength="25"></div>
-                        <div class="form-group"><label>Cidade (máx. 15 chars)</label><input type="text"
-                                id="adminPixCity" class="form-input" placeholder="Mogi Mirim" maxlength="15"></div>
+                        <div class="form-group"><label>Chave PIX</label><input type="text" id="adminPixKey" class="form-input" placeholder="CPF, telefone, e-mail ou chave aleatória"></div>
+                        <div class="form-group"><label>Nome do recebedor (máx. 25 chars)</label><input type="text" id="adminPixName" class="form-input" placeholder="TDA Acai" maxlength="25"></div>
+                        <div class="form-group"><label>Cidade (máx. 15 chars)</label><input type="text" id="adminPixCity" class="form-input" placeholder="Mogi Mirim" maxlength="15"></div>
                     </div>
                     <div class="admin-section">
                         <h3>📊 Google Sheets (tempo real)</h3>
-                        <p style="font-size:0.8rem;color:#6b7280;margin-bottom:10px">Cole aqui a URL do Apps Script após
-                            implantar. Cada pedido será registrado automaticamente na planilha.</p>
+                        <p style="font-size:0.8rem;color:#6b7280;margin-bottom:10px">Cole aqui a URL do Apps Script após implantar. Cada pedido será registrado automaticamente na planilha.</p>
                         <div class="form-group">
                             <label>URL do Apps Script</label>
-                            <input type="url" id="adminSheetsUrl" class="form-input"
-                                placeholder="https://script.google.com/macros/s/...">
+                            <input type="url" id="adminSheetsUrl" class="form-input" placeholder="https://script.google.com/macros/s/...">
                         </div>
                         <div id="sheetsStatus" style="font-size:0.8rem;margin-top:6px"></div>
-                        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="testarConexaoSheets()">🔗
-                            Testar conexão</button>
+                        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="testarConexaoSheets()">🔗 Testar conexão</button>
                     </div>
 
                     <div class="admin-section">
                         <h3>🔐 Senha Admin</h3>
-                        <div class="form-group"><label>Nova senha (deixe em branco para não alterar)</label><input
-                                type="password" id="adminNewPass" class="form-input" placeholder="Nova senha"></div>
+                        <div class="form-group"><label>Nova senha (deixe em branco para não alterar)</label><input type="password" id="adminNewPass" class="form-input" placeholder="Nova senha"></div>
                     </div>
                     <button class="btn btn-primary btn-full" onclick="saveAdminSettings()">💾 Salvar</button>
                 </div>
@@ -518,5 +471,4 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <script src="script.js"></script>
 </body>
-
 </html>
