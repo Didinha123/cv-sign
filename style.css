@@ -395,8 +395,21 @@ button { cursor: pointer; font-family: inherit; }
 .prod-size-opt:hover   { border-color: var(--purple); }
 .prod-size-opt.selected { border-color: var(--purple); background: var(--purple-light); }
 .prod-size-opt.selected .pso-label { color: var(--purple); font-weight: 700; }
-.pso-label { font-size: 0.9rem; font-weight: 600; }
-.pso-price { font-size: 0.9rem; font-weight: 700; color: var(--purple); }
+.pso-label  { font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.pso-prices { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pso-price  { font-size: 0.9rem; font-weight: 700; color: var(--purple); }
+.pso-price-old { font-size: 0.8rem; color: var(--text-light); text-decoration: line-through; }
+
+/* Preço riscado nos cards */
+.price-old { font-size: 0.8rem; color: var(--text-light); text-decoration: line-through; margin-right: 2px; }
+.price-new { color: var(--pink) !important; }
+
+/* Badge de desconto */
+.discount-badge {
+    display: inline-block; background: var(--pink); color: #fff;
+    font-size: 0.68rem; font-weight: 800; padding: 2px 6px;
+    border-radius: 4px; letter-spacing: 0.02em; vertical-align: middle;
+}
 .prod-modal-footer {
     display: flex; align-items: center; gap: 12px;
     padding: 12px 16px 0;
