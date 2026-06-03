@@ -90,7 +90,8 @@ if (!settings) {
         pixKey: '',
         pixName: 'TDA Acai',
         pixCity: 'Mogi Mirim',
-        adminPass: '1234'
+        adminPass: '1234',
+        sheetsUrl: ''   // URL do Apps Script (configurar no Admin)
     };
     saveSettings();
 }
@@ -758,6 +759,60 @@ function saveOrder(address, paymentMethod, changeFor) {
     };
     orders.unshift(order);
     localStorage.setItem('tda_orders', JSON.stringify(orders));
+
+    // Sincroniza com Google Sheets em tempo real
+    enviarParaSheets(order);
+}
+
+// ─────────────────────────────────────────────────────────────
+// INTEGRAÇÃO GOOGLE SHEETS
+// ─────────────────────────────────────────────────────────────
+
+async function enviarParaSheets(order) {
+    const url = settings.sheetsUrl;
+    if (!url || url.trim() === '') return; // não configurado ainda
+
+    const payload = {
+        tipo: 'pedido',
+        pedido: {
+            cliente: {
+                nome:     order.customer.name,
+                telefone: order.customer.phone,
+            },
+            endereco: {
+                rua:          order.address.street,
+                numero:       order.address.number,
+                bairro:       order.address.neighborhood,
+                complemento:  order.address.complement || '',
+                cidade:       order.address.city,
+            },
+            itens:       order.items,
+            pagamento:   order.paymentMethod,
+            troco:       order.changeFor || '',
+            subtotal:    order.subtotal,
+            taxaEntrega: order.deliveryFee,
+            total:       order.total,
+            status:      order.status,
+            criadoEm:    order.createdAt,
+        }
+    };
+
+    try {
+        // Envia via POST (fire-and-forget, não bloqueia o fluxo)
+        fetch(url, {
+            method: 'POST',
+            mode:   'no-cors', // evita bloqueio de CORS no navegador
+            body:   JSON.stringify(payload)
+        });
+        console.log('📊 Pedido enviado para Google Sheets');
+    } catch (e) {
+        console.warn('Google Sheets sync falhou:', e);
+        // Tenta via GET como fallback
+        try {
+            const data = encodeURIComponent(JSON.stringify(payload));
+            fetch(`${url}?d=${data}`, { method: 'GET', mode: 'no-cors' });
+        } catch(e2) { /* silencia */ }
+    }
 }
 
 function openTracking() {
@@ -839,6 +894,8 @@ function checkAdminPass() {
         document.getElementById('adminPixName').value     = settings.pixName;
         document.getElementById('adminPixCity').value     = settings.pixCity;
         document.getElementById('adminNewPass').value     = '';
+        document.getElementById('adminSheetsUrl').value   = settings.sheetsUrl || '';
+        atualizarStatusSheets();
     } else {
         showToast('Senha incorreta!', 'error');
     }
@@ -854,15 +911,91 @@ function saveAdminSettings() {
 
     if (isNaN(fee) || fee < 0) { showToast('Taxa inválida.', 'error'); return; }
 
+    const sheetsUrl = document.getElementById('adminSheetsUrl').value.trim();
+
     settings.deliveryFee = fee;
-    if (key)     settings.pixKey   = key;
-    if (name)    settings.pixName  = name;
-    if (city)    settings.pixCity  = city;
-    if (newPass) settings.adminPass = newPass;
+    if (key)       settings.pixKey    = key;
+    if (name)      settings.pixName   = name;
+    if (city)      settings.pixCity   = city;
+    if (newPass)   settings.adminPass = newPass;
+    settings.sheetsUrl = sheetsUrl;
 
     saveSettings();
     closeModal('modalAdmin');
     showToast('Configurações salvas! ✓');
+}
+
+function atualizarStatusSheets() {
+    const el  = document.getElementById('sheetsStatus');
+    if (!el) return;
+    const url = settings.sheetsUrl || '';
+    if (!url) {
+        el.textContent = '⚪ Não configurado';
+        el.style.color = '#9ca3af';
+    } else {
+        el.textContent = '🟢 Configurado — pedidos vão para a planilha automaticamente';
+        el.style.color = '#16a34a';
+    }
+}
+
+async function testarConexaoSheets() {
+    const urlInput = document.getElementById('adminSheetsUrl');
+    const el       = document.getElementById('sheetsStatus');
+    const url      = urlInput ? urlInput.value.trim() : '';
+
+    if (!url) {
+        showToast('Cole a URL do Apps Script primeiro!', 'error');
+        if (el) { el.textContent = '⚠️ URL não informada'; el.style.color = '#f59e0b'; }
+        return;
+    }
+
+    showToast('⏳ Testando conexão com Google Sheets...', 'info');
+    if (el) { el.textContent = '⏳ Testando...'; el.style.color = '#6b7280'; }
+
+    // Payload de teste (via GET — funciona sem CORS)
+    const payload = {
+        tipo: 'pedido',
+        pedido: {
+            cliente:  { nome: 'TESTE TDA', telefone: '(00) 00000-0000' },
+            endereco: { rua: 'Rua Teste', numero: '0', bairro: 'Teste', complemento: '', cidade: 'Teste' },
+            itens:    [{ qty: 1, productName: 'TESTE — pode apagar', size: null, price: 0 }],
+            pagamento: 'pix', troco: '',
+            subtotal: 0, taxaEntrega: 0, total: 0,
+            status: 'pending', criadoEm: new Date().toISOString()
+        }
+    };
+
+    try {
+        // GET funciona sem problemas de CORS com Apps Script implantado como "Qualquer pessoa"
+        const params   = new URLSearchParams({ d: JSON.stringify(payload) });
+        const response = await fetch(`${url}?${params}`, { method: 'GET' });
+        const text     = await response.text();
+
+        let json = {};
+        try { json = JSON.parse(text); } catch(_) {}
+
+        if (response.ok && (json.status === 'ok' || text.includes('ok'))) {
+            showToast('✅ Conexão OK! Verifique a planilha.', 'success');
+            if (el) { el.textContent = '✅ Conexão OK! Uma linha de teste foi adicionada na planilha.'; el.style.color = '#16a34a'; }
+            settings.sheetsUrl = url;
+            saveSettings();
+        } else {
+            showToast('⚠️ Servidor respondeu mas com erro. Verifique as permissões.', 'error');
+            if (el) { el.textContent = '⚠️ Resposta inesperada: ' + text.substring(0, 80); el.style.color = '#f59e0b'; }
+        }
+    } catch(e) {
+        // Se GET falhou, tenta POST no-cors (fire-and-forget)
+        try {
+            fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            showToast('📤 Enviado! Verifique em 5 segundos se apareceu na planilha.', 'info');
+            if (el) { el.textContent = '📤 Enviado via POST. Verifique a planilha em instantes.'; el.style.color = '#2563eb'; }
+            settings.sheetsUrl = url;
+            saveSettings();
+        } catch(e2) {
+            showToast('❌ Falha. Verifique se a URL está correta e se está implantado como "Qualquer pessoa".', 'error');
+            if (el) { el.textContent = '❌ Falha na conexão: ' + e.message; el.style.color = '#dc2626'; }
+        }
+    }
 }
 
 function switchAdminTab(tab) {
