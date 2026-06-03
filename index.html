@@ -442,6 +442,17 @@
                         <div class="form-group"><label>Cidade (máx. 15 chars)</label><input type="text" id="adminPixCity" class="form-input" placeholder="Mogi Mirim" maxlength="15"></div>
                     </div>
                     <div class="admin-section">
+                        <h3>📊 Google Sheets (tempo real)</h3>
+                        <p style="font-size:0.8rem;color:#6b7280;margin-bottom:10px">Cole aqui a URL do Apps Script após implantar. Cada pedido será registrado automaticamente na planilha.</p>
+                        <div class="form-group">
+                            <label>URL do Apps Script</label>
+                            <input type="url" id="adminSheetsUrl" class="form-input" placeholder="https://script.google.com/macros/s/...">
+                        </div>
+                        <div id="sheetsStatus" style="font-size:0.8rem;margin-top:6px"></div>
+                        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="testarConexaoSheets()">🔗 Testar conexão</button>
+                    </div>
+
+                    <div class="admin-section">
                         <h3>🔐 Senha Admin</h3>
                         <div class="form-group"><label>Nova senha (deixe em branco para não alterar)</label><input type="password" id="adminNewPass" class="form-input" placeholder="Nova senha"></div>
                     </div>
