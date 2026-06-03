@@ -612,7 +612,7 @@
     <!-- ============================================================ -->
     <!-- MODAL: RESUMO DO PEDIDO -->
     <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalSummary" onclick="closeModalOnOverlay(event, 'modalSummary')">
+    <div class="modal-overlay" id="modalSummary">
         <div class="modal modal--summary">
             <button class="modal-close" onclick="closeModal('modalSummary')">✕</button>
             <div class="summary-header">
@@ -639,9 +639,9 @@
                 </div>
             </div>
 
-            <div class="summary-actions">
-                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp()">📱 Reenviar pelo WhatsApp</button>
-                <button class="btn btn-outline btn-full" onclick="finishOrder()">✓ Concluir</button>
+            <div class="summary-actions" id="summaryActions">
+                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp(false)">📱 Reenviar pelo WhatsApp</button>
+                <button class="btn btn-outline btn-full" id="btnFinishOrder" onclick="finishOrder()">✓ Concluir pedido</button>
             </div>
         </div>
     </div>
