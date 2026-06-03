@@ -1,736 +1,909 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+/**
+ * TDA Açaí — Script Principal
+ * Inclui: Menu, FAQ, Scroll, WhatsApp + Sistema de Pedidos completo
+ */
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sabor da Vila - A melhor pizzaria artesanal da região. Delivery rápido, ingredientes frescos e ambiente aconchegante.">
-    <title> 🌿 Açaíteria TDA</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+// =====================================================
+// ESTADO DA APLICAÇÃO
+// =====================================================
 
-<body>
-    <!-- ========== HEADER ========== -->
-    <header class="header" id="header">
-        <div class="container">
-            <nav class="nav">
-                <a href="#inicio" class="logo">🌿 Açaiteria TDA</a>
+let cart        = JSON.parse(localStorage.getItem('tda_cart')     || '[]');
+let currentUser = JSON.parse(localStorage.getItem('tda_user')    || 'null');
+let settings    = JSON.parse(localStorage.getItem('tda_settings') || 'null');
+let adminAuth   = false;
 
-                <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+const ORDER_STATUSES = {
+    pending:   { label: '⏳ Aguardando confirmação', color: '#f59e0b', bg: '#fef3c7' },
+    preparing: { label: '👨‍🍳 Em preparo',            color: '#7c3aed', bg: '#ede9fe' },
+    delivery:  { label: '🛵 Saiu para entrega',      color: '#2563eb', bg: '#dbeafe' },
+    delivered: { label: '✅ Entregue',                color: '#16a34a', bg: '#dcfce7' },
+    cancelled: { label: '❌ Cancelado',               color: '#dc2626', bg: '#fee2e2' },
+};
 
-                <ul class="nav-menu" id="navMenu">
-                    <li><a href="#inicio">Início</a></li>
-                    <li><a href="#sobre">Sobre</a></li>
-                    <li><a href="#servicos">Cardápio</a></li>
-                    <li><a href="#destaques">Destaques</a></li>
-                    <li><a href="#faq">FAQ</a></li>
-                    <li><a href="#contato">Contato</a></li>
-                </ul>
+// Configurações padrão
+if (!settings) {
+    settings = {
+        deliveryFee: 5.00,
+        pixKey: '',
+        pixName: 'TDA Acai',
+        pixCity: 'Mogi Mirim',
+        adminPass: '1234'
+    };
+    saveSettings();
+}
 
-                <!-- Botões de usuário e carrinho -->
-                <div class="nav-actions">
-                    <button class="btn-user" id="btnUser" onclick="openAuthModal()" title="Minha Conta">
-                        <span class="user-icon">👤</span>
-                        <span class="user-label" id="userLabel">Entrar</span>
-                    </button>
-                    <button class="btn-track" id="btnTrack" onclick="openTracking()" title="Meus Pedidos" style="display:none">
-                        📦
-                    </button>
-                    <button class="btn-cart" id="btnCart" onclick="openCart()">
-                        🛒
-                        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
-                    </button>
-                </div>
-            </nav>
+function saveSettings() {
+    localStorage.setItem('tda_settings', JSON.stringify(settings));
+}
+
+// =====================================================
+// DOM READY
+// =====================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    initNav();
+    initScrollLinks();
+    initFAQ();
+    initHeaderScroll();
+    initAnimations();
+    initWhatsApp();
+    updateUserUI();
+    updateCartBadge();
+
+});
+
+// =====================================================
+// 1. MENU MOBILE
+// =====================================================
+
+function initNav() {
+    const navToggle = document.getElementById('navToggle');
+    const navMenu   = document.getElementById('navMenu');
+
+    if (!navToggle || !navMenu) return;
+
+    navToggle.addEventListener('click', function () {
+        navToggle.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    });
+
+    navMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+        }
+    });
+}
+
+// =====================================================
+// 2. SCROLL SUAVE
+// =====================================================
+
+function initScrollLinks() {
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href !== '#') {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    const headerHeight  = document.querySelector('.header').offsetHeight;
+                    const targetPosition = target.offsetTop - headerHeight;
+                    window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                }
+            }
+        });
+    });
+}
+
+// =====================================================
+// 3. FAQ ACORDEÃO
+// =====================================================
+
+function initFAQ() {
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.querySelector('.faq-question').addEventListener('click', function () {
+            const isActive = item.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            if (!isActive) item.classList.add('active');
+        });
+    });
+}
+
+// =====================================================
+// 4. HEADER SCROLL EFFECT
+// =====================================================
+
+function initHeaderScroll() {
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', function () {
+        header.style.boxShadow = window.pageYOffset > 100
+            ? '0 4px 20px rgba(0,0,0,0.15)'
+            : '0 4px 20px rgba(0,0,0,0.1)';
+    });
+}
+
+// =====================================================
+// 5. ANIMAÇÕES DE ENTRADA
+// =====================================================
+
+function initAnimations() {
+    const elements = document.querySelectorAll(
+        '.servico-card, .destaque-card, .beneficio-card, .faq-item, .feature'
+    );
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity  = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+
+    elements.forEach(el => {
+        el.style.opacity   = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+    });
+}
+
+// =====================================================
+// 6. WHATSAPP MENSAGEM PADRÃO
+// =====================================================
+
+function initWhatsApp() {
+    const msg = encodeURIComponent('Olá! Gostaria de fazer um pedido.');
+    document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
+        if (!link.href.includes('text=')) {
+            link.href += `?text=${msg}`;
+        }
+    });
+}
+
+// =====================================================
+// UTILITÁRIOS UI
+// =====================================================
+
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast toast--${type} toast--show`;
+    setTimeout(() => t.classList.remove('toast--show'), 3000);
+}
+
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.classList.remove('active');
+    });
+    document.body.style.overflow = '';
+}
+
+function closeModalOnOverlay(event, id) {
+    if (event.target.id === id) closeModal(id);
+}
+
+function formatCurrency(value) {
+    return 'R$ ' + parseFloat(value).toFixed(2).replace('.', ',');
+}
+
+// =====================================================
+// AUTENTICAÇÃO
+// =====================================================
+
+function openAuthModal() {
+    if (currentUser) {
+        if (confirm(`Sair da conta de ${currentUser.name}?`)) {
+            currentUser = null;
+            localStorage.removeItem('tda_user');
+            updateUserUI();
+            showToast('Você saiu da conta.');
+        }
+        return;
+    }
+    openModal('modalAuth');
+}
+
+function switchTab(tab) {
+    document.getElementById('panelLogin').style.display   = tab === 'login'    ? '' : 'none';
+    document.getElementById('panelCadastro').style.display = tab === 'cadastro' ? '' : 'none';
+    document.getElementById('tabLogin').classList.toggle('active',   tab === 'login');
+    document.getElementById('tabCadastro').classList.toggle('active', tab === 'cadastro');
+}
+
+function doLogin() {
+    const phone = document.getElementById('loginPhone').value.trim();
+    if (!phone) { showToast('Informe seu telefone.', 'error'); return; }
+
+    const users = JSON.parse(localStorage.getItem('tda_users') || '{}');
+    const user  = users[phone];
+
+    if (!user) {
+        showToast('Telefone não encontrado. Cadastre-se!', 'error');
+        switchTab('cadastro');
+        document.getElementById('regPhone').value = phone;
+        return;
+    }
+
+    currentUser = user;
+    localStorage.setItem('tda_user', JSON.stringify(user));
+    updateUserUI();
+    closeModal('modalAuth');
+    showToast(`Bem-vindo(a), ${user.name}! 🌿`);
+}
+
+function doRegister() {
+    const name         = document.getElementById('regName').value.trim();
+    const phone        = document.getElementById('regPhone').value.trim();
+    const street       = document.getElementById('regStreet').value.trim();
+    const number       = document.getElementById('regNumber').value.trim();
+    const neighborhood = document.getElementById('regNeighborhood').value.trim();
+    const complement   = document.getElementById('regComplement').value.trim();
+    const city         = document.getElementById('regCity').value.trim();
+
+    if (!name || !phone || !street || !number || !neighborhood || !city) {
+        showToast('Preencha todos os campos obrigatórios.', 'error');
+        return;
+    }
+
+    const user = { name, phone, street, number, neighborhood, complement, city };
+    const users = JSON.parse(localStorage.getItem('tda_users') || '{}');
+    users[phone] = user;
+    localStorage.setItem('tda_users', JSON.stringify(users));
+
+    currentUser = user;
+    localStorage.setItem('tda_user', JSON.stringify(user));
+    updateUserUI();
+    closeModal('modalAuth');
+    showToast(`Conta criada! Bem-vindo(a), ${name}! 🌿`);
+}
+
+function updateUserUI() {
+    const label   = document.getElementById('userLabel');
+    const btnTrack = document.getElementById('btnTrack');
+    if (label)    label.textContent = currentUser ? currentUser.name.split(' ')[0] : 'Entrar';
+    if (btnTrack) btnTrack.style.display = currentUser ? 'flex' : 'none';
+}
+
+// =====================================================
+// CARRINHO
+// =====================================================
+
+function addToCart(productId, productName, selectId, image) {
+    if (!currentUser) {
+        openModal('modalAuth');
+        showToast('Faça login para adicionar ao carrinho.', 'info');
+        return;
+    }
+
+    const select  = document.getElementById(selectId);
+    const price   = parseFloat(select.value);
+    const sizeLabel = select.options[select.selectedIndex].text.split(' — ')[0];
+
+    const key = `${productId}-${sizeLabel}`;
+    const existing = cart.find(i => i.key === key);
+
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({ key, productId, productName, size: sizeLabel, price, qty: 1, image });
+    }
+
+    saveCart();
+    updateCartBadge();
+    showToast(`${productName} (${sizeLabel}) adicionado! 🛒`);
+}
+
+function addToCartFixed(productId, productName, price, image) {
+    if (!currentUser) {
+        openModal('modalAuth');
+        showToast('Faça login para adicionar ao carrinho.', 'info');
+        return;
+    }
+
+    const key = productId;
+    const existing = cart.find(i => i.key === key);
+
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({ key, productId, productName, size: null, price, qty: 1, image });
+    }
+
+    saveCart();
+    updateCartBadge();
+    showToast(`${productName} adicionado! 🛒`);
+}
+
+function saveCart() {
+    localStorage.setItem('tda_cart', JSON.stringify(cart));
+}
+
+function clearCart() {
+    if (!confirm('Esvaziar o carrinho?')) return;
+    cart = [];
+    saveCart();
+    updateCartBadge();
+    renderCart();
+}
+
+function removeFromCart(key) {
+    cart = cart.filter(i => i.key !== key);
+    saveCart();
+    updateCartBadge();
+    renderCart();
+}
+
+function changeQty(key, delta) {
+    const item = cart.find(i => i.key === key);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) {
+        removeFromCart(key);
+        return;
+    }
+    saveCart();
+    renderCart();
+}
+
+function getSubtotal() {
+    return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+}
+
+function getTotal() {
+    return getSubtotal() + settings.deliveryFee;
+}
+
+function updateCartBadge() {
+    const total = cart.reduce((sum, i) => sum + i.qty, 0);
+    const badge = document.getElementById('cartBadge');
+    if (!badge) return;
+    if (total > 0) {
+        badge.style.display = 'flex';
+        badge.textContent   = total;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function openCart() {
+    renderCart();
+    openModal('modalCart');
+}
+
+function renderCart() {
+    const empty = document.getElementById('cartEmpty');
+    const items = document.getElementById('cartItems');
+    const list  = document.getElementById('cartItemsList');
+
+    if (cart.length === 0) {
+        empty.style.display = '';
+        items.style.display = 'none';
+        return;
+    }
+
+    empty.style.display = 'none';
+    items.style.display = '';
+
+    list.innerHTML = cart.map(item => `
+        <div class="cart-item">
+            <img src="${item.image}" alt="${item.productName}" class="cart-item-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect fill=%22%23f0f0f0%22 width=%2260%22 height=%2260%22/></svg>'">
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.productName}${item.size ? ` <small>(${item.size})</small>` : ''}</div>
+                <div class="cart-item-price">${formatCurrency(item.price)}</div>
+            </div>
+            <div class="cart-item-qty">
+                <button onclick="changeQty('${item.key}', -1)">−</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty('${item.key}', 1)">+</button>
+            </div>
+            <button class="cart-item-remove" onclick="removeFromCart('${item.key}')">🗑</button>
         </div>
-    </header>
+    `).join('');
 
-    <!-- ========== HERO ========== -->
-    <section class="hero" id="inicio">
-        <div class="hero-background">
-            <img src="./4-copos-escuro.png" alt="Logo" class="hero-bg-image">
-            <div class="hero-overlay"></div>
+    document.getElementById('cartSubtotal').textContent = formatCurrency(getSubtotal());
+    document.getElementById('cartDelivery').textContent  = formatCurrency(settings.deliveryFee);
+    document.getElementById('cartTotal').textContent     = formatCurrency(getTotal());
+}
+
+// =====================================================
+// CHECKOUT
+// =====================================================
+
+function openCheckout() {
+    if (!currentUser) {
+        closeModal('modalCart');
+        openModal('modalAuth');
+        return;
+    }
+    if (cart.length === 0) {
+        showToast('Carrinho vazio!', 'error');
+        return;
+    }
+
+    // Preenche endereço com dados do usuário
+    document.getElementById('chkStreet').value       = currentUser.street       || '';
+    document.getElementById('chkNumber').value       = currentUser.number       || '';
+    document.getElementById('chkNeighborhood').value = currentUser.neighborhood || '';
+    document.getElementById('chkComplement').value   = currentUser.complement   || '';
+    document.getElementById('chkCity').value         = currentUser.city         || '';
+    document.getElementById('chkTotal').textContent  = formatCurrency(getTotal());
+
+    // Reset pagamento
+    document.querySelectorAll('input[name="payment"]').forEach(r => r.checked = false);
+    document.getElementById('paymentNoticeCard').style.display  = 'none';
+    document.getElementById('paymentNoticeMoney').style.display = 'none';
+
+    closeModal('modalCart');
+    openModal('modalCheckout');
+}
+
+function onPaymentChange(method) {
+    document.getElementById('paymentNoticeCard').style.display  =
+        (method === 'debito' || method === 'credito') ? '' : 'none';
+    document.getElementById('paymentNoticeMoney').style.display =
+        method === 'dinheiro' ? '' : 'none';
+}
+
+function confirmOrder() {
+    const street       = document.getElementById('chkStreet').value.trim();
+    const number       = document.getElementById('chkNumber').value.trim();
+    const neighborhood = document.getElementById('chkNeighborhood').value.trim();
+    const city         = document.getElementById('chkCity').value.trim();
+    const payment      = document.querySelector('input[name="payment"]:checked');
+
+    if (!street || !number || !neighborhood || !city) {
+        showToast('Preencha o endereço completo.', 'error');
+        return;
+    }
+    if (!payment) {
+        showToast('Escolha uma forma de pagamento.', 'error');
+        return;
+    }
+
+    const address = {
+        street, number, neighborhood,
+        complement: document.getElementById('chkComplement').value.trim(),
+        city
+    };
+
+    const paymentMethod = payment.value;
+    const changeFor     = document.getElementById('changeFor').value.trim();
+
+    closeModal('modalCheckout');
+
+    // Salva snapshots antes de mostrar o resumo
+    window._lastOrderItems = cart.map(i => ({ ...i }));
+    window._lastSubtotal   = getSubtotal();
+    window._lastTotal      = getTotal();
+    window._lastOrder      = { address, paymentMethod, changeFor };
+
+    saveOrder(address, paymentMethod, changeFor);
+    showOrderSummary(address, paymentMethod, changeFor);
+
+    // Abre WhatsApp automaticamente
+    setTimeout(() => sendToWhatsApp(false), 400);
+}
+
+// =====================================================
+// RESUMO DO PEDIDO
+// =====================================================
+
+function showOrderSummary(address, paymentMethod, changeFor) {
+    const paymentLabels = {
+        pix:      '📲 PIX',
+        debito:   '💳 Cartão de Débito',
+        credito:  '💳 Cartão de Crédito',
+        dinheiro: '💵 Dinheiro'
+    };
+
+    const addressStr = `${address.street}, ${address.number}${address.complement ? ' – ' + address.complement : ''}, ${address.neighborhood} – ${address.city}`;
+
+    const itemsHtml = cart.map(i =>
+        `<div class="summary-item">
+            <span>${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}</span>
+            <span>${formatCurrency(i.price * i.qty)}</span>
+        </div>`
+    ).join('');
+
+    const changeNote = (paymentMethod === 'dinheiro' && changeFor)
+        ? `<p class="summary-note">💵 Troco para: ${changeFor}</p>` : '';
+
+    const cardNote = (paymentMethod === 'debito' || paymentMethod === 'credito')
+        ? `<div class="summary-alert">🛵 Levaremos a maquininha no momento da entrega!</div>` : '';
+
+    document.getElementById('summaryContent').innerHTML = `
+        <div class="summary-section">
+            <h4>🛍️ Itens do Pedido</h4>
+            ${itemsHtml}
+            <div class="summary-divider"></div>
+            <div class="summary-item"><span>Subtotal</span><span>${formatCurrency(getSubtotal())}</span></div>
+            <div class="summary-item"><span>Entrega</span><span>${formatCurrency(settings.deliveryFee)}</span></div>
+            <div class="summary-item summary-item--total"><span>Total</span><span>${formatCurrency(getTotal())}</span></div>
         </div>
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-badge">🔥 Aberto todos os dias <br> ⛔ Exceto de sexta às 17:45 até sábado às 17:45</div>
-                <h1>TDA Açaí – A experiência mais completa da região</h1>
-                <p class="hero-subtitle">Delivery ágil, ingredientes selecionados e combinações irresistíveis para todos os gostos!</p>
-                <div class="hero-buttons">
-                    <a href="#servicos" class="btn btn-primary">Ver Cardápio</a>
-                    <a href="https://wa.me/5519994194916" class="btn btn-secondary" target="_blank">Falar no WhatsApp</a>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">5.0★</span>
-                    <span class="stat-label">Avaliação média</span>
-                </div>
-            </div>
+        <div class="summary-section">
+            <h4>📍 Endereço</h4>
+            <p class="summary-text">${addressStr}</p>
         </div>
-        <div class="hero-visual">
-            <div class="hero-image-container">
-                <img src="./Copo_thaina.png" alt="Copo Thaina" class="hero-main-image">
-                <div class="floating-badge">Copo Thaina</div>
-            </div>
+        <div class="summary-section">
+            <h4>💳 Pagamento</h4>
+            <p class="summary-text">${paymentLabels[paymentMethod]}</p>
+            ${changeNote}
+            ${cardNote}
         </div>
-    </section>
+    `;
 
-    <!-- ========== SOBRE ========== -->
-    <section class="sobre" id="sobre">
-        <div class="container">
-            <div class="section-header">
-                <div class="sobre_novo">
-                    <h2>Sobre a TDA Açaí</h2>
-                    <h4>Conheça nossa história e paixão pelo açaí perfeito</h4>
-                </div>
+    // Seção PIX
+    const pixSection = document.getElementById('pixSection');
+    if (paymentMethod === 'pix') {
+        pixSection.style.display = '';
+        if (!settings.pixKey) {
+            pixSection.querySelector('.pix-box').innerHTML = `
+                <h3>📲 PIX</h3>
+                <p style="color:#c00">⚠️ Chave PIX não configurada. Configure no painel Admin.</p>
+            `;
+        } else {
+            const pixPayload = buildPixEMV(settings.pixKey, settings.pixName, settings.pixCity, getTotal());
+            renderPixQR(pixPayload);
+            document.getElementById('pixKeyDisplay').textContent = settings.pixKey;
+            document.getElementById('pixAmount').textContent     = formatCurrency(getTotal());
+        }
+    } else {
+        pixSection.style.display = 'none';
+    }
+
+    // Snapshot já foi salvo em confirmOrder() — apenas garante referência
+
+    openModal('modalSummary');
+}
+
+function copyPixKey() {
+    navigator.clipboard.writeText(settings.pixKey)
+        .then(() => showToast('Chave PIX copiada!'))
+        .catch(() => showToast('Não foi possível copiar.', 'error'));
+}
+
+// autoClose=true: limpa carrinho e fecha modal (botão Concluir)
+// autoClose=false: só abre WA, mantém modal aberto (envio automático e botão Reenviar)
+function sendToWhatsApp(autoClose = true) {
+    if (!window._lastOrder) return;
+    const { address, paymentMethod, changeFor } = window._lastOrder;
+
+    const paymentLabels = {
+        pix: 'PIX', debito: 'Cartão de Débito',
+        credito: 'Cartão de Crédito', dinheiro: 'Dinheiro'
+    };
+
+    const itemsText = window._lastOrderItems.map(i =>
+        `• ${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''} — ${formatCurrency(i.price * i.qty)}`
+    ).join('\n');
+
+    const addressText = `${address.street}, ${address.number}${address.complement ? ' – ' + address.complement : ''}, ${address.neighborhood} – ${address.city}`;
+
+    let msg = `🌿 *Novo Pedido — TDA Açaí*\n\n`;
+    msg += `👤 *Cliente:* ${currentUser.name} (${currentUser.phone})\n`;
+    msg += `📍 *Endereço:* ${addressText}\n\n`;
+    msg += `🛍️ *Itens:*\n${itemsText}\n\n`;
+    msg += `Subtotal: ${formatCurrency(window._lastSubtotal)}\n`;
+    msg += `Entrega:  ${formatCurrency(settings.deliveryFee)}\n`;
+    msg += `*Total:   ${formatCurrency(window._lastTotal)}*\n\n`;
+    msg += `💳 *Pagamento:* ${paymentLabels[paymentMethod]}`;
+    if (paymentMethod === 'dinheiro' && changeFor) msg += `\n💵 Troco para: ${changeFor}`;
+
+    const url = `https://wa.me/5519994194916?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+
+    if (!autoClose) {
+        showToast('WhatsApp aberto! 🎉');
+    }
+}
+
+function finishOrder() {
+    cart = [];
+    saveCart();
+    updateCartBadge();
+    closeAllModals();
+    showToast('Pedido concluído! 🌿');
+}
+
+// =====================================================
+// QR CODE — renderiza no canvas com qrcode-generator
+// =====================================================
+
+function renderPixQR(text) {
+    const canvas = document.getElementById('pixQRCode');
+    if (!canvas) return;
+
+    try {
+        // qrcode-generator: qr(typeNumber, errorCorrectionLevel)
+        const qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+
+        const size    = 220;
+        const modules = qr.getModuleCount();
+        const cell    = Math.floor(size / modules);
+        const offset  = Math.floor((size - cell * modules) / 2);
+
+        canvas.width  = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Fundo
+        ctx.fillStyle = '#f0fdf4';
+        ctx.fillRect(0, 0, size, size);
+
+        // Módulos
+        ctx.fillStyle = '#166534';
+        for (let r = 0; r < modules; r++) {
+            for (let c = 0; c < modules; c++) {
+                if (qr.isDark(r, c)) {
+                    ctx.fillRect(offset + c * cell, offset + r * cell, cell, cell);
+                }
+            }
+        }
+    } catch (e) {
+        console.error('QR Code error:', e);
+        canvas.getContext('2d').fillText('Erro ao gerar QR', 10, 110);
+    }
+}
+
+// =====================================================
+// PEDIDOS — salvar e rastrear
+// =====================================================
+
+function saveOrder(address, paymentMethod, changeFor) {
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
+    const order = {
+        id: Date.now(),
+        customer: { name: currentUser.name, phone: currentUser.phone },
+        items: window._lastOrderItems,
+        address,
+        paymentMethod,
+        changeFor,
+        subtotal:    window._lastSubtotal,
+        deliveryFee: settings.deliveryFee,
+        total:       window._lastTotal,
+        status:      'pending',
+        createdAt:   new Date().toISOString(),
+    };
+    orders.unshift(order); // mais recente primeiro
+    localStorage.setItem('tda_orders', JSON.stringify(orders));
+    return order.id;
+}
+
+// ---- Rastreamento (visão do cliente) ----
+
+function openTracking() {
+    renderTracking();
+    openModal('modalTracking');
+}
+
+function renderTracking() {
+    const el = document.getElementById('trackingContent');
+    if (!currentUser) { el.innerHTML = '<p>Faça login para ver seus pedidos.</p>'; return; }
+
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]')
+        .filter(o => o.customer.phone === currentUser.phone);
+
+    if (orders.length === 0) {
+        el.innerHTML = '<div class="tracking-empty"><p>📦</p><p>Nenhum pedido encontrado.</p></div>';
+        return;
+    }
+
+    el.innerHTML = orders.map(o => {
+        const st    = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
+        const date  = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        const items = o.items.map(i => `${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}`).join(', ');
+        const payLabels = { pix:'PIX', debito:'Débito', credito:'Crédito', dinheiro:'Dinheiro' };
+        return `
+        <div class="tracking-card">
+            <div class="tracking-card-header">
+                <span class="tracking-date">${date}</span>
+                <span class="tracking-status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
             </div>
-            <div class="sobre-content">
-                <div class="sobre-image">
-                    <img src="./historia.png" alt="Chef preparando pizza artesanal">
-                </div>
-                <div class="sobre-info">
-                    <div class="sobre-text">
-                        <p> A <strong>TDA Açaí</strong> nasceu recentemente com o sonho de levar sabor, qualidade e refrescância para cada cliente. Mesmo sendo novos no ramo, começamos essa jornada com muita dedicação, escolhendo cuidadosamente cada ingrediente para oferecer uma experiência deliciosa e especial.</p>
-                        <p>Nosso objetivo é conquistar a confiança da comunidade através de um atendimento acolhedor, produtos de qualidade e combinações irresistíveis de açaí, frutas e acompanhamentos.</p>
-                    </div> <br><br>
-                    <div class="sobre-features">
-                        <div class="feature">
-                            <div class="feature-icon">🌴</div>
-                            <h4>Açaí Cremoso</h4>
-                            <p>Preparado com ingredientes selecionados para garantir muito sabor</p>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">🍌</div>
-                            <h4>Combinações Irresistíveis</h4>
-                            <p>Frutas frescas, cremes e toppings para montar do seu jeito</p>
-                        </div>
-                        <div class="feature">
-                            <div class="feature-icon">🛵</div>
-                            <h4>Delivery Rápido</h4>
-                            <p>Seu pedido entregue com agilidade e todo o cuidado que você merece</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="tracking-items">${items}</div>
+            <div class="tracking-footer">
+                <span>${formatCurrency(o.total)}</span>
+                <span>${payLabels[o.paymentMethod] || o.paymentMethod}</span>
             </div>
-        </div>
-    </section>
-
-    <!-- ========== CARDÁPIO ========== -->
-    <section class="servicos" id="servicos">
-        <div class="container">
-            <div class="section-header">
-                <h2>Nosso Cardápio</h2>
-                <p>Escolha seu favorito e adicione ao carrinho!</p>
+            <!-- Linha do tempo -->
+            <div class="status-timeline">
+                ${renderTimeline(o.status)}
             </div>
-            <div class="servicos-grid">
+        </div>`;
+    }).join('');
+}
 
-                <div class="servico-card">
-                    <div class="servico-image">
-                        <img src="./Copo1.png" alt="Copo Diego">
-                    </div>
-                    <div class="servico-content">
-                        <h3>Copo Diego</h3>
-                        <p>Açaí cremoso com leite condensado, paçoca, amendoim, frutas frescas e muito mais.</p>
-                        <div class="card-order">
-                            <select class="size-select" id="size-diego" onchange="updateCardPrice('diego', this)">
-                                <option value="21.00">300ml — R$ 21,00</option>
-                                <option value="26.00">500ml — R$ 26,00</option>
-                                <option value="30.00">700ml — R$ 30,00</option>
-                            </select>
-                            <button class="btn btn-add-cart" onclick="addToCart('diego', 'Copo Diego', 'size-diego', './Copo1.png')">🛒 Adicionar</button>
-                        </div>
-                    </div>
-                </div>
+function renderTimeline(currentStatus) {
+    const steps = [
+        { key: 'pending',   icon: '⏳', label: 'Confirmado' },
+        { key: 'preparing', icon: '👨‍🍳', label: 'Em preparo' },
+        { key: 'delivery',  icon: '🛵', label: 'Saiu p/ entrega' },
+        { key: 'delivered', icon: '✅', label: 'Entregue' },
+    ];
+    const order  = ['pending','preparing','delivery','delivered'];
+    const curIdx = order.indexOf(currentStatus);
+    return steps.map((s, i) => {
+        const done   = i <= curIdx;
+        const active = i === curIdx;
+        return `<div class="tl-step ${done ? 'tl-done' : ''} ${active ? 'tl-active' : ''}">
+            <div class="tl-icon">${s.icon}</div>
+            <div class="tl-label">${s.label}</div>
+        </div>`;
+    }).join('<div class="tl-line"></div>');
+}
 
-                <div class="servico-card">
-                    <div class="servico-image">
-                        <img src="./Copo2.png" alt="Copo Arthur">
-                    </div>
-                    <div class="servico-content">
-                        <h3>Copo Arthur</h3>
-                        <p>Morango fresco, creme de avelã e leite Ninho em um açaí super cremoso e irresistível.</p>
-                        <div class="card-order">
-                            <select class="size-select" id="size-arthur" onchange="updateCardPrice('arthur', this)">
-                                <option value="22.00">300ml — R$ 22,00</option>
-                                <option value="27.00">500ml — R$ 27,00</option>
-                                <option value="31.00">700ml — R$ 31,00</option>
-                            </select>
-                            <button class="btn btn-add-cart" onclick="addToCart('arthur', 'Copo Arthur', 'size-arthur', './Copo2.png')">🛒 Adicionar</button>
-                        </div>
-                    </div>
-                </div>
+// ---- Admin — gestão de pedidos ----
 
-                <div class="servico-card">
-                    <div class="servico-image">
-                        <img src="./Copo3.png" alt="Copo Thaina">
-                    </div>
-                    <div class="servico-content">
-                        <h3>Copo Thaina</h3>
-                        <p>Morango fresco, leite condensado e amendoim crocante em um açaí cremoso e irresistível.</p>
-                        <div class="card-order">
-                            <select class="size-select" id="size-thaina" onchange="updateCardPrice('thaina', this)">
-                                <option value="21.00">300ml — R$ 21,00</option>
-                                <option value="26.00">500ml — R$ 26,00</option>
-                                <option value="30.00">700ml — R$ 30,00</option>
-                            </select>
-                            <button class="btn btn-add-cart" onclick="addToCart('thaina', 'Copo Thaina', 'size-thaina', './Copo3.png')">🛒 Adicionar</button>
-                        </div>
-                    </div>
-                </div>
+function switchAdminTab(tab) {
+    const isConfig = tab === 'config';
+    document.getElementById('adminPanelConfig').style.display  = isConfig ? '' : 'none';
+    document.getElementById('adminPanelOrders').style.display  = isConfig ? 'none' : '';
+    document.getElementById('adminTabConfig').classList.toggle('active',  isConfig);
+    document.getElementById('adminTabOrders').classList.toggle('active', !isConfig);
+    if (!isConfig) renderAdminOrders();
+}
 
-                <div class="servico-card">
-                    <div class="servico-image">
-                        <img src="./Copo4.png" alt="Copo Davi">
-                    </div>
-                    <div class="servico-content">
-                        <h3>Copo Davi</h3>
-                        <p>Banana fresca, leite condensado e granola crocante em um açaí cremoso e refrescante.</p>
-                        <div class="card-order">
-                            <select class="size-select" id="size-davi" onchange="updateCardPrice('davi', this)">
-                                <option value="21.00">300ml — R$ 21,00</option>
-                                <option value="26.00">500ml — R$ 26,00</option>
-                                <option value="30.00">700ml — R$ 30,00</option>
-                            </select>
-                            <button class="btn btn-add-cart" onclick="addToCart('davi', 'Copo Davi', 'size-davi', './Copo4.png')">🛒 Adicionar</button>
-                        </div>
-                    </div>
-                </div>
+function renderAdminOrders() {
+    const el     = document.getElementById('adminOrdersList');
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
 
-                <div class="servico-card">
-                    <div class="servico-image">
-                        <img src="./4-copos.jpeg" alt="Combo Família">
-                    </div>
-                    <div class="servico-content">
-                        <h3>Combo Família</h3>
-                        <p>Açaí, frutas frescas, leite condensado, paçoca, creme de avelã, Ninho e granola. Para compartilhar!</p>
-                        <div class="card-order card-order--fixed">
-                            <span class="preco">R$ 69,90</span>
-                            <button class="btn btn-add-cart" onclick="addToCartFixed('combo', 'Combo Família', 69.90, './4-copos.jpeg')">🛒 Adicionar</button>
-                        </div>
-                    </div>
-                </div>
+    if (orders.length === 0) {
+        el.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Nenhum pedido ainda.</p>';
+        return;
+    }
 
-                <div class="servico-card">
-                    <div class="servico-image">
-                        <img src="./Diego max.png" alt="Copo TDA">
-                    </div>
-                    <div class="servico-content">
-                        <h3>Copo TDA</h3>
-                        <p>Uva, banana, leite em pó e creme de avelã — o equilíbrio perfeito entre sabor e intensidade.</p>
-                        <div class="card-order">
-                            <select class="size-select" id="size-tda" onchange="updateCardPrice('tda', this)">
-                                <option value="22.00">300ml — R$ 22,00</option>
-                                <option value="27.00">500ml — R$ 27,00</option>
-                                <option value="31.00">700ml — R$ 31,00</option>
-                            </select>
-                            <button class="btn btn-add-cart" onclick="addToCart('tda', 'Copo TDA', 'size-tda', './Diego max.png')">🛒 Adicionar</button>
-                        </div>
-                    </div>
-                </div>
+    el.innerHTML = orders.map(o => {
+        const st   = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
+        const date = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        const items = o.items.map(i => `${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}`).join('<br>');
+        const addr  = `${o.address.street}, ${o.address.number} – ${o.address.neighborhood}, ${o.address.city}`;
+        const payLabels = { pix:'PIX', debito:'Débito', credito:'Crédito', dinheiro:'Dinheiro' };
 
+        const statusOptions = Object.entries(ORDER_STATUSES).map(([k, v]) =>
+            `<option value="${k}" ${o.status === k ? 'selected' : ''}>${v.label}</option>`
+        ).join('');
+
+        return `
+        <div class="admin-order-card">
+            <div class="admin-order-head">
+                <strong>#${o.id.toString().slice(-5)}</strong>
+                <span>${date}</span>
+                <span class="tracking-status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
             </div>
-        </div>
-    </section>
-
-    <!-- ========== DESTAQUES ========== -->
-    <section class="destaques" id="destaques">
-        <div class="container">
-            <div class="section-header">
-                <div class="sobre_novo">
-                    <h2>Nossos Destaques</h2>
-                    <h4>O que faz a TDA Açaí ser a escolha certa</h4>
-                </div>
+            <div class="admin-order-info">
+                <p><strong>👤</strong> ${o.customer.name} — ${o.customer.phone}</p>
+                <p><strong>📍</strong> ${addr}</p>
+                <p><strong>🛍️</strong> ${items}</p>
+                <p><strong>💳</strong> ${payLabels[o.paymentMethod] || o.paymentMethod} — <strong>${formatCurrency(o.total)}</strong></p>
             </div>
-            <div class="destaques-grid">
-                <div class="destaque-card">
-                    <div class="destaque-image">
-                        <img src="./frutas.webp" alt="Ingredientes Frescos Todos os Dias">
-                    </div>
-                    <div class="destaque-content">
-                        <h3>Ingredientes Frescos Todos os Dias</h3>
-                        <p>Selecionamos diariamente frutas, cremes e acompanhamentos de qualidade para garantir mais sabor, frescor e uma experiência irresistível em cada copo.</p>
-                    </div>
-                </div>
-                <div class="destaque-card">
-                    <div class="destaque-image">
-                        <img src="./4-copos.jpeg" alt="Combos Perfeitos para Família">
-                    </div>
-                    <div class="destaque-content">
-                        <h3>Combos Perfeitos para Família</h3>
-                        <p>Combinações deliciosas pensadas para compartilhar momentos especiais com quem você ama.</p>
-                    </div>
-                </div>
-                <div class="destaque-card">
-                    <div class="destaque-image">
-                        <img src="./Avaliacao.avif" alt="Clientes satisfeitos">
-                    </div>
-                    <div class="destaque-content">
-                        <h3>5.0 de Avaliação</h3>
-                        <p>A confiança e o carinho dos nossos clientes refletem em cada avaliação.</p>
-                    </div>
-                </div>
+            <div class="admin-order-status">
+                <label>Atualizar status:</label>
+                <select class="form-input" onchange="updateOrderStatus(${o.id}, this.value)">${statusOptions}</select>
             </div>
-        </div>
-    </section>
+        </div>`;
+    }).join('');
+}
 
-    <!-- ========== BENEFÍCIOS ========== -->
-    <section class="beneficios">
-        <div class="container">
-            <div class="section-header">
-                <h2>Por Que Escolher a TDA Açaí?</h2>
-                <p>Vantagens que fazem a diferença na sua experiência</p>
-            </div>
-            <div class="beneficios-grid">
-                <div class="beneficio-card">
-                    <div class="beneficio-icon">⏱️</div>
-                    <h3>Entrega Rápida</h3>
-                    <p>Seu açaí em até 45 minutos no conforto de sua casa!</p>
-                </div>
-                <div class="beneficio-card">
-                    <div class="beneficio-icon">💳</div>
-                    <h3>Pagamento Facilitado</h3>
-                    <p>Aceitamos cartões, PIX e dinheiro. Parcele em até 3x sem juros.</p>
-                </div>
-                <div class="beneficio-card">
-                    <div class="beneficio-icon">🌿</div>
-                    <h3>Ingredientes Premium</h3>
-                    <p>Trabalhamos apenas com fornecedores selecionados e produtos de primeira linha.</p>
-                </div>
-                <div class="beneficio-card">
-                    <div class="beneficio-icon">📱</div>
-                    <h3>Pedido Fácil</h3>
-                    <p>Peça pelo site ou WhatsApp. Atendimento ágil e simpático!</p>
-                </div>
-                <div class="beneficio-card">
-                    <div class="beneficio-icon">🎁</div>
-                    <h3>Programa Fidelidade</h3>
-                    <p>A cada 10 açaí, ganhe 1 grátis! Acumule pontos a cada pedido.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+function updateOrderStatus(orderId, newStatus) {
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
+    const order  = orders.find(o => o.id === orderId);
+    if (!order) return;
+    order.status = newStatus;
+    localStorage.setItem('tda_orders', JSON.stringify(orders));
+    showToast(`Status atualizado: ${ORDER_STATUSES[newStatus].label}`);
+    renderAdminOrders();
+}
 
-    <!-- ========== FAQ ========== -->
-    <section class="faq" id="faq">
-        <div class="container">
-            <div class="section-header">
-                <div class="perguntas">
-                    <h2>Perguntas Frequentes</h2>
-                    <h4>Tire suas dúvidas sobre nossos serviços</h4>
-                </div>
-            </div>
-            <div class="faq-list">
-                <div class="faq-item">
-                    <button class="faq-question">Vocês fazem delivery? <span class="faq-icon">+</span></button>
-                    <div class="faq-answer"><p>Sim! Fazemos delivery para toda a região. O tempo médio de entrega é de 30 a 45 minutos. Pedidos acima de R$ 80,00 têm frete grátis.</p></div>
-                </div>
-                <div class="faq-item">
-                    <button class="faq-question">Quais são as formas de pagamento? <span class="faq-icon">+</span></button>
-                    <div class="faq-answer"><p>Aceitamos dinheiro, PIX, cartões de débito e crédito (todas as bandeiras). No cartão de crédito, você pode parcelar em até 3x sem juros para compras acima de R$ 100,00.</p></div>
-                </div>
-                <div class="faq-item">
-                    <button class="faq-question">Qual o horário de funcionamento? <span class="faq-icon">+</span></button>
-                    <div class="faq-answer"><p>Funcionamos todos os dias! Pausamos apenas das sextas-feiras às 17h45 até os sábados às 17h45.</p></div>
-                </div>
-            </div>
-        </div>
-    </section>
+// =====================================================
+// PIX — Gerador de payload EMV (BR Code)
+// =====================================================
 
-    <!-- ========== CONTATO ========== -->
-    <section class="contato" id="contato">
-        <div class="container">
-            <div class="section-header">
-                <h2>Entre em Contato</h2>
-                <p>Faça seu pedido agora mesmo</p>
-            </div>
-            <div class="contato-content">
-                <div class="contato-info">
-                    <div class="info-item">
-                        <div class="info-icon">📱</div>
-                        <div>
-                            <h4>WhatsApp</h4>
-                            <p>(19) 99419-4916</p>
-                            <a href="https://wa.me/5519994194916" class="btn btn-whatsapp" target="_blank">Chamar no WhatsApp</a>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-icon">📍</div>
-                        <div>
-                            <h4>Endereço</h4>
-                            <p>Rua Maria Magdalena Urban, 17 - Recanto Di Verona<br>Mogi Mirim - SP, 13803-382</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-icon">🕐</div>
-                        <div>
-                            <h4>Horário de Funcionamento</h4>
-                            <p>Domingo a Quinta: 14h às 23h30<br>Sexta: 10h às 17h30<br>Sábado: 18h às 23h30</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="contato-mapa">
-                    <div class="mapa-container">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3687.4590278583046!2d-46.97459552440449!3d-22.449378379579695!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c8f9d073346573%3A0x6d9cebdd01117e6c!2sRecanto%20De%20Verona%20-%20R.%20Maria%20Magdalena%20Urban%20Romanello%2C%2017%20-%20Planalto%20Bela%20Vista%2C%20Mogi%20Mirim%20-%20SP%2C%2013803-382!5e0!3m2!1spt-BR!2sbr!4v1778216127537!5m2!1spt-BR!2sbr" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+function buildPixEMV(pixKey, merchantName, merchantCity, amount) {
+    function field(id, value) {
+        const len = String(value.length).padStart(2, '0');
+        return `${id}${len}${value}`;
+    }
 
-    <div id="ai-agent-container" class="ai-agent-area"></div>
+    const gui            = field('00', 'br.gov.bcb.pix') + field('01', pixKey);
+    const merchantInfo   = field('26', gui);
+    const mcc            = field('52', '0000');
+    const currency       = field('53', '986');
+    const amountField    = amount > 0 ? field('54', parseFloat(amount).toFixed(2)) : '';
+    const country        = field('58', 'BR');
+    const nameField      = field('59', (merchantName || 'Comercio').substring(0, 25).padEnd(1, ' ').trimEnd());
+    const cityField      = field('60', (merchantCity  || 'Brasil').substring(0, 15).padEnd(1, ' ').trimEnd());
+    const additional     = field('62', field('05', '***'));
 
-    <!-- ========== FOOTER ========== -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo" id="footerLogo">🌿 Açaíteria TDA</div>
-                <p>A experiência mais completa da região.</p>
-                <div class="footer-links">
-                    <a href="#inicio">Início</a>
-                    <a href="#sobre">Sobre</a>
-                    <a href="#servicos">Cardápio</a>
-                    <a href="#contato">Contato</a>
-                </div>
-                <div class="footer-social">
-                    <a href="#" aria-label="Instagram">📷</a>
-                    <a href="#" aria-label="WhatsApp">📱</a>
-                </div>
-                <!-- Admin discreto -->
-                <div style="margin-top:12px">
-                    <button class="btn-admin-link" onclick="openAdminModal()" title="Configurações">⚙️ Admin</button>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 TDA Açaí. Todos os direitos reservados.</p>
-                <p><a href="#privacidade">Política de Privacidade</a></p>
-            </div>
-        </div>
-    </footer>
+    const payload = field('00', '01') + field('01', '12') +
+                    merchantInfo + mcc + currency + amountField +
+                    country + nameField + cityField + additional + '6304';
 
-    <section class="privacidade" id="privacidade">
-        <div class="container">
-            <h3>Política de Privacidade</h3>
-            <p>A TDA Açaí respeita sua privacidade. Os dados coletados são utilizados apenas para processamento de pedidos e comunicação com clientes. Não compartilhamos informações pessoais com terceiros sem consentimento.</p>
-        </div>
-    </section>
+    return payload + crc16(payload);
+}
 
-    <!-- ============================================================ -->
-    <!-- MODAL: LOGIN / CADASTRO -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalAuth" onclick="closeModalOnOverlay(event, 'modalAuth')">
-        <div class="modal modal--auth">
-            <button class="modal-close" onclick="closeModal('modalAuth')">✕</button>
-            <h2 class="modal-title">🌿 Minha Conta</h2>
+function crc16(str) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+            crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+            crc &= 0xFFFF;
+        }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+}
 
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Entrar</button>
-                <button class="auth-tab" id="tabCadastro" onclick="switchTab('cadastro')">Cadastrar</button>
-            </div>
+// =====================================================
+// ADMIN
+// =====================================================
 
-            <!-- LOGIN -->
-            <div id="panelLogin">
-                <p class="auth-hint">Digite seu telefone para acessar sua conta salva.</p>
-                <div class="form-group">
-                    <label>Telefone (com DDD)</label>
-                    <input type="tel" id="loginPhone" placeholder="(19) 99999-9999" class="form-input">
-                </div>
-                <button class="btn btn-primary btn-full" onclick="doLogin()">Entrar</button>
-                <p class="auth-switch">Não tem conta? <a onclick="switchTab('cadastro')">Cadastre-se</a></p>
-            </div>
+function openAdminModal() {
+    adminAuth = false;
+    document.getElementById('adminLoginPanel').style.display = '';
+    document.getElementById('adminPanel').style.display      = 'none';
+    document.getElementById('adminPassword').value          = '';
+    openModal('modalAdmin');
+}
 
-            <!-- CADASTRO -->
-            <div id="panelCadastro" style="display:none">
-                <div class="form-group">
-                    <label>Nome completo *</label>
-                    <input type="text" id="regName" placeholder="Seu nome" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Telefone (com DDD) *</label>
-                    <input type="tel" id="regPhone" placeholder="(19) 99999-9999" class="form-input">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Rua *</label>
-                        <input type="text" id="regStreet" placeholder="Nome da rua" class="form-input">
-                    </div>
-                    <div class="form-group form-group--sm">
-                        <label>Número *</label>
-                        <input type="text" id="regNumber" placeholder="Nº" class="form-input">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Bairro *</label>
-                    <input type="text" id="regNeighborhood" placeholder="Bairro" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Complemento <span class="optional">(opcional)</span></label>
-                    <input type="text" id="regComplement" placeholder="Apto, bloco, referência..." class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Cidade *</label>
-                    <input type="text" id="regCity" placeholder="Cidade" class="form-input" value="Mogi Mirim">
-                </div>
-                <button class="btn btn-primary btn-full" onclick="doRegister()">Criar Conta</button>
-                <p class="auth-switch">Já tem conta? <a onclick="switchTab('login')">Entrar</a></p>
-            </div>
-        </div>
-    </div>
+function checkAdminPass() {
+    const pass = document.getElementById('adminPassword').value;
+    if (pass === settings.adminPass) {
+        adminAuth = true;
+        document.getElementById('adminLoginPanel').style.display = 'none';
+        document.getElementById('adminPanel').style.display      = '';
+        // Preenche valores atuais
+        document.getElementById('adminDeliveryFee').value = settings.deliveryFee;
+        document.getElementById('adminPixKey').value      = settings.pixKey;
+        document.getElementById('adminPixName').value     = settings.pixName;
+        document.getElementById('adminPixCity').value     = settings.pixCity;
+        document.getElementById('adminNewPass').value     = '';
+    } else {
+        showToast('Senha incorreta!', 'error');
+    }
+}
 
-    <!-- ============================================================ -->
-    <!-- MODAL: CARRINHO -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalCart" onclick="closeModalOnOverlay(event, 'modalCart')">
-        <div class="modal modal--cart">
-            <div class="cart-header">
-                <h2>🛒 Meu Carrinho</h2>
-                <button class="modal-close" onclick="closeModal('modalCart')">✕</button>
-            </div>
+function saveAdminSettings() {
+    if (!adminAuth) return;
 
-            <div id="cartEmpty" class="cart-empty">
-                <p>🍧</p>
-                <p>Seu carrinho está vazio!</p>
-                <button class="btn btn-primary" onclick="closeModal('modalCart')">Ver Cardápio</button>
-            </div>
+    const fee  = parseFloat(document.getElementById('adminDeliveryFee').value);
+    const key  = document.getElementById('adminPixKey').value.trim();
+    const name = document.getElementById('adminPixName').value.trim();
+    const city = document.getElementById('adminPixCity').value.trim();
+    const newPass = document.getElementById('adminNewPass').value.trim();
 
-            <div id="cartItems" style="display:none">
-                <div id="cartItemsList"></div>
+    if (isNaN(fee) || fee < 0) {
+        showToast('Taxa de entrega inválida.', 'error');
+        return;
+    }
 
-                <div class="cart-summary">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span id="cartSubtotal">R$ 0,00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Taxa de entrega</span>
-                        <span id="cartDelivery">R$ 0,00</span>
-                    </div>
-                    <div class="summary-row summary-row--total">
-                        <span>Total</span>
-                        <span id="cartTotal">R$ 0,00</span>
-                    </div>
-                </div>
+    settings.deliveryFee = fee;
+    if (key)  settings.pixKey  = key;
+    if (name) settings.pixName = name;
+    if (city) settings.pixCity = city;
+    if (newPass) settings.adminPass = newPass;
 
-                <button class="btn btn-primary btn-full" onclick="openCheckout()">Finalizar Pedido →</button>
-                <button class="btn btn-outline btn-full" onclick="clearCart()">Esvaziar carrinho</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- MODAL: CHECKOUT -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalCheckout" onclick="closeModalOnOverlay(event, 'modalCheckout')">
-        <div class="modal modal--checkout">
-            <button class="modal-close" onclick="closeModal('modalCheckout')">✕</button>
-            <h2 class="modal-title">📋 Finalizar Pedido</h2>
-
-            <!-- Endereço de entrega -->
-            <div class="checkout-section">
-                <h3>📍 Endereço de Entrega</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Rua *</label>
-                        <input type="text" id="chkStreet" class="form-input">
-                    </div>
-                    <div class="form-group form-group--sm">
-                        <label>Número *</label>
-                        <input type="text" id="chkNumber" class="form-input">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Bairro *</label>
-                    <input type="text" id="chkNeighborhood" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Complemento</label>
-                    <input type="text" id="chkComplement" class="form-input" placeholder="Apto, bloco...">
-                </div>
-                <div class="form-group">
-                    <label>Cidade *</label>
-                    <input type="text" id="chkCity" class="form-input">
-                </div>
-            </div>
-
-            <!-- Forma de pagamento -->
-            <div class="checkout-section">
-                <h3>💳 Forma de Pagamento</h3>
-                <div class="payment-options">
-                    <label class="payment-opt">
-                        <input type="radio" name="payment" value="pix" onchange="onPaymentChange('pix')">
-                        <span class="payment-opt-box">
-                            <span class="payment-icon">📲</span>
-                            <span>PIX</span>
-                        </span>
-                    </label>
-                    <label class="payment-opt">
-                        <input type="radio" name="payment" value="debito" onchange="onPaymentChange('debito')">
-                        <span class="payment-opt-box">
-                            <span class="payment-icon">💳</span>
-                            <span>Débito</span>
-                        </span>
-                    </label>
-                    <label class="payment-opt">
-                        <input type="radio" name="payment" value="credito" onchange="onPaymentChange('credito')">
-                        <span class="payment-opt-box">
-                            <span class="payment-icon">💳</span>
-                            <span>Crédito</span>
-                        </span>
-                    </label>
-                    <label class="payment-opt">
-                        <input type="radio" name="payment" value="dinheiro" onchange="onPaymentChange('dinheiro')">
-                        <span class="payment-opt-box">
-                            <span class="payment-icon">💵</span>
-                            <span>Dinheiro</span>
-                        </span>
-                    </label>
-                </div>
-
-                <!-- Aviso cartão -->
-                <div id="paymentNoticeCard" class="payment-notice payment-notice--card" style="display:none">
-                    🛵 <strong>Atenção:</strong> Para pagamento com cartão, levaremos a maquininha no momento da entrega. Tenha seu cartão em mãos!
-                </div>
-
-                <!-- Aviso dinheiro -->
-                <div id="paymentNoticeMoney" class="payment-notice payment-notice--money" style="display:none">
-                    💵 <strong>Dinheiro:</strong> Informe se precisar de troco.
-                    <input type="text" id="changeFor" class="form-input" placeholder="Troco para R$..." style="margin-top:8px">
-                </div>
-            </div>
-
-            <div class="checkout-total">
-                <span>Total do pedido:</span>
-                <strong id="chkTotal">R$ 0,00</strong>
-            </div>
-
-            <button class="btn btn-primary btn-full" onclick="confirmOrder()">Confirmar Pedido ✓</button>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- MODAL: RESUMO DO PEDIDO -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalSummary" onclick="closeModalOnOverlay(event, 'modalSummary')">
-        <div class="modal modal--summary">
-            <button class="modal-close" onclick="closeModal('modalSummary')">✕</button>
-            <div class="summary-header">
-                <div class="summary-check">✓</div>
-                <h2>Pedido Confirmado!</h2>
-                <p>Revise os detalhes abaixo</p>
-            </div>
-
-            <div id="summaryContent"></div>
-
-            <!-- QR Code PIX -->
-            <div id="pixSection" style="display:none">
-                <div class="pix-box">
-                    <h3>📲 Pague via PIX</h3>
-                    <canvas id="pixQRCode" class="pix-qr-canvas"></canvas>
-                    <p class="pix-key-label">Chave PIX:</p>
-                    <div class="pix-key-value" id="pixKeyDisplay"></div>
-                    <button class="btn btn-outline btn-sm" onclick="copyPixKey()">📋 Copiar Chave</button>
-                    <p class="pix-amount-label">Valor a pagar: <strong id="pixAmount"></strong></p>
-                    <div class="pix-comprovante-notice">
-                        📩 <strong>Após o pagamento</strong>, envie o comprovante para o nosso WhatsApp:
-                        <a href="https://wa.me/5519994194916" target="_blank" class="pix-wa-link">📱 (19) 99419-4916</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="summary-actions">
-                <button class="btn btn-whatsapp btn-full" onclick="sendToWhatsApp()">📱 Reenviar pelo WhatsApp</button>
-                <button class="btn btn-outline btn-full" onclick="finishOrder()">✓ Concluir</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- MODAL: ACOMPANHAR PEDIDO -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalTracking" onclick="closeModalOnOverlay(event, 'modalTracking')">
-        <div class="modal modal--tracking">
-            <button class="modal-close" onclick="closeModal('modalTracking')">✕</button>
-            <h2 class="modal-title">📦 Meus Pedidos</h2>
-            <div id="trackingContent"></div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- MODAL: ADMIN -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalAdmin" onclick="closeModalOnOverlay(event, 'modalAdmin')">
-        <div class="modal modal--admin">
-            <button class="modal-close" onclick="closeModal('modalAdmin')">✕</button>
-            <h2 class="modal-title">⚙️ Configurações Admin</h2>
-
-            <div id="adminLoginPanel">
-                <p>Digite a senha de administrador:</p>
-                <div class="form-group">
-                    <input type="password" id="adminPassword" class="form-input" placeholder="Senha" onkeydown="if(event.key==='Enter')checkAdminPass()">
-                </div>
-                <button class="btn btn-primary btn-full" onclick="checkAdminPass()">Entrar</button>
-            </div>
-
-            <div id="adminPanel" style="display:none">
-
-                <!-- Abas do admin -->
-                <div class="admin-tabs">
-                    <button class="admin-tab active" id="adminTabConfig" onclick="switchAdminTab('config')">⚙️ Configurações</button>
-                    <button class="admin-tab" id="adminTabOrders" onclick="switchAdminTab('orders')">📋 Pedidos</button>
-                </div>
-
-                <!-- Painel Configurações -->
-                <div id="adminPanelConfig">
-                <div class="admin-section">
-                    <h3>🚚 Taxa de Entrega</h3>
-                    <div class="form-group">
-                        <label>Valor da taxa (R$)</label>
-                        <input type="number" id="adminDeliveryFee" class="form-input" placeholder="Ex: 5.00" step="0.50" min="0">
-                    </div>
-                </div>
-
-                <div class="admin-section">
-                    <h3>📲 Dados do PIX</h3>
-                    <div class="form-group">
-                        <label>Chave PIX</label>
-                        <input type="text" id="adminPixKey" class="form-input" placeholder="CPF, telefone, e-mail ou chave aleatória">
-                    </div>
-                    <div class="form-group">
-                        <label>Nome do recebedor (máx. 25 caracteres)</label>
-                        <input type="text" id="adminPixName" class="form-input" placeholder="TDA Acai" maxlength="25">
-                    </div>
-                    <div class="form-group">
-                        <label>Cidade (máx. 15 caracteres)</label>
-                        <input type="text" id="adminPixCity" class="form-input" placeholder="Mogi Mirim" maxlength="15">
-                    </div>
-                </div>
-
-                <div class="admin-section">
-                    <h3>🔐 Senha Admin</h3>
-                    <div class="form-group">
-                        <label>Nova senha (deixe em branco para não alterar)</label>
-                        <input type="password" id="adminNewPass" class="form-input" placeholder="Nova senha">
-                    </div>
-                </div>
-
-                <button class="btn btn-primary btn-full" onclick="saveAdminSettings()">💾 Salvar Configurações</button>
-                </div><!-- fim adminPanelConfig -->
-
-                <!-- Painel Pedidos -->
-                <div id="adminPanelOrders" style="display:none">
-                    <div id="adminOrdersList"></div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast notification -->
-    <div id="toast" class="toast"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+    saveSettings();
+    closeModal('modalAdmin');
+    showToast('Configurações salvas! ✓');
+}
