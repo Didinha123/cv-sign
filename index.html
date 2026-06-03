@@ -60,6 +60,7 @@
         </div>
         <div class="cat-bar" id="catBar">
             <button class="cat-pill active" data-cat="all" onclick="filterCat('all',this)">Todos</button>
+            <button class="cat-pill cat-pill--promo" data-cat="promocoes" onclick="filterCat('promocoes',this)" style="display:none">🔥 Promoções</button>
             <button class="cat-pill" data-cat="copos" onclick="filterCat('copos',this)">Copos</button>
             <button class="cat-pill" data-cat="combos" onclick="filterCat('combos',this)">Combos</button>
         </div>
@@ -67,6 +68,9 @@
 
     <!-- PRODUTOS -->
     <main class="main-content" id="mainContent">
+
+        <!-- Seção Promoções — preenchida dinamicamente pelo JS -->
+        <div class="prod-section" data-cat="promocoes" id="sec-promocoes" style="display:none"></div>
 
         <div class="prod-section" data-cat="copos" id="sec-copos">
             <h2 class="prod-section-title">🌴 Nossos Copos</h2>
