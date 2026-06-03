@@ -8,7 +8,7 @@
 //     Assim funciona em TODOS os dispositivos automaticamente.
 //     Exemplo: 'https://script.google.com/macros/s/ABC.../exec'
 // ─────────────────────────────────────────────────────────────
-const SHEETS_URL_FIXO = 'https://script.google.com/macros/s/AKfycbynxjnxCyXE9huzTWHkr1H7Um6uKcRl0mRRmzL2OE7AM3gJ2tJowbSieck5L_hVXX4E/exec';
+const SHEETS_URL_FIXO = 'https://script.google.com/macros/s/AKfycbzMkdRxMa5ECAPABJDwdLugyY7r8imAQohtOXwr9HjmweqUhr2FWUx6l2Lo4PUPvKIh/exec';
 
 // ─────────────────────────────────────────────────────────────
 // DADOS DOS PRODUTOS
