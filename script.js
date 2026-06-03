@@ -7,10 +7,18 @@
 // ESTADO DA APLICAÇÃO
 // =====================================================
 
-let cart      = JSON.parse(localStorage.getItem('tda_cart')     || '[]');
-let currentUser = JSON.parse(localStorage.getItem('tda_user')   || 'null');
-let settings  = JSON.parse(localStorage.getItem('tda_settings') || 'null');
-let adminAuth = false;
+let cart        = JSON.parse(localStorage.getItem('tda_cart')     || '[]');
+let currentUser = JSON.parse(localStorage.getItem('tda_user')    || 'null');
+let settings    = JSON.parse(localStorage.getItem('tda_settings') || 'null');
+let adminAuth   = false;
+
+const ORDER_STATUSES = {
+    pending:   { label: '⏳ Aguardando confirmação', color: '#f59e0b', bg: '#fef3c7' },
+    preparing: { label: '👨‍🍳 Em preparo',            color: '#7c3aed', bg: '#ede9fe' },
+    delivery:  { label: '🛵 Saiu para entrega',      color: '#2563eb', bg: '#dbeafe' },
+    delivered: { label: '✅ Entregue',                color: '#16a34a', bg: '#dcfce7' },
+    cancelled: { label: '❌ Cancelado',               color: '#dc2626', bg: '#fee2e2' },
+};
 
 // Configurações padrão
 if (!settings) {
@@ -270,10 +278,10 @@ function doRegister() {
 }
 
 function updateUserUI() {
-    const label = document.getElementById('userLabel');
-    if (label) {
-        label.textContent = currentUser ? currentUser.name.split(' ')[0] : 'Entrar';
-    }
+    const label   = document.getElementById('userLabel');
+    const btnTrack = document.getElementById('btnTrack');
+    if (label)    label.textContent = currentUser ? currentUser.name.split(' ')[0] : 'Entrar';
+    if (btnTrack) btnTrack.style.display = currentUser ? 'flex' : 'none';
 }
 
 // =====================================================
@@ -482,10 +490,17 @@ function confirmOrder() {
     const changeFor     = document.getElementById('changeFor').value.trim();
 
     closeModal('modalCheckout');
-    showOrderSummary(address, paymentMethod, changeFor);
 
-    // Abre WhatsApp automaticamente
-    setTimeout(() => sendToWhatsApp(false), 400);
+    // Salva snapshots antes de mostrar o resumo
+    window._lastOrderItems = cart.map(i => ({ ...i }));
+    window._lastSubtotal   = getSubtotal();
+    window._lastTotal      = getTotal();
+    window._lastOrder      = { address, paymentMethod, changeFor };
+
+    saveOrder(address, paymentMethod, changeFor);
+    showOrderSummary(address, paymentMethod, changeFor);
+    // Abre WhatsApp depois que o modal já abriu (600ms dá tempo pro QR também renderizar)
+    setTimeout(() => sendToWhatsApp(false), 600);
 }
 
 // =====================================================
@@ -493,6 +508,11 @@ function confirmOrder() {
 // =====================================================
 
 function showOrderSummary(address, paymentMethod, changeFor) {
+    // Usa sempre o snapshot salvo (imune a limpeza de carrinho)
+    const items    = window._lastOrderItems || [];
+    const subtotal = window._lastSubtotal   || 0;
+    const total    = window._lastTotal      || 0;
+
     const paymentLabels = {
         pix:      '📲 PIX',
         debito:   '💳 Cartão de Débito',
@@ -502,7 +522,7 @@ function showOrderSummary(address, paymentMethod, changeFor) {
 
     const addressStr = `${address.street}, ${address.number}${address.complement ? ' – ' + address.complement : ''}, ${address.neighborhood} – ${address.city}`;
 
-    const itemsHtml = cart.map(i =>
+    const itemsHtml = items.map(i =>
         `<div class="summary-item">
             <span>${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}</span>
             <span>${formatCurrency(i.price * i.qty)}</span>
@@ -520,9 +540,9 @@ function showOrderSummary(address, paymentMethod, changeFor) {
             <h4>🛍️ Itens do Pedido</h4>
             ${itemsHtml}
             <div class="summary-divider"></div>
-            <div class="summary-item"><span>Subtotal</span><span>${formatCurrency(getSubtotal())}</span></div>
+            <div class="summary-item"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
             <div class="summary-item"><span>Entrega</span><span>${formatCurrency(settings.deliveryFee)}</span></div>
-            <div class="summary-item summary-item--total"><span>Total</span><span>${formatCurrency(getTotal())}</span></div>
+            <div class="summary-item summary-item--total"><span>Total</span><span>${formatCurrency(total)}</span></div>
         </div>
         <div class="summary-section">
             <h4>📍 Endereço</h4>
@@ -538,41 +558,38 @@ function showOrderSummary(address, paymentMethod, changeFor) {
 
     // Seção PIX
     const pixSection = document.getElementById('pixSection');
-    const qrContainer = document.getElementById('pixQRCode');
     if (paymentMethod === 'pix') {
         pixSection.style.display = '';
         if (!settings.pixKey) {
             pixSection.querySelector('.pix-box').innerHTML = `
                 <h3>📲 PIX</h3>
-                <p style="color:#c00">⚠️ Chave PIX não configurada. Fale com o admin.</p>
+                <p style="color:#c00">⚠️ Chave PIX não configurada. Configure no painel Admin.</p>
             `;
         } else {
-            // Limpa QR anterior
-            qrContainer.innerHTML = '';
-            const pixPayload = buildPixEMV(settings.pixKey, settings.pixName, settings.pixCity, getTotal());
-            // Gera QR code localmente com qrcodejs
-            new QRCode(qrContainer, {
-                text: pixPayload,
-                width: 220,
-                height: 220,
-                colorDark: '#166534',
-                colorLight: '#f0fdf4',
-                correctLevel: QRCode.CorrectLevel.M
-            });
             document.getElementById('pixKeyDisplay').textContent = settings.pixKey;
-            document.getElementById('pixAmount').textContent     = formatCurrency(getTotal());
+            document.getElementById('pixAmount').textContent     = formatCurrency(total);
+            // Gera QR após o modal abrir (garante que o canvas está no DOM visível)
+            try {
+                const pixPayload = buildPixEMV(settings.pixKey, settings.pixName, settings.pixCity, total);
+                setTimeout(() => renderPixQR(pixPayload), 150);
+            } catch(e) {
+                console.error('Erro PIX payload:', e);
+            }
         }
     } else {
         pixSection.style.display = 'none';
     }
 
-    // Salva snapshot do pedido para o WhatsApp (antes de qualquer limpeza de carrinho)
-    window._lastOrder      = { address, paymentMethod, changeFor };
-    window._lastOrderItems = cart.map(i => ({ ...i }));
-    window._lastSubtotal   = getSubtotal();
-    window._lastTotal      = getTotal();
-
+    // Abre o modal PRIMEIRO — depois o WA (evita que erros impeçam a abertura)
     openModal('modalSummary');
+
+    // Ajusta botão Concluir para PIX
+    const btnFinish = document.getElementById('btnFinishOrder');
+    if (btnFinish) {
+        btnFinish.textContent = paymentMethod === 'pix'
+            ? '✓ Já realizei o pagamento PIX'
+            : '✓ Concluir pedido';
+    }
 }
 
 function copyPixKey() {
@@ -622,6 +639,202 @@ function finishOrder() {
     updateCartBadge();
     closeAllModals();
     showToast('Pedido concluído! 🌿');
+}
+
+// =====================================================
+// QR CODE — renderiza no canvas com qrcode-generator
+// =====================================================
+
+function renderPixQR(text) {
+    const canvas = document.getElementById('pixQRCode');
+    if (!canvas) return;
+
+    try {
+        // Tenta com qrcode-generator (CDN)
+        if (typeof qrcode !== 'undefined') {
+            const qr = qrcode(0, 'M');
+            qr.addData(text, 'Alphanumeric');
+            qr.make();
+
+            const size    = 220;
+            const modules = qr.getModuleCount();
+            const cell    = Math.floor(size / modules);
+            const offset  = Math.floor((size - cell * modules) / 2);
+
+            canvas.width  = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f0fdf4';
+            ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = '#166534';
+            for (let r = 0; r < modules; r++) {
+                for (let c = 0; c < modules; c++) {
+                    if (qr.isDark(r, c)) {
+                        ctx.fillRect(offset + c * cell, offset + r * cell, cell, cell);
+                    }
+                }
+            }
+            return;
+        }
+    } catch(e) { console.warn('qrcode-generator falhou, usando fallback:', e); }
+
+    // Fallback: imagem via API externa
+    try {
+        const img = document.createElement('img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(text)}`;
+        img.alt = 'QR Code PIX';
+        img.className = 'pix-qr-canvas';
+        img.onerror = () => { img.alt = '⚠️ QR indisponível. Use a chave copiada acima.'; };
+        canvas.replaceWith(img);
+    } catch(e2) { console.error('Fallback QR também falhou:', e2); }
+}
+
+// =====================================================
+// PEDIDOS — salvar e rastrear
+// =====================================================
+
+function saveOrder(address, paymentMethod, changeFor) {
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
+    const order = {
+        id: Date.now(),
+        customer: { name: currentUser.name, phone: currentUser.phone },
+        items: window._lastOrderItems,
+        address,
+        paymentMethod,
+        changeFor,
+        subtotal:    window._lastSubtotal,
+        deliveryFee: settings.deliveryFee,
+        total:       window._lastTotal,
+        status:      'pending',
+        createdAt:   new Date().toISOString(),
+    };
+    orders.unshift(order); // mais recente primeiro
+    localStorage.setItem('tda_orders', JSON.stringify(orders));
+    return order.id;
+}
+
+// ---- Rastreamento (visão do cliente) ----
+
+function openTracking() {
+    renderTracking();
+    openModal('modalTracking');
+}
+
+function renderTracking() {
+    const el = document.getElementById('trackingContent');
+    if (!currentUser) { el.innerHTML = '<p>Faça login para ver seus pedidos.</p>'; return; }
+
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]')
+        .filter(o => o.customer.phone === currentUser.phone);
+
+    if (orders.length === 0) {
+        el.innerHTML = '<div class="tracking-empty"><p>📦</p><p>Nenhum pedido encontrado.</p></div>';
+        return;
+    }
+
+    el.innerHTML = orders.map(o => {
+        const st    = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
+        const date  = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        const items = o.items.map(i => `${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}`).join(', ');
+        const payLabels = { pix:'PIX', debito:'Débito', credito:'Crédito', dinheiro:'Dinheiro' };
+        return `
+        <div class="tracking-card">
+            <div class="tracking-card-header">
+                <span class="tracking-date">${date}</span>
+                <span class="tracking-status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+            </div>
+            <div class="tracking-items">${items}</div>
+            <div class="tracking-footer">
+                <span>${formatCurrency(o.total)}</span>
+                <span>${payLabels[o.paymentMethod] || o.paymentMethod}</span>
+            </div>
+            <!-- Linha do tempo -->
+            <div class="status-timeline">
+                ${renderTimeline(o.status)}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderTimeline(currentStatus) {
+    const steps = [
+        { key: 'pending',   icon: '⏳', label: 'Confirmado' },
+        { key: 'preparing', icon: '👨‍🍳', label: 'Em preparo' },
+        { key: 'delivery',  icon: '🛵', label: 'Saiu p/ entrega' },
+        { key: 'delivered', icon: '✅', label: 'Entregue' },
+    ];
+    const order  = ['pending','preparing','delivery','delivered'];
+    const curIdx = order.indexOf(currentStatus);
+    return steps.map((s, i) => {
+        const done   = i <= curIdx;
+        const active = i === curIdx;
+        return `<div class="tl-step ${done ? 'tl-done' : ''} ${active ? 'tl-active' : ''}">
+            <div class="tl-icon">${s.icon}</div>
+            <div class="tl-label">${s.label}</div>
+        </div>`;
+    }).join('<div class="tl-line"></div>');
+}
+
+// ---- Admin — gestão de pedidos ----
+
+function switchAdminTab(tab) {
+    const isConfig = tab === 'config';
+    document.getElementById('adminPanelConfig').style.display  = isConfig ? '' : 'none';
+    document.getElementById('adminPanelOrders').style.display  = isConfig ? 'none' : '';
+    document.getElementById('adminTabConfig').classList.toggle('active',  isConfig);
+    document.getElementById('adminTabOrders').classList.toggle('active', !isConfig);
+    if (!isConfig) renderAdminOrders();
+}
+
+function renderAdminOrders() {
+    const el     = document.getElementById('adminOrdersList');
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
+
+    if (orders.length === 0) {
+        el.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Nenhum pedido ainda.</p>';
+        return;
+    }
+
+    el.innerHTML = orders.map(o => {
+        const st   = ORDER_STATUSES[o.status] || ORDER_STATUSES.pending;
+        const date = new Date(o.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        const items = o.items.map(i => `${i.qty}x ${i.productName}${i.size ? ` (${i.size})` : ''}`).join('<br>');
+        const addr  = `${o.address.street}, ${o.address.number} – ${o.address.neighborhood}, ${o.address.city}`;
+        const payLabels = { pix:'PIX', debito:'Débito', credito:'Crédito', dinheiro:'Dinheiro' };
+
+        const statusOptions = Object.entries(ORDER_STATUSES).map(([k, v]) =>
+            `<option value="${k}" ${o.status === k ? 'selected' : ''}>${v.label}</option>`
+        ).join('');
+
+        return `
+        <div class="admin-order-card">
+            <div class="admin-order-head">
+                <strong>#${o.id.toString().slice(-5)}</strong>
+                <span>${date}</span>
+                <span class="tracking-status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+            </div>
+            <div class="admin-order-info">
+                <p><strong>👤</strong> ${o.customer.name} — ${o.customer.phone}</p>
+                <p><strong>📍</strong> ${addr}</p>
+                <p><strong>🛍️</strong> ${items}</p>
+                <p><strong>💳</strong> ${payLabels[o.paymentMethod] || o.paymentMethod} — <strong>${formatCurrency(o.total)}</strong></p>
+            </div>
+            <div class="admin-order-status">
+                <label>Atualizar status:</label>
+                <select class="form-input" onchange="updateOrderStatus(${o.id}, this.value)">${statusOptions}</select>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function updateOrderStatus(orderId, newStatus) {
+    const orders = JSON.parse(localStorage.getItem('tda_orders') || '[]');
+    const order  = orders.find(o => o.id === orderId);
+    if (!order) return;
+    order.status = newStatus;
+    localStorage.setItem('tda_orders', JSON.stringify(orders));
+    showToast(`Status atualizado: ${ORDER_STATUSES[newStatus].label}`);
+    renderAdminOrders();
 }
 
 // =====================================================
