@@ -16,6 +16,7 @@ const PIX_CIDADE_FIXA   = 'Mogi Mirim';   // ex: 'Mogi Mirim' — máx 15 chars
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
 
+
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -113,7 +114,18 @@ document.addEventListener('DOMContentLoaded', () => {
 function checkStoreOpen() {
     const el = document.getElementById('storeStatus'); if (!el) return;
     const now = new Date(), day = now.getDay(), t = now.getHours()*60+now.getMinutes();
-    let open = day===5 ? (t>=600&&t<1050) : day===6 ? t>=1080 : (t>=840&&t<1410);
+    // 0=Dom 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb
+    const horarios = {
+        0: { a: 13*60, f: 18*60 }, // Dom 13–18
+        1: { a: 13*60, f: 22*60 }, // Seg 13–22
+        2: { a: 13*60, f: 22*60 }, // Ter 13–22
+        3: { a: 13*60, f: 18*60 }, // Qua 13–18
+        4: { a: 13*60, f: 22*60 }, // Qui 13–22
+        5: { a: 13*60, f: 17*60 }, // Sex 13–17
+        6: { a: 18*60, f: 22*60 }, // Sáb 18–22
+    };
+    const h    = horarios[day];
+    const open = h ? (t >= h.a && t < h.f) : false;
     el.textContent = open ? '● Aberto agora' : '● Fechado';
     el.className   = 'store-status '+(open?'open':'closed');
 }
