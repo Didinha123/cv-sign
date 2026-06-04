@@ -6,7 +6,6 @@
 // ─────────────────────────────────────────────────────────────
 // ⚠️  CONFIGURAÇÕES FIXAS — valem em TODOS os dispositivos
 // ─────────────────────────────────────────────────────────────
-
 const SHEETS_URL_FIXO   = 'https://script.google.com/macros/s/AKfycbzMkdRxMa5ECAPABJDwdLugyY7r8imAQohtOXwr9HjmweqUhr2FWUx6l2Lo4PUPvKIh/exec';   // URL do Apps Script
 const TAXA_ENTREGA_FIXA = 2;    // ex: 5.00 — usa 0 para ler do Admin
 const PIX_KEY_FIXA      = '8af2ba28-1c9c-47cd-82cc-3be69599d2d1';   // ex: '19999999999' — usa '' para ler do Admin
@@ -15,6 +14,7 @@ const PIX_CIDADE_FIXA   = 'Mogi Mirim';   // ex: 'Mogi Mirim' — máx 15 chars
 
 // Bairros/condomínios com frete grátis (sem acento, minúsculas)
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
+
 
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
