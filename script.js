@@ -1,6 +1,3 @@
-
-
-
 /**
  * TDA Açaí — Script Principal
  */
@@ -11,10 +8,12 @@
 
 const SHEETS_URL_FIXO   = 'https://script.google.com/macros/s/AKfycbzMkdRxMa5ECAPABJDwdLugyY7r8imAQohtOXwr9HjmweqUhr2FWUx6l2Lo4PUPvKIh/exec';   // URL do Apps Script
 const TAXA_ENTREGA_FIXA = 2;    // ex: 5.00 — usa 0 para ler do Admin
+const PIX_KEY_FIXA      = '8af2ba28-1c9c-47cd-82cc-3be69599d2d1';   // ex: '19999999999' — usa '' para ler do Admin
+const PIX_NOME_FIXO     = 'TDA Acai';   // ex: 'TDA Acai' — máx 25 chars
+const PIX_CIDADE_FIXA   = 'Mogi Mirim';   // ex: 'Mogi Mirim' — máx 15 chars
 
 // Bairros/condomínios com frete grátis (sem acento, minúsculas)
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
-
 
 
 // ─────────────────────────────────────────────────────────────
@@ -507,11 +506,14 @@ function showOrderSummary(address,paymentMethod,changeFor){
     const pixSection=document.getElementById('pixSection');
     if(paymentMethod==='pix'){
         pixSection.style.display='';
-        if(!settings.pixKey){pixSection.querySelector('.pix-box').innerHTML=`<h3>📲 PIX</h3><p style="color:#dc2626">⚠️ Chave PIX não configurada. Configure no Admin.</p>`;}
+        const pixKey  = PIX_KEY_FIXA   || settings.pixKey;
+        const pixNome = PIX_NOME_FIXO  || settings.pixName;
+        const pixCid  = PIX_CIDADE_FIXA|| settings.pixCity;
+        if(!pixKey){pixSection.querySelector('.pix-box').innerHTML=`<h3>📲 PIX</h3><p style="color:#dc2626">⚠️ Chave PIX não configurada. Configure no Admin.</p>`;}
         else{
-            document.getElementById('pixKeyDisplay').textContent=settings.pixKey;
+            document.getElementById('pixKeyDisplay').textContent=pixKey;
             document.getElementById('pixAmount').textContent=formatCurrency(total);
-            try{const p=buildPixEMV(settings.pixKey,settings.pixName,settings.pixCity,total);setTimeout(()=>renderPixQR(p),150);}catch(e){}
+            try{const p=buildPixEMV(pixKey,pixNome,pixCid,total);setTimeout(()=>renderPixQR(p),150);}catch(e){}
         }
     }else{pixSection.style.display='none';}
     openModal('modalSummary');
@@ -519,7 +521,7 @@ function showOrderSummary(address,paymentMethod,changeFor){
     if(btn)btn.textContent=paymentMethod==='pix'?'✓ Já realizei o pagamento PIX':'✓ Concluir pedido';
 }
 
-function copyPixKey(){navigator.clipboard.writeText(settings.pixKey).then(()=>showToast('Chave PIX copiada!')).catch(()=>showToast('Não foi possível copiar.','error'));}
+function copyPixKey(){const k=PIX_KEY_FIXA||settings.pixKey;navigator.clipboard.writeText(k).then(()=>showToast('Chave PIX copiada!')).catch(()=>showToast('Não foi possível copiar.','error'));}
 
 function sendToWhatsApp(autoClose=true){
     if(!window._lastOrder)return;
