@@ -1,3 +1,4 @@
+
 /**
  * TDA Açaí — Script Principal
  */
@@ -15,7 +16,6 @@ const PIX_CIDADE_FIXA   = 'Mogi Mirim';   // ex: 'Mogi Mirim' — máx 15 chars
 // Bairros/condomínios com frete grátis (sem acento, minúsculas)
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
-
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -27,11 +27,7 @@ const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', '
 //                              ↑ preço novo   ↑ preço antigo (aparece riscado)
 // ─────────────────────────────────────────────────────────────
 const PRODUCTS = {
-    // 👇 EXEMPLO DE PROMOÇÃO — Copo Diego com desconto:
-    //    price = preço NOVO (com desconto)
-    //    originalPrice = preço ANTIGO (aparece riscado)
-    //    Para remover a promoção, apague o ", originalPrice: 21" de cada tamanho
-    diego:  { id:'diego',  name:'Copo Diego',    cat:'copos',  image:'./Copo1.png',      desc:'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas.',           sizes:[{label:'300ml',price:18, originalPrice:21},{label:'500ml',price:22, originalPrice:26},{label:'700ml',price:26, originalPrice:30}] },
+    diego:  { id:'diego',  name:'Copo Diego',    cat:'copos',  image:'./Copo1.png',      desc:'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas.',           sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
     arthur: { id:'arthur', name:'Copo Arthur',   cat:'copos',  image:'./Copo2.png',      desc:'Morango fresco, creme de avelã e leite Ninho em açaí cremoso.',                   sizes:[{label:'300ml',price:22},{label:'500ml',price:27},{label:'700ml',price:31}] },
     thaina: { id:'thaina', name:'Copo Thaina',   cat:'copos',  image:'./Copo3.png',      desc:'Morango fresco, leite condensado e amendoim crocante em açaí cremoso.',           sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
     davi:   { id:'davi',   name:'Copo Davi',     cat:'copos',  image:'./Copo4.png',      desc:'Banana fresca, leite condensado e granola crocante em açaí refrescante.',         sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
@@ -101,12 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartBadge();
     checkStoreOpen();
     initWhatsApp();
-    atualizarTodosOsCards();  // preços do JS
-    renderPromocoes();         // aba promoções
-    carregarPrecosDoSheets();  // sobrescreve com Sheets se configurado
+    atualizarTodosOsCards();
+    renderPromocoes();
+    carregarPrecosDoSheets();
     const el = document.getElementById('siTaxaEntrega');
     if (el) el.textContent = formatCurrency(getTaxaEntrega());
     setInterval(checkStoreOpen, 60000);
+    iniciarPollingStatus();    // inicia verificação de status de pedidos
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -420,6 +417,7 @@ function doLogin(){
     const users=JSON.parse(localStorage.getItem('tda_users')||'{}'),user=users[phone];
     if(!user){showToast('Não encontrado. Cadastre-se!','error');switchTab('cadastro');document.getElementById('regPhone').value=phone;return;}
     currentUser=user;localStorage.setItem('tda_user',JSON.stringify(user));updateUserUI();closeModal('modalAuth');showToast(`Bem-vindo(a), ${user.name}! 🌿`);
+    _pollingAtivo=false; iniciarPollingStatus();
 }
 function doRegister(){
     const g=id=>document.getElementById(id).value.trim();
@@ -429,6 +427,7 @@ function doRegister(){
     const users=JSON.parse(localStorage.getItem('tda_users')||'{}');
     users[phone]=user;localStorage.setItem('tda_users',JSON.stringify(users));
     currentUser=user;localStorage.setItem('tda_user',JSON.stringify(user));updateUserUI();closeModal('modalAuth');showToast(`Bem-vindo(a), ${name}! 🌿`);
+    _pollingAtivo=false; iniciarPollingStatus();
 }
 function updateUserUI(){
     const l=document.getElementById('userLabel'),b=document.getElementById('btnTrack');
@@ -598,6 +597,78 @@ function renderTimeline(cur){
     const steps=[{key:'pending',icon:'⏳',label:'Confirmado'},{key:'preparing',icon:'👨‍🍳',label:'Em preparo'},{key:'delivery',icon:'🛵',label:'Saiu'},{key:'delivered',icon:'✅',label:'Entregue'}];
     const idx=['pending','preparing','delivery','delivered'].indexOf(cur);
     return steps.map((s,i)=>`<div class="tl-step ${i<=idx?'tl-done':''} ${i===idx?'tl-active':''}"><div class="tl-icon">${s.icon}</div><div class="tl-label">${s.label}</div></div>${i<3?'<div class="tl-line"></div>':''}`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICAÇÕES DE STATUS DO PEDIDO
+// ─────────────────────────────────────────────────────────────
+
+let _statusCache = JSON.parse(localStorage.getItem('tda_status_cache') || '{}');
+let _pollingAtivo = false;
+
+async function iniciarPollingStatus() {
+    if (!currentUser) return;
+
+    // Pede permissão para notificações do navegador
+    if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+    }
+
+    // Inicia o polling (só uma vez)
+    if (_pollingAtivo) return;
+    _pollingAtivo = true;
+
+    await verificarStatusPedidos();
+    setInterval(verificarStatusPedidos, 60000); // verifica a cada 60 segundos
+}
+
+async function verificarStatusPedidos() {
+    const url = (SHEETS_URL_FIXO || settings.sheetsUrl || '').trim();
+    if (!url || !currentUser) return;
+
+    try {
+        const payload = { tipo: 'status_pedidos', telefone: currentUser.phone };
+        const res     = await fetch(`${url}?d=${encodeURIComponent(JSON.stringify(payload))}`);
+        const json    = await res.json();
+
+        if (json.status !== 'ok' || !Array.isArray(json.pedidos)) return;
+
+        json.pedidos.forEach(pedido => {
+            const statusAnterior = _statusCache[pedido.id];
+
+            // Se tem status anterior e mudou → notifica
+            if (statusAnterior && statusAnterior !== pedido.status) {
+                dispararNotificacao(pedido);
+            }
+
+            // Atualiza o cache
+            _statusCache[pedido.id] = pedido.status;
+        });
+
+        localStorage.setItem('tda_status_cache', JSON.stringify(_statusCache));
+
+    } catch(e) { /* silencia erros de rede */ }
+}
+
+function dispararNotificacao(pedido) {
+    const st  = ORDER_STATUSES[pedido.status] || { label: pedido.statusTexto || pedido.status };
+    const msg = `Seu pedido ${pedido.id} está: ${st.label}`;
+
+    // Toast na tela
+    showToast(`🔔 ${msg}`, 'info');
+
+    // Notificação do navegador (funciona mesmo com site em segundo plano)
+    if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+            new Notification('🌿 TDA Açaí', {
+                body:    msg,
+                icon:    './Copo_thaina.png',
+                badge:   './Copo_thaina.png',
+                tag:     pedido.id, // evita duplicatas para o mesmo pedido
+                vibrate: [200, 100, 200]
+            });
+        } catch(e) { /* alguns browsers bloqueiam fora de service worker */ }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
