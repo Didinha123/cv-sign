@@ -17,7 +17,6 @@ const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', '
 
 
 
-
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -83,9 +82,21 @@ function bairroTemFreteGratis(bairro) {
 
 function verificarFreteGratis(bairro) {
     _freteGratis = bairroTemFreteGratis(bairro);
+    // Sincroniza o checkbox do Manacas
+    const cbManacas = document.getElementById('chkManacas');
+    if (cbManacas) cbManacas.checked = _freteGratis;
     const aviso = document.getElementById('freteGratisAviso');
     if (aviso) aviso.style.display = _freteGratis ? '' : 'none';
     // Atualiza total exibido
+    const chkTotal = document.getElementById('chkTotal');
+    if (chkTotal) chkTotal.textContent = formatCurrency(getTotal());
+}
+
+// Chamada quando o cliente clica no checkbox do Manacas
+function onManacasToggle(checked) {
+    _freteGratis = checked;
+    const aviso = document.getElementById('freteGratisAviso');
+    if (aviso) aviso.style.display = checked ? '' : 'none';
     const chkTotal = document.getElementById('chkTotal');
     if (chkTotal) chkTotal.textContent = formatCurrency(getTotal());
 }
