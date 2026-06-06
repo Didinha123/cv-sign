@@ -15,6 +15,7 @@ const PIX_CIDADE_FIXA   = 'Mogi Mirim';   // ex: 'Mogi Mirim' — máx 15 chars
 // Bairros/condomínios com frete grátis (sem acento, minúsculas)
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
+
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -80,11 +81,24 @@ function bairroTemFreteGratis(bairro) {
 
 function verificarFreteGratis(bairro) {
     _freteGratis = bairroTemFreteGratis(bairro);
+    const cb = document.getElementById('chkManacas');
+    if (cb) cb.checked = _freteGratis;
     const aviso = document.getElementById('freteGratisAviso');
     if (aviso) aviso.style.display = _freteGratis ? '' : 'none';
-    // Atualiza total exibido
     const chkTotal = document.getElementById('chkTotal');
     if (chkTotal) chkTotal.textContent = formatCurrency(getTotal());
+}
+
+function onManacasToggle(checked) {
+    _freteGratis = checked;
+    const aviso = document.getElementById('freteGratisAviso');
+    if (aviso) aviso.style.display = checked ? '' : 'none';
+    const chkTotal = document.getElementById('chkTotal');
+    if (chkTotal) chkTotal.textContent = formatCurrency(getTotal());
+    const entregaEl = document.getElementById('cartDelivery');
+    if (entregaEl) entregaEl.textContent = checked ? 'Grátis 🎉' : formatCurrency(getTaxaEntrega());
+    updateCartBadge();
+    showToast(checked ? '🎉 Frete grátis aplicado!' : 'Frete: ' + formatCurrency(getTaxaEntrega()));
 }
 
 // ─────────────────────────────────────────────────────────────
