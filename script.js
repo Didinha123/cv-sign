@@ -15,8 +15,6 @@ const PIX_CIDADE_FIXA   = 'Mogi Mirim';   // ex: 'Mogi Mirim' — máx 15 chars
 // Bairros/condomínios com frete grátis (sem acento, minúsculas)
 const FRETE_GRATIS_BAIRROS = ['manacas', 'manacás', 'condominio dos manacas', 'cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
-
-
 // ─────────────────────────────────────────────────────────────
 // PRODUTOS
 // ─────────────────────────────────────────────────────────────
@@ -82,21 +80,9 @@ function bairroTemFreteGratis(bairro) {
 
 function verificarFreteGratis(bairro) {
     _freteGratis = bairroTemFreteGratis(bairro);
-    // Sincroniza o checkbox do Manacas
-    const cbManacas = document.getElementById('chkManacas');
-    if (cbManacas) cbManacas.checked = _freteGratis;
     const aviso = document.getElementById('freteGratisAviso');
     if (aviso) aviso.style.display = _freteGratis ? '' : 'none';
     // Atualiza total exibido
-    const chkTotal = document.getElementById('chkTotal');
-    if (chkTotal) chkTotal.textContent = formatCurrency(getTotal());
-}
-
-// Chamada quando o cliente clica no checkbox do Manacas
-function onManacasToggle(checked) {
-    _freteGratis = checked;
-    const aviso = document.getElementById('freteGratisAviso');
-    if (aviso) aviso.style.display = checked ? '' : 'none';
     const chkTotal = document.getElementById('chkTotal');
     if (chkTotal) chkTotal.textContent = formatCurrency(getTotal());
 }
@@ -117,6 +103,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.textContent = formatCurrency(getTaxaEntrega());
     setInterval(checkStoreOpen, 60000);
     iniciarPollingStatus();    // inicia verificação de status de pedidos
+    // ── Rastreamento de visitas ──────────────────
+    (function() {
+      try {
+        var url = (SHEETS_URL_FIXO || settings.sheetsUrl || '').trim();
+        if (!url) return;
+        fetch(url + '?d=' + encodeURIComponent(JSON.stringify({
+          tipo: 'visita',
+          visita: {
+            pagina:      window.location.pathname || '/',
+            referencia:  document.referrer || 'direto',
+            dispositivo: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+            navegador:   navigator.userAgent.substring(0, 100),
+            hora:        new Date().toISOString()
+          }
+        }))).catch(function(){});
+      } catch(e) {}
+    })();
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -500,6 +503,7 @@ function confirmOrder(){
     window._lastOrder={address,paymentMethod,changeFor};
     saveOrder(address,paymentMethod,changeFor);
     showOrderSummary(address,paymentMethod,changeFor);
+    setTimeout(()=>sendToWhatsApp(false),600);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -558,7 +562,7 @@ function sendToWhatsApp(autoClose=true){
     if(!autoClose)showToast('WhatsApp aberto! 🎉');
 }
 
-function finishOrder(){sendToWhatsApp(false);cart=[];saveCart();updateCartBadge();closeAllModals();showToast('Pedido concluído! 🌿');}
+function finishOrder(){cart=[];saveCart();updateCartBadge();closeAllModals();showToast('Pedido concluído! 🌿');}
 
 // ─────────────────────────────────────────────────────────────
 // QR CODE PIX
