@@ -517,7 +517,6 @@ function confirmOrder(){
     window._lastOrder={address,paymentMethod,changeFor};
     saveOrder(address,paymentMethod,changeFor);
     showOrderSummary(address,paymentMethod,changeFor);
-    setTimeout(()=>sendToWhatsApp(false),600);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -576,7 +575,7 @@ function sendToWhatsApp(autoClose=true){
     if(!autoClose)showToast('WhatsApp aberto! 🎉');
 }
 
-function finishOrder(){cart=[];saveCart();updateCartBadge();closeAllModals();showToast('Pedido concluído! 🌿');}
+function finishOrder(){sendToWhatsApp(false);cart=[];saveCart();updateCartBadge();closeAllModals();showToast('Pedido concluído! 🌿');}
 
 // ─────────────────────────────────────────────────────────────
 // QR CODE PIX
