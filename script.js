@@ -33,6 +33,8 @@ const PRODUCTS = {
     davi:   { id:'davi',   name:'Copo Davi',     cat:'copos',  image:'./Copo4.png',      desc:'Banana fresca, leite condensado e granola crocante em açaí refrescante.',         sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
     tda:    { id:'tda',    name:'Copo TDA',      cat:'copos',  image:'./Diego max.png',  desc:'Uva, banana, leite em pó e creme de avelã — equilíbrio perfeito de sabor.',      sizes:[{label:'300ml',price:22},{label:'500ml',price:27},{label:'700ml',price:31}] },
     combo:  { id:'combo',  name:'Combo Família', cat:'combos', image:'./4-copos.jpeg',   desc:'4 copos com açaí, frutas frescas, leite condensado, paçoca, creme de avelã e granola.', sizes:[{label:'Único',price:69.90}] },
+    kitkat: { id:'kitkat', name:'Copo Kit Kat', cat:'copos', image:'./KitKat.png', desc:'Açaí tradicional com creme de Kit Kat, morango fresco e leite em pó — o equilíbrio perfeito entre cremosidade e sabor!', sizes:[{label:'300ml',price:22},{label:'500ml',price:27},{label:'700ml',price:32}] },
+    garrafa: { id:'garrafa', name:'Açaí na Garrafa', cat:'garrafas', image:'./garrafa.png', desc:'Açaí cremoso na garrafa com leite em pó e leite condensado — perfeito para levar e saborear onde quiser.', sizes:[{label:'300ml',price:16.99}] },
 };
 
 const ORDER_STATUSES = {
