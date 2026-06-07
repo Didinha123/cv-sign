@@ -58,6 +58,7 @@
             <button class="cat-pill cat-pill--promo" data-cat="promocoes" onclick="filterCat('promocoes',this)" style="display:none">🔥 Promoções</button>
             <button class="cat-pill" data-cat="copos" onclick="filterCat('copos',this)">Copos</button>
             <button class="cat-pill" data-cat="combos" onclick="filterCat('combos',this)">Combos</button>
+            <button class="cat-pill" data-cat="garrafas" onclick="filterCat('garrafas',this)">🍶 Garrafa</button>
         </div>
     </div>
     <!-- PRODUTOS -->
@@ -120,6 +121,17 @@
                     <div class="product-add-btn">+</div>
                 </div>
             </div>
+            <div class="product-card" data-product="kitkat" onclick="openProductModal('kitkat')">
+                <div class="product-info">
+                    <div class="product-name">Copo Kit Kat</div>
+                    <div class="product-desc">Açaí tradicional com creme de Kit Kat, morango fresco e leite em pó</div>
+                    <div class="product-price">A partir de <strong>R$ 22,00</strong></div>
+                </div>
+                <div class="product-img-wrap">
+                    <img src="./KitKat.png" alt="Copo Kit Kat" class="product-img" loading="lazy">
+                    <div class="product-add-btn">+</div>
+                </div>
+            </div>
         </div>
         <div class="prod-section" data-cat="combos" id="sec-combos">
             <h2 class="prod-section-title">👨‍👩‍👧 Combos</h2>
@@ -131,6 +143,20 @@
                 </div>
                 <div class="product-img-wrap">
                     <img src="./4-copos.jpeg" alt="Combo Família" class="product-img" loading="lazy">
+                    <div class="product-add-btn">+</div>
+                </div>
+            </div>
+        </div>
+        <div class="prod-section" data-cat="garrafas" id="sec-garrafas">
+            <h2 class="prod-section-title">🍶 Açaí na Garrafa</h2>
+            <div class="product-card" data-product="garrafa" onclick="openProductModal('garrafa')">
+                <div class="product-info">
+                    <div class="product-name">Açaí na Garrafa</div>
+                    <div class="product-desc">Açaí cremoso com leite em pó e leite condensado — perfeito para levar onde quiser</div>
+                    <div class="product-price"><strong>R$ 16,99</strong></div>
+                </div>
+                <div class="product-img-wrap">
+                    <img src="./garrafa.png" alt="Açaí na Garrafa" class="product-img" loading="lazy" onerror="this.style.fontSize='3rem';this.alt='🍶'">
                     <div class="product-add-btn">+</div>
                 </div>
             </div>
