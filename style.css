@@ -126,6 +126,28 @@ button { cursor:pointer; font-family:inherit; }
 .btn-clear-search { background:none; border:1.5px solid var(--purple); color:var(--purple); padding:8px 20px; border-radius:50px; font-weight:600; font-size:0.9rem; cursor:pointer; }
 
 /* ── MONTE SEU AÇAÍ ── */
+.monte-tamanhos {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+.monte-tamanho {
+    flex: 1;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--white);
+}
+.monte-tamanho:hover { border-color:var(--purple); }
+.monte-tamanho-sel  { border-color:var(--purple); background:var(--purple-light); }
+.monte-tamanho-label { font-size:.9rem; font-weight:700; color:var(--text); }
+.monte-tamanho-price { font-size:.85rem; color:var(--purple); font-weight:700; margin-top:3px; }
+.monte-tamanho-sel .monte-tamanho-label { color:var(--purple); }
+
+
 .monte-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
