@@ -59,6 +59,7 @@
             <button class="cat-pill" data-cat="copos" onclick="filterCat('copos',this)">Copos</button>
             <button class="cat-pill" data-cat="combos" onclick="filterCat('combos',this)">Combos</button>
             <button class="cat-pill" data-cat="garrafas" onclick="filterCat('garrafas',this)">🍶 Garrafa</button>
+            <button class="cat-pill" data-cat="monte" onclick="filterCat('monte',this)">🍧 Monte seu Açaí</button>
         </div>
     </div>
     <!-- PRODUTOS -->
@@ -161,6 +162,8 @@
                 </div>
             </div>
         </div>
+        <!-- MONTE SEU AÇAÍ -->
+        <div class="prod-section" data-cat="monte" id="sec-monte" style="display:none"></div>
         <div class="empty-search" id="emptySearch" style="display:none">
             <div class="empty-icon">🍧</div>
             <p>Nenhum item encontrado.</p>
@@ -191,7 +194,6 @@
         </div>
         <div class="footer-bottom">
             <span>© 2026 TDA Açaí</span>
-            
         </div>
     </footer>
     <!-- CARRINHO FLUTUANTE -->
@@ -324,7 +326,6 @@
                 <div id="freteGratisAviso" class="frete-gratis-aviso" style="display:none">
                     🎉 <strong>Frete grátis!</strong> Morador do Condomínio dos Manacás.
                 </div>
-                <!-- CHECKBOX MANACÁS -->
                 <label id="labelManacas" style="display:flex;align-items:center;gap:10px;margin:10px 0 14px;padding:12px 14px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;cursor:pointer;font-size:.9rem;">
                     <input type="checkbox" id="chkManacas" onchange="onManacasToggle(this.checked)"
                         style="width:18px;height:18px;accent-color:#16a34a;cursor:pointer;flex-shrink:0;">
