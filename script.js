@@ -37,8 +37,16 @@ const ORDER_STATUSES = {
 };
 
 // ─────────────────────────────────────────────────────────────
-// MONTE SEU AÇAÍ — Adicionais
+// MONTE SEU AÇAÍ — Tamanhos do copo e Adicionais
 // ─────────────────────────────────────────────────────────────
+const MONTE_TAMANHOS = [
+    { id:'300ml', label:'300ml', price:12.99 },
+    { id:'500ml', label:'500ml', price:15.99 },
+    { id:'700ml', label:'700ml', price:19.99 },
+];
+
+let monteTamanhoSelecionado = null; // id do tamanho escolhido
+
 const ADICIONAIS = [
     { id:'sucrilhos',    name:'Sucrilhos',        price:2.99, emoji:'🌾' },
     { id:'amendoim',     name:'Amendoim',         price:5.99, emoji:'🥜' },
@@ -53,6 +61,7 @@ const ADICIONAIS = [
 ];
 
 let monteSelecao = {}; // { id: quantidade }
+
 
 // ─────────────────────────────────────────────────────────────
 // ESTADO
@@ -292,14 +301,33 @@ function renderMonteSeuAcai() {
     const sec = document.getElementById('sec-monte');
     if (!sec) return;
 
-    const total = Object.entries(monteSelecao).reduce((sum, [id, qty]) => {
+    const tamanho = MONTE_TAMANHOS.find(t => t.id === monteTamanhoSelecionado);
+    const totalAdicionais = Object.entries(monteSelecao).reduce((sum, [id, qty]) => {
         const item = ADICIONAIS.find(a => a.id === id);
         return sum + (item ? item.price * qty : 0);
     }, 0);
+    const totalGeral = (tamanho ? tamanho.price : 0) + totalAdicionais;
+    const temItens   = monteTamanhoSelecionado && Object.keys(monteSelecao).length > 0;
 
     sec.innerHTML = `
         <h2 class="prod-section-title" style="background:linear-gradient(135deg,#f5eeff,#ede9fe);color:#4c1d95;border-left:4px solid #7c3aed;">🍧 Monte seu Açaí</h2>
-        <div style="padding:12px 16px 4px;color:#6b7280;font-size:.88rem;">Escolha os adicionais e personalize do seu jeito!</div>
+
+        <!-- STEP 1: Tamanho do copo -->
+        <div style="padding:14px 16px 6px;">
+            <div style="font-size:.82rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">1. Escolha o tamanho do copo 🥤</div>
+            <div class="monte-tamanhos">
+                ${MONTE_TAMANHOS.map(t => `
+                <div class="monte-tamanho ${monteTamanhoSelecionado === t.id ? 'monte-tamanho-sel' : ''}" onclick="monteSelecionarTamanho('${t.id}')">
+                    <div class="monte-tamanho-label">${t.label}</div>
+                    <div class="monte-tamanho-price">${formatCurrency(t.price)}</div>
+                </div>`).join('')}
+            </div>
+        </div>
+
+        <!-- STEP 2: Adicionais -->
+        <div style="padding:14px 16px 6px;">
+            <div style="font-size:.82rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">2. Escolha os adicionais 🍓</div>
+        </div>
         <div class="monte-grid">
             ${ADICIONAIS.map(item => {
                 const qty = monteSelecao[item.id] || 0;
@@ -316,17 +344,28 @@ function renderMonteSeuAcai() {
                 </div>`;
             }).join('')}
         </div>
-        ${Object.keys(monteSelecao).length > 0 ? `
+
+        <!-- RESUMO -->
+        ${monteTamanhoSelecionado ? `
         <div class="monte-resumo">
             <div class="monte-resumo-title">📋 Resumo da montagem</div>
+            <div class="monte-resumo-row"><span>🥤 Copo Açaí ${tamanho.label}</span><span>${formatCurrency(tamanho.price)}</span></div>
             ${Object.entries(monteSelecao).map(([id, qty]) => {
                 const item = ADICIONAIS.find(a => a.id === id);
                 return item ? `<div class="monte-resumo-row"><span>${item.emoji} ${item.name} x${qty}</span><span>${formatCurrency(item.price * qty)}</span></div>` : '';
             }).join('')}
-            <div class="monte-resumo-total"><span>Total adicionais</span><span>${formatCurrency(total)}</span></div>
-            <button class="monte-add-cart" onclick="monteAdicionarCarrinho()">🛒 Adicionar ao Carrinho — ${formatCurrency(total)}</button>
-        </div>` : ''}
+            <div class="monte-resumo-total"><span>Total</span><span>${formatCurrency(totalGeral)}</span></div>
+            <button class="monte-add-cart" onclick="monteAdicionarCarrinho()">🛒 Adicionar ao Carrinho — ${formatCurrency(totalGeral)}</button>
+        </div>` : `
+        <div style="text-align:center;padding:16px;color:#9ca3af;font-size:.88rem;">
+            👆 Selecione o tamanho do copo para continuar
+        </div>`}
     `;
+}
+
+function monteSelecionarTamanho(id) {
+    monteTamanhoSelecionado = id;
+    renderMonteSeuAcai();
 }
 
 function monteAjustar(id, delta) {
@@ -339,33 +378,38 @@ function monteAjustar(id, delta) {
 
 function monteAdicionarCarrinho() {
     if (!currentUser) { openModal('modalAuth'); showToast('Faça login para adicionar.', 'info'); return; }
-    const itens = Object.entries(monteSelecao);
-    if (itens.length === 0) return;
+    if (!monteTamanhoSelecionado) { showToast('Selecione o tamanho do copo!', 'error'); return; }
+
+    const tamanho = MONTE_TAMANHOS.find(t => t.id === monteTamanhoSelecionado);
+    const itens   = Object.entries(monteSelecao);
 
     const nomes = itens.map(([id, qty]) => {
         const item = ADICIONAIS.find(a => a.id === id);
         return item ? `${item.name} x${qty}` : '';
     }).filter(Boolean).join(', ');
 
-    const total = itens.reduce((sum, [id, qty]) => {
+    const totalAdicionais = itens.reduce((sum, [id, qty]) => {
         const item = ADICIONAIS.find(a => a.id === id);
         return sum + (item ? item.price * qty : 0);
     }, 0);
+
+    const totalGeral = tamanho.price + totalAdicionais;
 
     const key = 'monte_' + Date.now();
     cart.push({
         key,
         productId:   'monte',
         productName: 'Monte seu Açaí',
-        size:        nomes,
-        price:       total,
+        size:        `${tamanho.label}${nomes ? ' · ' + nomes : ''}`,
+        price:       totalGeral,
         qty:         1,
         image:       ''
     });
 
     saveCart();
     updateCartBadge();
-    monteSelecao = {};
+    monteSelecao           = {};
+    monteTamanhoSelecionado = null;
     renderMonteSeuAcai();
     showToast('Adicionado ao carrinho! 🛒');
 }
