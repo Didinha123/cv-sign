@@ -18,7 +18,6 @@
     --transition:  all 0.25s ease;
     --topbar-h:    56px;
 }
-
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; overflow-x:hidden; }
 body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; overflow-x:hidden; padding-bottom:80px; }
@@ -76,38 +75,14 @@ button { cursor:pointer; font-family:inherit; }
 .store-rating { color:#d97706; font-weight:600; }
 .store-info-btn { background:none; border:none; color:var(--purple); font-size:0.82rem; font-weight:600; padding:0; cursor:pointer; }
 
-/* ── BANNER FRETE GRÁTIS MANACÁS ── */
-.banner-frete-gratis {
-    max-width:720px; margin:0 auto;
-    background:linear-gradient(135deg, #16a34a, #15803d);
-    color:var(--white);
-    padding:10px 16px;
-    display:flex; align-items:center; gap:10px;
-    font-size:0.875rem;
-}
+/* ── BANNER FRETE GRÁTIS ── */
+.banner-frete-gratis { max-width:720px; margin:0 auto; background:linear-gradient(135deg,#16a34a,#15803d); color:var(--white); padding:10px 16px; display:flex; align-items:center; gap:10px; font-size:0.875rem; }
 .banner-icon { font-size:1.2rem; flex-shrink:0; }
 .banner-text { flex:1; line-height:1.4; }
-.banner-tag  {
-    flex-shrink:0; background:rgba(255,255,255,0.2);
-    border-radius:50px; padding:3px 10px;
-    font-size:0.75rem; font-weight:700; white-space:nowrap;
-}
-
-/* Aviso no checkout */
-.frete-gratis-aviso {
-    background:#f0fdf4; border:1.5px solid #86efac;
-    border-radius:var(--radius-sm); padding:10px 14px;
-    font-size:0.875rem; color:#166534; margin-bottom:10px;
-    animation:fadeIn .3s ease;
-}
+.banner-tag  { flex-shrink:0; background:rgba(255,255,255,0.2); border-radius:50px; padding:3px 10px; font-size:0.75rem; font-weight:700; white-space:nowrap; }
+.frete-gratis-aviso { background:#f0fdf4; border:1.5px solid #86efac; border-radius:var(--radius-sm); padding:10px 14px; font-size:0.875rem; color:#166534; margin-bottom:10px; animation:fadeIn .3s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
-
-/* Aviso no modal de info */
-.frete-gratis-info {
-    background:#f0fdf4; border-left:3px solid #22c55e;
-    padding:8px 12px; border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-    font-size:0.82rem; color:#166534; margin-top:8px;
-}
+.frete-gratis-info { background:#f0fdf4; border-left:3px solid #22c55e; padding:8px 12px; border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:0.82rem; color:#166534; margin-top:8px; }
 
 /* ── STICKY NAV ── */
 .sticky-nav { position:sticky; top:var(--topbar-h); z-index:100; background:var(--white); border-bottom:1px solid var(--border); padding:10px 16px 0; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
@@ -126,7 +101,6 @@ button { cursor:pointer; font-family:inherit; }
 .prod-section { margin-bottom:8px; }
 .prod-section.hidden { display:none; }
 .prod-section-title { font-size:1rem; font-weight:700; color:var(--text); padding:16px 16px 8px; background:var(--bg); border-bottom:1px solid var(--border); }
-
 .product-card { display:flex; align-items:center; gap:12px; background:var(--white); padding:16px; border-bottom:1px solid var(--border); cursor:pointer; transition:var(--transition); }
 .product-card:hover  { background:#fafafa; }
 .product-card:active { background:#f0f0f0; }
@@ -138,27 +112,79 @@ button { cursor:pointer; font-family:inherit; }
 .product-img-wrap { position:relative; flex-shrink:0; width:96px; height:96px; }
 .product-img { width:96px; height:96px; object-fit:cover; border-radius:var(--radius-sm); background:var(--bg); }
 .product-add-btn { position:absolute; bottom:-8px; right:-8px; width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--pink)); color:var(--white); font-size:1.3rem; font-weight:300; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(110,44,124,0.4); line-height:1; }
-
-/* Preços promocionais */
 .price-old { font-size:0.8rem; color:var(--text-light); text-decoration:line-through; margin-right:2px; }
 .price-new { color:var(--pink)!important; }
 .discount-badge { display:inline-block; background:var(--pink); color:#fff; font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; vertical-align:middle; }
-
-/* Pill de promoção */
 .cat-pill--promo { background:linear-gradient(135deg,var(--pink),#ff8c00); color:#fff!important; border-color:transparent!important; animation:pulse-promo 2s ease-in-out infinite; }
 .cat-pill--promo.active { background:linear-gradient(135deg,#c1121f,#d97706); box-shadow:0 0 0 3px rgba(230,57,70,.3); }
 @keyframes pulse-promo { 0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,.4)} 50%{box-shadow:0 0 0 6px rgba(230,57,70,0)} }
-
-/* Título da seção promoções */
 .promo-section-title { background:linear-gradient(135deg,#fff1f2,#fff7ed)!important; color:var(--pink)!important; border-left:4px solid var(--pink); }
-
-/* Card de promoção em destaque */
 .promo-destaque { border-left:3px solid var(--pink); }
 .promo-destaque .product-name { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-
 .empty-search { text-align:center; padding:60px 20px; color:var(--text-light); }
 .empty-search .empty-icon { font-size:3rem; margin-bottom:12px; }
 .btn-clear-search { background:none; border:1.5px solid var(--purple); color:var(--purple); padding:8px 20px; border-radius:50px; font-weight:600; font-size:0.9rem; cursor:pointer; }
+
+/* ── MONTE SEU AÇAÍ ── */
+.monte-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+.monte-card {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 10px;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+.monte-card:hover         { border-color:var(--purple); transform:translateY(-2px); box-shadow:0 4px 16px rgba(110,44,124,.15); }
+.monte-card.monte-selected { border-color:var(--purple); background:var(--purple-light); }
+.monte-emoji { font-size:1.8rem; }
+.monte-name  { font-size:0.78rem; font-weight:700; color:var(--text); line-height:1.2; }
+.monte-price { font-size:0.82rem; color:var(--purple); font-weight:700; }
+.monte-qty-ctrl { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.monte-btn-minus,
+.monte-btn-plus {
+    width:26px; height:26px;
+    border-radius:50%;
+    border:2px solid var(--purple);
+    background:transparent;
+    color:var(--purple);
+    font-size:1rem; font-weight:700;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s;
+    line-height:1;
+}
+.monte-btn-plus:hover  { background:var(--purple); color:#fff; }
+.monte-btn-minus:hover { background:var(--purple); color:#fff; }
+.monte-btn-minus:disabled { opacity:0.3; cursor:not-allowed; }
+.monte-qty { font-weight:700; font-size:0.95rem; min-width:18px; text-align:center; }
+.monte-resumo {
+    background: var(--purple-light);
+    border: 2px solid var(--purple);
+    border-radius: 16px;
+    padding: 18px;
+    margin: 0 16px 16px;
+}
+.monte-resumo-title { font-weight:700; font-size:0.95rem; margin-bottom:10px; color:var(--purple-dark); }
+.monte-resumo-row   { display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text); margin-bottom:5px; }
+.monte-resumo-total { display:flex; justify-content:space-between; font-weight:800; font-size:1rem; color:var(--purple-dark); border-top:1.5px dashed var(--purple); padding-top:10px; margin-top:8px; margin-bottom:14px; }
+.monte-add-cart {
+    width:100%; padding:13px;
+    background:linear-gradient(135deg,var(--purple),var(--pink));
+    color:#fff; border:none; border-radius:12px;
+    font-size:0.92rem; font-weight:700; cursor:pointer;
+    transition:all 0.2s;
+}
+.monte-add-cart:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(110,44,124,.4); }
 
 /* ── RODAPÉ ── */
 .store-footer { background:var(--white); border-top:1px solid var(--border); margin-top:8px; }
@@ -190,8 +216,6 @@ button { cursor:pointer; font-family:inherit; }
 .modal-close--over:hover { background:rgba(0,0,0,0.7); }
 .modal-close--inline { position:static; }
 .modal-title { font-size:1.2rem; font-weight:800; margin-bottom:16px; color:var(--text); }
-
-/* ── Modal Produto ── */
 .modal--product { padding:0 0 32px; }
 .modal--product::before { margin-top:10px; }
 .prod-modal-img-wrap { width:100%; height:220px; overflow:hidden; background:var(--bg); }
@@ -202,21 +226,19 @@ button { cursor:pointer; font-family:inherit; }
 .prod-sizes-title { font-size:0.875rem; font-weight:700; color:var(--text); margin-bottom:8px; }
 .prod-sizes { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
 .prod-size-opt { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition); }
-.prod-size-opt:hover   { border-color:var(--purple); }
+.prod-size-opt:hover    { border-color:var(--purple); }
 .prod-size-opt.selected { border-color:var(--purple); background:var(--purple-light); }
 .prod-size-opt.selected .pso-label { color:var(--purple); font-weight:700; }
 .pso-label  { font-size:0.9rem; font-weight:600; display:flex; align-items:center; gap:6px; }
 .pso-prices { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-.pso-price      { font-size:0.9rem; font-weight:700; color:var(--purple); }
-.pso-price-old  { font-size:0.8rem; color:var(--text-light); text-decoration:line-through; }
+.pso-price     { font-size:0.9rem; font-weight:700; color:var(--purple); }
+.pso-price-old { font-size:0.8rem; color:var(--text-light); text-decoration:line-through; }
 .prod-modal-footer { display:flex; align-items:center; gap:12px; padding:12px 16px 0; border-top:1px solid var(--border); }
 .prod-qty { display:flex; align-items:center; gap:8px; background:var(--bg); border-radius:50px; padding:4px; flex-shrink:0; }
 .prod-qty-btn { width:32px; height:32px; border-radius:50%; background:var(--white); border:none; font-size:1.2rem; font-weight:700; box-shadow:var(--shadow); transition:var(--transition); }
 .prod-qty-btn:hover { background:var(--purple); color:var(--white); }
 .prod-qty-val { font-weight:700; min-width:20px; text-align:center; }
 .prod-add-btn { flex:1; margin:0; }
-
-/* ── Modal Info da Loja ── */
 .si-block { margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--border); }
 .si-block:last-of-type { border-bottom:none; }
 .si-block h4 { font-size:0.95rem; font-weight:700; margin-bottom:10px; color:var(--text); }
@@ -226,16 +248,12 @@ button { cursor:pointer; font-family:inherit; }
 .si-note { font-size:0.8rem; color:#dc2626; margin-top:4px; }
 .si-pay-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
 .si-pay-tag  { background:var(--bg); border:1px solid var(--border); border-radius:50px; padding:5px 12px; font-size:0.82rem; font-weight:600; }
-
-/* ── Modal Auth ── */
 .auth-tabs { display:flex; gap:4px; background:var(--bg); border-radius:var(--radius-sm); padding:4px; margin-bottom:20px; }
 .auth-tab { flex:1; padding:9px; border:none; background:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--text-light); font-size:0.9rem; transition:var(--transition); }
 .auth-tab.active { background:var(--white); color:var(--purple); box-shadow:0 1px 6px rgba(0,0,0,0.1); }
 .auth-hint { font-size:0.875rem; color:var(--text-light); margin-bottom:14px; }
 .auth-switch { text-align:center; font-size:0.875rem; margin-top:12px; color:var(--text-light); }
 .auth-switch a { color:var(--purple); font-weight:600; cursor:pointer; }
-
-/* ── Modal Carrinho ── */
 .cart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
 .cart-header h2 { font-size:1.1rem; font-weight:700; }
 .cart-empty { text-align:center; padding:40px 0; }
@@ -256,8 +274,6 @@ button { cursor:pointer; font-family:inherit; }
 .cart-summary { background:var(--bg); border-radius:var(--radius-sm); padding:14px; margin:14px 0; }
 .summary-row { display:flex; justify-content:space-between; font-size:0.875rem; padding:4px 0; color:var(--text-light); }
 .summary-row--total { border-top:1.5px solid var(--border); margin-top:6px; padding-top:8px; font-weight:800; font-size:1rem; color:var(--text); }
-
-/* ── Modal Checkout ── */
 .checkout-section { margin-bottom:20px; }
 .checkout-section h3 { font-size:0.9rem; font-weight:700; color:var(--text); padding-bottom:8px; border-bottom:1px solid var(--border); margin-bottom:12px; }
 .payment-options { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
@@ -272,8 +288,6 @@ button { cursor:pointer; font-family:inherit; }
 .payment-notice--money { background:#f0fdf4; border-left:3px solid #22c55e; color:#166534; }
 .checkout-total { display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:12px 14px; border-radius:var(--radius-sm); margin-bottom:8px; font-size:0.95rem; }
 .checkout-total strong { color:var(--purple); font-size:1.1rem; }
-
-/* ── Modal Resumo ── */
 .summary-header { text-align:center; margin-bottom:20px; }
 .summary-check { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--pink)); color:var(--white); font-size:1.8rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
 .summary-header h2 { font-size:1.25rem; color:var(--text); }
@@ -287,10 +301,8 @@ button { cursor:pointer; font-family:inherit; }
 .summary-note  { font-size:0.8rem; color:var(--text-light); margin:4px 0 0; }
 .summary-alert { background:#fff3cd; border-left:3px solid #f59e0b; padding:8px 12px; border-radius:6px; font-size:0.85rem; color:#856404; margin-top:8px; }
 .summary-actions { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
-
-/* ── PIX ── */
 .pix-box { background:#f0fdf4; border:1.5px solid #86efac; border-radius:var(--radius); padding:16px; text-align:center; margin-bottom:16px; }
-.pix-box h3 { font-size:1rem; color:#166534; margin-bottom:12px; }
+.pix-box h3 { font-size:1rem; color:#166634; margin-bottom:12px; }
 .pix-qr-canvas { border-radius:8px; border:3px solid #86efac; margin:0 auto 12px; display:block; }
 .pix-key-label { font-size:0.75rem; color:var(--text-light); margin-bottom:4px; }
 .pix-key-value { background:var(--white); border:1px solid #d1fae5; border-radius:6px; padding:8px 12px; font-family:monospace; font-size:0.875rem; color:var(--text); margin-bottom:8px; word-break:break-all; }
@@ -298,8 +310,6 @@ button { cursor:pointer; font-family:inherit; }
 .pix-amount-label strong { color:#166534; }
 .pix-comprovante-notice { margin-top:12px; background:#ecfdf5; border:1px solid #6ee7b7; border-radius:6px; padding:10px 12px; font-size:0.82rem; color:#065f46; line-height:1.5; text-align:left; }
 .pix-wa-link { color:#128c7e; font-weight:700; text-decoration:underline; }
-
-/* ── Modal Rastreamento ── */
 .tracking-empty { text-align:center; padding:40px 0; color:var(--text-light); }
 .tracking-empty p:first-child { font-size:3rem; }
 .tracking-card { border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:12px; background:var(--bg); }
@@ -312,12 +322,10 @@ button { cursor:pointer; font-family:inherit; }
 .tl-step { display:flex; flex-direction:column; align-items:center; gap:3px; flex-shrink:0; }
 .tl-icon { width:32px; height:32px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:0.9rem; }
 .tl-label { font-size:0.62rem; color:var(--text-light); text-align:center; max-width:52px; line-height:1.2; }
-.tl-done .tl-icon  { background:#dcfce7; }
-.tl-active .tl-icon { background:var(--purple); box-shadow:0 0 0 4px rgba(110,44,124,0.2); }
+.tl-done .tl-icon   { background:#dcfce7; }
+.tl-active .tl-icon  { background:var(--purple); box-shadow:0 0 0 4px rgba(110,44,124,0.2); }
 .tl-active .tl-label { color:var(--purple); font-weight:700; }
 .tl-line { flex:1; height:2px; background:var(--border); min-width:8px; max-width:28px; }
-
-/* ── Modal Admin ── */
 .admin-tabs { display:flex; gap:4px; background:var(--bg); border-radius:var(--radius-sm); padding:4px; margin-bottom:16px; }
 .admin-tab { flex:1; padding:9px 6px; border:none; background:none; border-radius:6px; font-weight:600; cursor:pointer; color:var(--text-light); font-size:0.85rem; transition:var(--transition); }
 .admin-tab.active { background:var(--white); color:var(--purple); box-shadow:0 1px 6px rgba(0,0,0,0.1); }
@@ -329,8 +337,6 @@ button { cursor:pointer; font-family:inherit; }
 .admin-order-head strong { color:var(--purple); }
 .admin-order-info p { font-size:0.82rem; color:var(--text); margin-bottom:3px; }
 .admin-order-status label { font-size:0.75rem; font-weight:600; color:var(--text-light); display:block; margin-bottom:4px; margin-top:8px; }
-
-/* ── Toast ── */
 .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(30px); background:#1f2937; color:var(--white); padding:10px 20px; border-radius:50px; font-size:0.875rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,0.2); z-index:9999; opacity:0; transition:transform .3s ease,opacity .3s ease; white-space:nowrap; pointer-events:none; }
 .toast--show    { transform:translateX(-50%) translateY(0); opacity:1; }
 .toast--error   { background:#dc2626; }
@@ -338,7 +344,6 @@ button { cursor:pointer; font-family:inherit; }
 .toast--success { background:#16a34a; }
 
 /* ══ RESPONSIVO ══════════════════════════════════════════════ */
-
 @media (min-width:720px) {
     .store-cover { max-height:240px; }
     .store-info-bar,.main-content,.store-footer-inner,.footer-bottom { max-width:720px; margin-left:auto; margin-right:auto; }
@@ -351,15 +356,14 @@ button { cursor:pointer; font-family:inherit; }
     .prod-modal-img-wrap { height:280px; }
     .floating-cart { left:50%; right:auto; transform:translateX(-50%); width:420px; bottom:20px; }
     .floating-cart:hover { transform:translateX(-50%) translateY(-2px); }
+    .monte-grid { grid-template-columns:repeat(5,1fr); }
 }
-
 @media (max-width:719px) {
     .store-footer-inner { grid-template-columns:1fr; gap:16px; }
     .prod-section-title { position:static; }
     .form-row { grid-template-columns:1fr; }
     .form-group--sm { width:100%; }
 }
-
 @media (max-width:430px) {
     .topbar-logo { font-size:1rem; }
     .tb-btn-user span:last-child { display:none; }
@@ -373,4 +377,5 @@ button { cursor:pointer; font-family:inherit; }
     .checkout-total { flex-direction:column; gap:4px; text-align:center; }
     .banner-frete-gratis { font-size:0.8rem; padding:8px 12px; gap:8px; }
     .banner-tag { display:none; }
+    .monte-grid { grid-template-columns:repeat(2,1fr); }
 }
