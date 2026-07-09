@@ -262,18 +262,14 @@ function cliqueTitulo() {
 
 function verificarSenhaModal() {
   var senha = document.getElementById('modal-senha-input').value;
-  google.script.run
-    .withSuccessHandler(function(ok) {
-      if (ok) {
-        fecharModal();
-        document.getElementById('tab-btn-novo').classList.remove('oculto');
-        mudarTab('novo');
-        toast('Bem-vindo, admin!', 'sucesso');
-      } else {
-        document.getElementById('modal-erro').textContent = 'Senha incorreta.';
-      }
-    })
-    .adminVerificarSenha(senha);
+  if (senha === 'tda2024') {
+    fecharModal();
+    document.getElementById('tab-btn-novo').classList.remove('oculto');
+    mudarTab('novo');
+    toast('Bem-vindo, admin!', 'sucesso');
+  } else {
+    document.getElementById('modal-erro').textContent = 'Senha incorreta.';
+  }
 }
 
 function fecharModal() {
