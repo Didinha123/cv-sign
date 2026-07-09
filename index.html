@@ -3,186 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TDA Açaí - Admin</title>
+<title>TDA Açaí — Admin</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+:root {
+  --purple: #6e2c7c;
+  --purple-dark: #4a1a54;
+  --purple-light: #f5eeff;
+  --pink: #e63946;
+  --bg: #f4f5f7;
+  --white: #ffffff;
+  --text: #2b2d42;
+  --text-light: #6b7280;
+  --border: #e5e7eb;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); padding-bottom:40px; }
 
-  .topbar {
-    background: linear-gradient(135deg, #4a1942, #c0392b);
-    color: white; padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .topbar h2 { font-size: 1.1rem; cursor: pointer; user-select: none; }
+/* TOPBAR */
+.topbar { background:var(--purple); padding:0 16px; height:56px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+.topbar-logo { color:white; font-weight:800; font-size:1.1rem; cursor:pointer; user-select:none; }
+.topbar-sub { color:rgba(255,255,255,0.7); font-size:0.75rem; }
 
-  .tabs {
-    display: flex; background: white; border-bottom: 2px solid #eee; position: sticky; top: 0; z-index: 10;
-  }
-  .tab {
-    flex: 1; padding: 14px; text-align: center; cursor: pointer;
-    font-weight: 600; color: #888; border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-  }
-  .tab.ativo { color: #4a1942; border-bottom-color: #4a1942; }
-  .tab.oculto { display: none; }
+/* TABS */
+.tabs { display:flex; background:white; border-bottom:2px solid var(--border); position:sticky; top:0; z-index:100; }
+.tab { flex:1; padding:14px; text-align:center; cursor:pointer; font-weight:600; color:var(--text-light); border-bottom:3px solid transparent; transition:all 0.2s; font-size:0.9rem; }
+.tab.ativo { color:var(--purple); border-bottom-color:var(--purple); }
+.tab.oculto { display:none; }
+.tab-content { display:none; }
+.tab-content.ativo { display:block; }
 
-  .tab-content { display: none; padding: 16px; }
-  .tab-content.ativo { display: block; }
+/* SEÇÃO */
+.section-title { font-size:0.85rem; font-weight:700; color:var(--text-light); text-transform:uppercase; letter-spacing:.05em; padding:16px 16px 8px; }
 
-  .produto-card {
-    background: white; border-radius: 12px; margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;
-  }
-  .produto-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px; cursor: pointer; user-select: none;
-  }
-  .produto-nome { font-weight: 700; font-size: 1rem; color: #4a1942; }
-  .produto-cat { font-size: 0.75rem; color: #888; margin-top: 2px; }
-  .chevron { transition: transform 0.2s; font-size: 0.8rem; color: #888; }
-  .produto-card.aberto .chevron { transform: rotate(180deg); }
+/* PRODUCT CARDS ADMIN */
+.prod-card { background:white; border-bottom:1px solid var(--border); overflow:hidden; }
+.prod-card-header { display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; }
+.prod-card-img { width:60px; height:60px; border-radius:var(--radius-sm); object-fit:cover; background:var(--bg); flex-shrink:0; }
+.prod-card-img-placeholder { width:60px; height:60px; border-radius:var(--radius-sm); background:var(--purple-light); display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0; }
+.prod-card-info { flex:1; min-width:0; }
+.prod-card-name { font-weight:700; color:var(--text); font-size:0.95rem; }
+.prod-card-cat { font-size:0.75rem; color:var(--text-light); margin-top:2px; }
+.prod-card-chevron { color:var(--text-light); font-size:0.8rem; transition:transform 0.2s; }
+.prod-card.aberto .prod-card-chevron { transform:rotate(180deg); }
 
-  .produto-linhas { display: none; border-top: 1px solid #f0f0f0; }
-  .produto-card.aberto .produto-linhas { display: block; }
+.prod-card-body { display:none; border-top:1px solid var(--border); background:var(--bg); }
+.prod-card.aberto .prod-card-body { display:block; }
 
-  .linha-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 16px; border-bottom: 1px solid #f9f9f9;
-  }
-  .linha-tamanho { font-size: 0.85rem; font-weight: 600; min-width: 56px; color: #555; }
+.size-row { display:flex; align-items:center; gap:8px; padding:10px 16px; background:white; border-bottom:1px solid var(--bg); flex-wrap:wrap; }
+.size-label { font-size:0.82rem; font-weight:700; min-width:54px; color:var(--text); }
 
-  .toggle-btn {
-    padding: 4px 10px; border-radius: 20px; border: none; cursor: pointer;
-    font-size: 0.75rem; font-weight: 600;
-  }
-  .toggle-btn.sim { background: #d4edda; color: #155724; }
-  .toggle-btn.nao { background: #f8d7da; color: #721c24; }
+.toggle-btn { padding:5px 12px; border-radius:50px; border:none; cursor:pointer; font-size:0.75rem; font-weight:700; flex-shrink:0; }
+.toggle-btn.sim { background:#d4edda; color:#155724; }
+.toggle-btn.nao { background:#f8d7da; color:#721c24; }
 
-  .preco-input {
-    width: 80px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px;
-    font-size: 0.85rem; text-align: center;
-  }
-  .save-btn {
-    padding: 4px 10px; background: #4a1942; color: white; border: none;
-    border-radius: 6px; font-size: 0.75rem; cursor: pointer;
-  }
-  .del-btn {
-    padding: 4px 8px; background: #fee; color: #c0392b; border: 1px solid #fcc;
-    border-radius: 6px; font-size: 0.75rem; cursor: pointer; margin-left: auto;
-  }
+.price-input { width:80px; padding:6px 8px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem; text-align:center; }
+.price-input:focus { border-color:var(--purple); outline:none; }
 
-  .desc-row { padding: 6px 16px 12px; }
-  .desc-input {
-    width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px;
-    font-size: 0.85rem; resize: none;
-  }
-  .desc-save { margin-top: 6px; float: right; }
+.btn-save { padding:6px 12px; background:linear-gradient(135deg,var(--purple),var(--pink)); color:white; border:none; border-radius:var(--radius-sm); font-size:0.75rem; font-weight:700; cursor:pointer; }
+.btn-del { padding:6px 10px; background:#fee2e2; color:#dc2626; border:1px solid #fecaca; border-radius:var(--radius-sm); font-size:0.75rem; cursor:pointer; margin-left:auto; }
 
-  .img-preview-mini {
-    width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid #eee;
-  }
-  .sem-img { font-size: 1.4rem; }
+.desc-area { padding:12px 16px; background:white; }
+.desc-input { width:100%; padding:8px 12px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem; resize:none; font-family:inherit; }
+.desc-input:focus { border-color:var(--purple); outline:none; }
+.desc-save { margin-top:8px; float:right; }
 
-  /* FORM NOVO PRODUTO */
-  .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #555; font-size: 0.9rem; }
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 14px; border: 2px solid #eee; border-radius: 10px;
-    font-size: 0.95rem; outline: none;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #4a1942; }
+/* FORM NOVO PRODUTO */
+.form-wrap { padding:16px; max-width:600px; }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:5px; }
+.form-input { width:100%; padding:10px 13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.95rem; color:var(--text); font-family:inherit; }
+.form-input:focus { border-color:var(--purple); outline:none; box-shadow:0 0 0 3px rgba(110,44,124,0.1); }
 
-  .tamanho-linha {
-    display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px;
-    margin-bottom: 8px; align-items: center;
-  }
-  .tamanho-linha input { padding: 8px 10px; font-size: 0.85rem; }
-  .rm-tam { background: #fee; color: #c0392b; border: 1px solid #fcc; border-radius: 8px; padding: 8px; cursor: pointer; }
-  .add-tam-btn {
-    background: #f0e8f0; color: #4a1942; border: 2px dashed #4a1942;
-    border-radius: 10px; padding: 10px; width: 100%; cursor: pointer;
-    font-weight: 600; font-size: 0.9rem; margin-bottom: 16px;
-  }
+.tam-grid { display:grid; grid-template-columns:1fr 1fr 1fr 36px; gap:8px; margin-bottom:8px; align-items:center; }
+.tam-grid input { padding:8px 10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem; font-family:inherit; width:100%; }
+.tam-grid input:focus { border-color:var(--purple); outline:none; }
+.btn-rm-tam { background:#fee2e2; color:#dc2626; border:1px solid #fecaca; border-radius:var(--radius-sm); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; height:36px; }
+.btn-add-tam { width:100%; padding:10px; background:var(--purple-light); color:var(--purple); border:2px dashed var(--purple); border-radius:var(--radius-sm); font-weight:700; font-size:0.9rem; cursor:pointer; margin-bottom:14px; }
+.tam-labels { display:grid; grid-template-columns:1fr 1fr 1fr 36px; gap:8px; margin-bottom:4px; }
+.tam-label-txt { font-size:0.72rem; color:var(--text-light); text-align:center; }
 
-  .img-upload-area {
-    border: 2px dashed #ccc; border-radius: 12px; padding: 24px;
-    text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative;
-  }
-  .img-upload-area:hover { border-color: #4a1942; }
-  .img-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  #img-preview { max-width: 100%; max-height: 180px; border-radius: 10px; margin-top: 12px; display: none; }
-  .upload-progress { display: none; color: #4a1942; font-weight: 600; margin-top: 8px; }
+.upload-area { border:2px dashed var(--border); border-radius:var(--radius); padding:24px; text-align:center; cursor:pointer; position:relative; transition:border-color 0.2s; }
+.upload-area:hover { border-color:var(--purple); }
+.upload-area input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-text { color:var(--text-light); font-size:0.9rem; }
+#img-preview { max-width:100%; max-height:160px; border-radius:var(--radius-sm); margin-top:12px; display:none; }
+.upload-prog { display:none; color:var(--purple); font-weight:600; font-size:0.9rem; margin-top:8px; }
 
-  .btn-salvar {
-    width: 100%; padding: 14px; background: linear-gradient(135deg, #4a1942, #c0392b);
-    color: white; border: none; border-radius: 12px; font-size: 1rem;
-    font-weight: 700; cursor: pointer; margin-top: 8px;
-  }
-  .btn-salvar:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary { width:100%; padding:13px; background:linear-gradient(135deg,var(--purple),var(--pink)); color:white; border:none; border-radius:var(--radius); font-size:1rem; font-weight:700; cursor:pointer; box-shadow:0 3px 12px rgba(110,44,124,0.35); }
+.btn-primary:hover { opacity:.92; }
+.btn-primary:disabled { opacity:.6; cursor:not-allowed; }
 
-  .loading { text-align: center; padding: 40px; color: #888; }
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: #333; color: white; padding: 12px 24px; border-radius: 10px;
-    font-size: 0.9rem; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none;
-  }
-  .toast.show { opacity: 1; }
-  .toast.sucesso { background: #27ae60; }
-  .toast.erro { background: #c0392b; }
+/* LOADING */
+.loading { text-align:center; padding:48px 20px; color:var(--text-light); }
+.loading-spinner { font-size:2rem; animation:spin 1s linear infinite; display:block; margin-bottom:8px; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
-  .tamanho-label { font-size: 0.75rem; color: #888; text-align: center; }
+/* MODAL SENHA */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(3px); z-index:200; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.ativo { display:flex; }
+.modal-box { background:white; border-radius:20px; padding:28px 24px; width:100%; max-width:340px; text-align:center; animation:slideUp .3s ease; }
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-box h3 { color:var(--purple); font-size:1.1rem; margin-bottom:6px; }
+.modal-box p { color:var(--text-light); font-size:0.85rem; margin-bottom:18px; }
+.modal-box input { width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:1rem; text-align:center; margin-bottom:12px; font-family:inherit; }
+.modal-box input:focus { border-color:var(--purple); outline:none; }
+.modal-btn { width:100%; padding:12px; background:linear-gradient(135deg,var(--purple),var(--pink)); color:white; border:none; border-radius:var(--radius-sm); font-size:1rem; font-weight:700; cursor:pointer; }
+.modal-erro { color:#dc2626; font-size:0.82rem; margin-top:8px; }
+.modal-cancel { color:var(--text-light); font-size:0.82rem; margin-top:10px; cursor:pointer; display:block; }
 
-  /* MODAL SENHA */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    z-index: 100; align-items: center; justify-content: center;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal-box {
-    background: white; border-radius: 16px; padding: 32px 24px;
-    width: 100%; max-width: 320px; text-align: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  }
-  .modal-box h3 { color: #4a1942; margin-bottom: 8px; }
-  .modal-box p { color: #888; font-size: 0.85rem; margin-bottom: 20px; }
-  .modal-box input {
-    width: 100%; padding: 10px 14px; border: 2px solid #eee; border-radius: 10px;
-    font-size: 1rem; outline: none; margin-bottom: 12px; text-align: center;
-  }
-  .modal-box input:focus { border-color: #4a1942; }
-  .modal-btn {
-    width: 100%; padding: 11px; background: #4a1942; color: white;
-    border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;
-  }
-  .modal-erro { color: #c0392b; font-size: 0.85rem; margin-top: 8px; }
-  .modal-cancel { color: #888; font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: block; }
+/* TOAST */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(30px); background:#1f2937; color:white; padding:10px 20px; border-radius:50px; font-size:0.875rem; font-weight:600; z-index:9999; opacity:0; transition:transform .3s,opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.sucesso { background:#16a34a; }
+.toast.erro { background:#dc2626; }
+.toast.info { background:var(--purple); }
+
+.empty-state { text-align:center; padding:32px 16px; color:var(--text-light); font-size:0.9rem; }
 </style>
 </head>
 <body>
 
-<div id="dashboard">
-  <div class="topbar">
-    <h2 id="titulo-admin" onclick="cliqueTitulo()">🍇 TDA Açaí — Admin</h2>
+<div class="topbar">
+  <div>
+    <div class="topbar-logo" id="titulo" onclick="cliqueTitulo()">🌿 TDA Açaí</div>
+    <div class="topbar-sub">Painel Admin</div>
   </div>
+</div>
 
-  <div class="tabs">
-    <div class="tab ativo" id="tab-btn-produtos" onclick="mudarTab('produtos')">📋 Produtos</div>
-    <div class="tab oculto" id="tab-btn-novo" onclick="mudarTab('novo')">➕ Novo Produto</div>
+<div class="tabs">
+  <div class="tab ativo" id="tab-btn-produtos" onclick="mudarTab('produtos')">📋 Produtos</div>
+  <div class="tab oculto" id="tab-btn-novo" onclick="mudarTab('novo')">➕ Novo Produto</div>
+</div>
+
+<!-- ABA PRODUTOS -->
+<div class="tab-content ativo" id="tab-produtos">
+  <div class="loading" id="loading">
+    <span class="loading-spinner">🍇</span>
+    Carregando produtos...
   </div>
+  <div id="lista-produtos"></div>
+</div>
 
-  <div class="tab-content ativo" id="tab-produtos">
-    <div class="loading" id="loading-produtos">Carregando produtos...</div>
-    <div id="lista-produtos"></div>
-  </div>
-
-  <div class="tab-content" id="tab-novo">
+<!-- ABA NOVO PRODUTO -->
+<div class="tab-content" id="tab-novo">
+  <div class="form-wrap">
     <div class="form-group">
       <label>Nome do Produto</label>
-      <input type="text" id="novo-nome" placeholder="Ex: Copo Especial">
+      <input type="text" id="novo-nome" class="form-input" placeholder="Ex: Copo Especial">
     </div>
     <div class="form-group">
       <label>Categoria</label>
-      <select id="novo-categoria">
+      <select id="novo-cat" class="form-input">
         <option value="Copo Individual">Copo Individual</option>
         <option value="Combo">Combo</option>
         <option value="Garrafa">Garrafa</option>
@@ -190,39 +164,29 @@
     </div>
     <div class="form-group">
       <label>Descrição</label>
-      <textarea id="novo-descricao" rows="2" placeholder="Ingredientes ou descrição"></textarea>
+      <textarea id="novo-desc" class="form-input" rows="2" placeholder="Ingredientes ou descrição"></textarea>
     </div>
-
     <div class="form-group">
       <label>Tamanhos e Preços</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:4px;margin-bottom:4px;">
-        <span class="tamanho-label">Tamanho</span>
-        <span class="tamanho-label">Preço (R$)</span>
-        <span class="tamanho-label">Preço Original</span>
+      <div class="tam-labels">
+        <span class="tam-label-txt">Tamanho</span>
+        <span class="tam-label-txt">Preço (R$)</span>
+        <span class="tam-label-txt">Preço Original</span>
         <span></span>
       </div>
-      <div id="tamanhos-lista">
-        <div class="tamanho-linha">
-          <input type="text" placeholder="300ml" class="tam-tamanho">
-          <input type="number" placeholder="18,90" step="0.01" class="tam-preco">
-          <input type="number" placeholder="(opcional)" step="0.01" class="tam-preco-orig">
-          <button class="rm-tam" onclick="removerTamanho(this)">✕</button>
-        </div>
-      </div>
-      <button class="add-tam-btn" onclick="adicionarTamanho()">+ Adicionar Tamanho</button>
+      <div id="tamanhos"></div>
+      <button class="btn-add-tam" onclick="addTam()">+ Adicionar Tamanho</button>
     </div>
-
     <div class="form-group">
       <label>Foto do Produto</label>
-      <div class="img-upload-area" onclick="document.getElementById('file-input').click()">
-        <div id="upload-placeholder">📷 Toque para escolher uma foto</div>
-        <input type="file" id="file-input" accept="image/*" onchange="previewImagem(this)">
+      <div class="upload-area" onclick="document.getElementById('file-in').click()">
+        <div class="upload-text">📷 Toque para escolher uma foto</div>
+        <input type="file" id="file-in" accept="image/*" onchange="previewImg(this)">
         <img id="img-preview">
       </div>
-      <div class="upload-progress" id="upload-progress">⬆️ Enviando imagem...</div>
+      <div class="upload-prog" id="upload-prog">⬆️ Enviando imagem...</div>
     </div>
-
-    <button class="btn-salvar" id="btn-salvar" onclick="salvarNovoProduto()">✅ Salvar Produto</button>
+    <button class="btn-primary" id="btn-salvar" onclick="salvarProduto()">✅ Salvar Produto</button>
   </div>
 </div>
 
@@ -231,8 +195,8 @@
   <div class="modal-box">
     <h3>🔒 Área Restrita</h3>
     <p>Digite a senha para adicionar produtos</p>
-    <input type="password" id="modal-senha-input" placeholder="Senha" onkeydown="if(event.key==='Enter')verificarSenhaModal()">
-    <button class="modal-btn" onclick="verificarSenhaModal()">Entrar</button>
+    <input type="password" id="input-senha" placeholder="Senha" onkeydown="if(event.key==='Enter')verificarSenha()">
+    <button class="modal-btn" onclick="verificarSenha()">Entrar</button>
     <div class="modal-erro" id="modal-erro"></div>
     <span class="modal-cancel" onclick="fecharModal()">Cancelar</span>
   </div>
@@ -241,116 +205,133 @@
 <div class="toast" id="toast"></div>
 
 <script>
-var imagemBase64 = '';
-var imagemMime = '';
-var imagemNome = '';
-var cliquesNoTitulo = 0;
-var timerCliques;
+var WEBAPP_URL = ''; // será preenchido automaticamente
+var SENHA_ADMIN = 'tda2024';
+var imgBase64 = '', imgMime = '', imgNome = '';
+var cliques = 0, timerCliques;
 
-// ─── ACESSO SECRETO ──────────────────────────────────────────────────────────
+// Pega a URL do webapp automaticamente
+try {
+  WEBAPP_URL = window.location.href.split('?')[0];
+} catch(e) {}
+
+// ─── ACESSO SECRETO ──────────────────────────────────────────
 
 function cliqueTitulo() {
-  cliquesNoTitulo++;
+  cliques++;
   clearTimeout(timerCliques);
-  timerCliques = setTimeout(function() { cliquesNoTitulo = 0; }, 2000);
-  if (cliquesNoTitulo >= 5) {
-    cliquesNoTitulo = 0;
-    document.getElementById('modal-senha').classList.add('show');
-    setTimeout(function() { document.getElementById('modal-senha-input').focus(); }, 100);
+  timerCliques = setTimeout(function() { cliques = 0; }, 2000);
+  if (cliques >= 5) {
+    cliques = 0;
+    document.getElementById('modal-senha').classList.add('ativo');
+    setTimeout(function() { document.getElementById('input-senha').focus(); }, 100);
   }
 }
 
-function verificarSenhaModal() {
-  var senha = document.getElementById('modal-senha-input').value;
-  if (senha === 'tda2024') {
+function verificarSenha() {
+  var s = document.getElementById('input-senha').value;
+  if (s === SENHA_ADMIN) {
     fecharModal();
     document.getElementById('tab-btn-novo').classList.remove('oculto');
     mudarTab('novo');
-    toast('Bem-vindo, admin!', 'sucesso');
+    toast('Bem-vindo, admin! 🌿', 'sucesso');
   } else {
     document.getElementById('modal-erro').textContent = 'Senha incorreta.';
   }
 }
 
 function fecharModal() {
-  document.getElementById('modal-senha').classList.remove('show');
-  document.getElementById('modal-senha-input').value = '';
+  document.getElementById('modal-senha').classList.remove('ativo');
+  document.getElementById('input-senha').value = '';
   document.getElementById('modal-erro').textContent = '';
 }
 
-// ─── TABS ────────────────────────────────────────────────────────────────────
+// ─── TABS ────────────────────────────────────────────────────
 
 function mudarTab(tab) {
-  document.getElementById('tab-btn-produtos').classList.toggle('ativo', tab === 'produtos');
-  document.getElementById('tab-btn-novo').classList.toggle('ativo', tab === 'novo');
-  document.getElementById('tab-produtos').classList.toggle('ativo', tab === 'produtos');
-  document.getElementById('tab-novo').classList.toggle('ativo', tab === 'novo');
+  ['produtos','novo'].forEach(function(t) {
+    document.getElementById('tab-btn-' + t).classList.toggle('ativo', t === tab);
+    document.getElementById('tab-' + t).classList.toggle('ativo', t === tab);
+  });
 }
 
-// ─── CARREGAR PRODUTOS ───────────────────────────────────────────────────────
+// ─── FETCH HELPER ────────────────────────────────────────────
 
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxn3um0K22U7ykTRA5VPBntTmy_JiKuBS2IGujuyrt6V34jwmHg-JlfgdwSgf1PLBMR/exec';
+function api(dados) {
+  return fetch(WEBAPP_URL, {
+    method: 'POST',
+    body: JSON.stringify(dados)
+  }).then(function(r) { return r.json(); });
+}
+
+// ─── CARREGAR PRODUTOS ───────────────────────────────────────
 
 function carregarProdutos() {
-  document.getElementById('loading-produtos').style.display = 'block';
+  document.getElementById('loading').style.display = 'block';
   document.getElementById('lista-produtos').innerHTML = '';
   fetch(WEBAPP_URL + '?tipo=cardapio')
     .then(function(r) { return r.json(); })
-    .then(renderizarProdutos)
+    .then(renderProdutos)
     .catch(function(e) {
-      document.getElementById('loading-produtos').textContent = 'Erro ao carregar: ' + e.message;
+      document.getElementById('loading').textContent = 'Erro ao carregar produtos.';
     });
 }
 
-function renderizarProdutos(produtos) {
-  document.getElementById('loading-produtos').style.display = 'none';
+function renderProdutos(produtos) {
+  document.getElementById('loading').style.display = 'none';
   var lista = document.getElementById('lista-produtos');
-  lista.innerHTML = '';
 
+  if (!produtos || !produtos.length) {
+    lista.innerHTML = '<div class="empty-state">Nenhum produto encontrado.</div>';
+    return;
+  }
+
+  // Agrupar por nome
   var grupos = {};
   produtos.forEach(function(p) {
     if (!grupos[p.produto]) grupos[p.produto] = [];
     grupos[p.produto].push(p);
   });
 
+  lista.innerHTML = '';
   Object.keys(grupos).forEach(function(nome) {
     var linhas = grupos[nome];
-    var primeiraLinha = linhas[0];
+    var first = linhas[0];
     var card = document.createElement('div');
-    card.className = 'produto-card';
+    card.className = 'prod-card';
 
-    var imgHtml = primeiraLinha.imagem
-      ? '<img class="img-preview-mini" src="' + primeiraLinha.imagem + '" onerror="this.style.display=\'none\'">'
-      : '<span class="sem-img">🍇</span>';
+    var imgHtml = first.imagem
+      ? '<img class="prod-card-img" src="' + first.imagem + '" onerror="this.parentNode.innerHTML=\'<div class=prod-card-img-placeholder>🍇</div>\'">'
+      : '<div class="prod-card-img-placeholder">🍇</div>';
 
-    var linhasHtml = linhas.map(function(l) {
-      return '<div class="linha-item">' +
-        '<span class="linha-tamanho">' + (l.tamanho || 'Único') + '</span>' +
-        '<button class="toggle-btn ' + (l.disponivel ? 'sim' : 'nao') + '" ' +
-          'onclick="toggleDisponivel(' + l.rowIndex + ', this)">' +
+    var sizesHtml = linhas.map(function(l) {
+      return '<div class="size-row">' +
+        '<span class="size-label">' + (l.tamanho || 'Único') + '</span>' +
+        '<button class="toggle-btn ' + (l.disponivel ? 'sim' : 'nao') + '" onclick="toggleDisp(' + l.rowIndex + ', this)">' +
           (l.disponivel ? '✅ Sim' : '❌ Não') + '</button>' +
-        'R$ <input class="preco-input" type="number" step="0.01" value="' + l.preco.toFixed(2) + '" ' +
-          'id="preco-' + l.rowIndex + '">' +
-        '<button class="save-btn" onclick="salvarPreco(' + l.rowIndex + ')">💾</button>' +
-        '<button class="del-btn" onclick="deletarLinha(' + l.rowIndex + ', \'' + nome.replace(/'/g, '') + '\')">🗑️</button>' +
+        '<span style="font-size:0.8rem;color:var(--text-light)">R$</span>' +
+        '<input class="price-input" type="number" step="0.01" value="' + l.preco.toFixed(2) + '" id="preco-' + l.rowIndex + '">' +
+        '<button class="btn-save" onclick="salvarPreco(' + l.rowIndex + ')">💾</button>' +
+        '<button class="btn-del" onclick="deletarLinha(' + l.rowIndex + ', \'' + nome.replace(/'/g,'') + '\')">🗑️</button>' +
         '</div>';
     }).join('');
 
     card.innerHTML =
-      '<div class="produto-header" onclick="toggleCard(this)">' +
+      '<div class="prod-card-header" onclick="toggleCard(this)">' +
         imgHtml +
-        '<div style="flex:1;margin-left:10px">' +
-          '<div class="produto-nome">' + nome + '</div>' +
-          '<div class="produto-cat">' + (primeiraLinha.categoria || '') + '</div>' +
+        '<div class="prod-card-info">' +
+          '<div class="prod-card-name">' + nome + '</div>' +
+          '<div class="prod-card-cat">' + (first.categoria || '') + ' · ' + linhas.length + ' tamanho' + (linhas.length > 1 ? 's' : '') + '</div>' +
         '</div>' +
-        '<span class="chevron">▼</span>' +
+        '<span class="prod-card-chevron">▼</span>' +
       '</div>' +
-      '<div class="produto-linhas">' +
-        linhasHtml +
-        '<div class="desc-row">' +
-          '<textarea class="desc-input" rows="2" id="desc-' + primeiraLinha.rowIndex + '">' +
-            (primeiraLinha.descricao || '') + '</textarea>' +
-          '<button class="save-btn desc-save" onclick="salvarDesc(' + primeiraLinha.rowIndex + ')">💾 Descrição</button>' +
+      '<div class="prod-card-body">' +
+        sizesHtml +
+        '<div class="desc-area">' +
+          '<label style="font-size:0.8rem;font-weight:700;color:var(--text-light);display:block;margin-bottom:6px;">Descrição</label>' +
+          '<textarea class="desc-input" rows="2" id="desc-' + first.rowIndex + '">' + (first.descricao || '') + '</textarea>' +
+          '<button class="btn-save desc-save" onclick="salvarDesc(' + first.rowIndex + ')">💾 Salvar descrição</button>' +
+          '<div style="clear:both"></div>' +
         '</div>' +
       '</div>';
 
@@ -362,155 +343,141 @@ function toggleCard(header) {
   header.parentElement.classList.toggle('aberto');
 }
 
-// ─── AÇÕES ───────────────────────────────────────────────────────────────────
+// ─── AÇÕES ───────────────────────────────────────────────────
 
-function toggleDisponivel(rowIndex, btn) {
-  google.script.run
-    .withSuccessHandler(function() {
+function toggleDisp(rowIndex, btn) {
+  api({ tipo: 'admin_toggle', rowIndex: rowIndex })
+    .then(function() {
       var eSim = btn.classList.contains('sim');
       btn.className = 'toggle-btn ' + (eSim ? 'nao' : 'sim');
       btn.textContent = eSim ? '❌ Não' : '✅ Sim';
       toast('Disponibilidade atualizada!', 'sucesso');
     })
-    .withFailureHandler(function() { toast('Erro ao atualizar', 'erro'); })
-    .adminToggleDisponivel(rowIndex);
+    .catch(function() { toast('Erro ao atualizar', 'erro'); });
 }
 
 function salvarPreco(rowIndex) {
   var val = document.getElementById('preco-' + rowIndex).value;
   var formatado = 'R$ ' + parseFloat(val).toFixed(2).replace('.', ',');
-  google.script.run
-    .withSuccessHandler(function() { toast('Preço salvo!', 'sucesso'); })
-    .withFailureHandler(function() { toast('Erro ao salvar', 'erro'); })
-    .adminAtualizarCelula(rowIndex, 3, formatado);
+  api({ tipo: 'admin_update', rowIndex: rowIndex, colIndex: 3, valor: formatado })
+    .then(function() { toast('Preço salvo!', 'sucesso'); })
+    .catch(function() { toast('Erro ao salvar', 'erro'); });
 }
 
 function salvarDesc(rowIndex) {
   var val = document.getElementById('desc-' + rowIndex).value;
-  google.script.run
-    .withSuccessHandler(function() { toast('Descrição salva!', 'sucesso'); })
-    .withFailureHandler(function() { toast('Erro ao salvar', 'erro'); })
-    .adminAtualizarCelula(rowIndex, 6, val);
+  api({ tipo: 'admin_update', rowIndex: rowIndex, colIndex: 6, valor: val })
+    .then(function() { toast('Descrição salva!', 'sucesso'); })
+    .catch(function() { toast('Erro ao salvar', 'erro'); });
 }
 
 function deletarLinha(rowIndex, nome) {
-  if (!confirm('Excluir a linha de "' + nome + '"?')) return;
-  google.script.run
-    .withSuccessHandler(function() {
-      toast('Produto excluído!', 'sucesso');
-      setTimeout(carregarProdutos, 600);
+  if (!confirm('Excluir linha de "' + nome + '"?')) return;
+  api({ tipo: 'admin_delete', rowIndex: rowIndex })
+    .then(function() {
+      toast('Excluído!', 'sucesso');
+      setTimeout(carregarProdutos, 500);
     })
-    .withFailureHandler(function() { toast('Erro ao excluir', 'erro'); })
-    .adminDeletarProduto(rowIndex);
+    .catch(function() { toast('Erro ao excluir', 'erro'); });
 }
 
-// ─── NOVO PRODUTO ────────────────────────────────────────────────────────────
+// ─── NOVO PRODUTO ────────────────────────────────────────────
 
-function adicionarTamanho() {
-  var div = document.createElement('div');
-  div.className = 'tamanho-linha';
-  div.innerHTML =
-    '<input type="text" placeholder="500ml" class="tam-tamanho">' +
-    '<input type="number" placeholder="26,00" step="0.01" class="tam-preco">' +
-    '<input type="number" placeholder="(opcional)" step="0.01" class="tam-preco-orig">' +
-    '<button class="rm-tam" onclick="removerTamanho(this)">✕</button>';
-  document.getElementById('tamanhos-lista').appendChild(div);
+function addTam() {
+  var d = document.createElement('div');
+  d.className = 'tam-grid';
+  d.innerHTML =
+    '<input type="text" placeholder="500ml" class="tam-t">' +
+    '<input type="number" placeholder="26,00" step="0.01" class="tam-p">' +
+    '<input type="number" placeholder="(opcional)" step="0.01" class="tam-po">' +
+    '<button class="btn-rm-tam" onclick="rmTam(this)">✕</button>';
+  document.getElementById('tamanhos').appendChild(d);
 }
 
-function removerTamanho(btn) {
-  var lista = document.getElementById('tamanhos-lista');
+function rmTam(btn) {
+  var lista = document.getElementById('tamanhos');
   if (lista.children.length > 1) btn.parentElement.remove();
 }
 
-function previewImagem(input) {
+function previewImg(input) {
   var file = input.files[0];
   if (!file) return;
-  imagemMime = file.type;
-  imagemNome = file.name;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var dataUrl = e.target.result;
-    imagemBase64 = dataUrl.split(',')[1];
-    document.getElementById('img-preview').src = dataUrl;
-    document.getElementById('img-preview').style.display = 'block';
-    document.getElementById('upload-placeholder').style.display = 'none';
+  imgMime = file.type;
+  imgNome = file.name;
+  var r = new FileReader();
+  r.onload = function(e) {
+    imgBase64 = e.target.result.split(',')[1];
+    var prev = document.getElementById('img-preview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.querySelector('.upload-text').style.display = 'none';
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(file);
 }
 
-function salvarNovoProduto() {
+function salvarProduto() {
   var nome = document.getElementById('novo-nome').value.trim();
-  var categoria = document.getElementById('novo-categoria').value;
-  var descricao = document.getElementById('novo-descricao').value.trim();
+  var cat = document.getElementById('novo-cat').value;
+  var desc = document.getElementById('novo-desc').value.trim();
 
   if (!nome) { toast('Informe o nome do produto', 'erro'); return; }
 
   var tamanhos = [];
-  document.querySelectorAll('.tamanho-linha').forEach(function(linha) {
-    var tam = linha.querySelector('.tam-tamanho').value.trim();
-    var preco = linha.querySelector('.tam-preco').value;
-    var precoOrig = linha.querySelector('.tam-preco-orig').value;
-    if (tam && preco) tamanhos.push({ tamanho: tam, preco: preco, precoOriginal: precoOrig || '' });
+  document.querySelectorAll('.tam-grid').forEach(function(linha) {
+    var t = linha.querySelector('.tam-t').value.trim();
+    var p = linha.querySelector('.tam-p').value;
+    var po = linha.querySelector('.tam-po').value;
+    if (t && p) tamanhos.push({ tamanho: t, preco: p, precoOriginal: po || '' });
   });
 
-  if (tamanhos.length === 0) { toast('Adicione ao menos um tamanho e preço', 'erro'); return; }
+  if (!tamanhos.length) { toast('Adicione ao menos um tamanho e preço', 'erro'); return; }
 
   var btn = document.getElementById('btn-salvar');
   btn.disabled = true;
 
-  function salvar(urlImagem) {
-    var dados = { produto: nome, categoria: categoria, descricao: descricao, tamanhos: tamanhos, imagem: urlImagem };
-    google.script.run
-      .withSuccessHandler(function() {
-        toast('Produto salvo com sucesso!', 'sucesso');
+  function salvar(url) {
+    api({ tipo: 'admin_save', produto: { produto: nome, categoria: cat, descricao: desc, tamanhos: tamanhos, imagem: url } })
+      .then(function() {
+        toast('Produto salvo! 🌿', 'sucesso');
         btn.disabled = false;
-        limparFormulario();
+        limparForm();
         mudarTab('produtos');
         carregarProdutos();
       })
-      .withFailureHandler(function(e) {
-        toast('Erro ao salvar: ' + e.message, 'erro');
-        btn.disabled = false;
-      })
-      .adminSalvarNovoProduto(dados);
+      .catch(function(e) { toast('Erro ao salvar', 'erro'); btn.disabled = false; });
   }
 
-  if (imagemBase64) {
-    document.getElementById('upload-progress').style.display = 'block';
-    google.script.run
-      .withSuccessHandler(function(res) {
-        document.getElementById('upload-progress').style.display = 'none';
+  if (imgBase64) {
+    document.getElementById('upload-prog').style.display = 'block';
+    api({ tipo: 'admin_upload', base64: imgBase64, nome: imgNome, mime: imgMime })
+      .then(function(res) {
+        document.getElementById('upload-prog').style.display = 'none';
         if (res.ok) salvar(res.url);
         else { toast('Erro no upload: ' + res.erro, 'erro'); btn.disabled = false; }
       })
-      .withFailureHandler(function(e) {
-        document.getElementById('upload-progress').style.display = 'none';
-        toast('Erro no upload: ' + e.message, 'erro');
-        btn.disabled = false;
-      })
-      .adminUploadImagem(imagemBase64, imagemNome, imagemMime);
+      .catch(function() { toast('Erro no upload', 'erro'); btn.disabled = false; });
   } else {
     salvar('');
   }
 }
 
-function limparFormulario() {
+function limparForm() {
   document.getElementById('novo-nome').value = '';
-  document.getElementById('novo-descricao').value = '';
-  document.getElementById('tamanhos-lista').innerHTML =
-    '<div class="tamanho-linha">' +
-    '<input type="text" placeholder="300ml" class="tam-tamanho">' +
-    '<input type="number" placeholder="18,90" step="0.01" class="tam-preco">' +
-    '<input type="number" placeholder="(opcional)" step="0.01" class="tam-preco-orig">' +
-    '<button class="rm-tam" onclick="removerTamanho(this)">✕</button>' +
+  document.getElementById('novo-desc').value = '';
+  document.getElementById('tamanhos').innerHTML =
+    '<div class="tam-grid">' +
+    '<input type="text" placeholder="300ml" class="tam-t">' +
+    '<input type="number" placeholder="18,90" step="0.01" class="tam-p">' +
+    '<input type="number" placeholder="(opcional)" step="0.01" class="tam-po">' +
+    '<button class="btn-rm-tam" onclick="rmTam(this)">✕</button>' +
     '</div>';
   document.getElementById('img-preview').style.display = 'none';
-  document.getElementById('upload-placeholder').style.display = 'block';
-  document.getElementById('file-input').value = '';
-  imagemBase64 = '';
+  document.querySelector('.upload-text').style.display = 'block';
+  document.getElementById('file-in').value = '';
+  imgBase64 = '';
 }
 
-// ─── TOAST ───────────────────────────────────────────────────────────────────
+// ─── TOAST ───────────────────────────────────────────────────
 
 function toast(msg, tipo) {
   var t = document.getElementById('toast');
@@ -518,6 +485,17 @@ function toast(msg, tipo) {
   t.className = 'toast show ' + (tipo || '');
   setTimeout(function() { t.className = 'toast'; }, 2800);
 }
+
+// ─── INIT ────────────────────────────────────────────────────
+
+// Cria a primeira linha de tamanho
+document.getElementById('tamanhos').innerHTML =
+  '<div class="tam-grid">' +
+  '<input type="text" placeholder="300ml" class="tam-t">' +
+  '<input type="number" placeholder="18,90" step="0.01" class="tam-p">' +
+  '<input type="number" placeholder="(opcional)" step="0.01" class="tam-po">' +
+  '<button class="btn-rm-tam" onclick="rmTam(this)">✕</button>' +
+  '</div>';
 
 carregarProdutos();
 </script>
