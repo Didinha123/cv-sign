@@ -289,15 +289,17 @@ function mudarTab(tab) {
 
 // ─── CARREGAR PRODUTOS ───────────────────────────────────────────────────────
 
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxn3um0K22U7ykTRA5VPBntTmy_JiKuBS2IGujuyrt6V34jwmHg-JlfgdwSgf1PLBMR/exec';
+
 function carregarProdutos() {
   document.getElementById('loading-produtos').style.display = 'block';
   document.getElementById('lista-produtos').innerHTML = '';
-  google.script.run
-    .withSuccessHandler(renderizarProdutos)
-    .withFailureHandler(function(e) {
+  fetch(WEBAPP_URL + '?tipo=cardapio')
+    .then(function(r) { return r.json(); })
+    .then(renderizarProdutos)
+    .catch(function(e) {
       document.getElementById('loading-produtos').textContent = 'Erro ao carregar: ' + e.message;
-    })
-    .adminListarProdutos();
+    });
 }
 
 function renderizarProdutos(produtos) {
