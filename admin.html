@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 TDA Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f5f7; min-height: 100vh; padding-bottom: 40px; }
+
+        .header { background: linear-gradient(135deg, #6e2c7c, #e63946); padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .header h1 { color: white; font-size: 1.2rem; font-weight: 800; }
+        .header p  { color: rgba(255,255,255,0.8); font-size: 0.8rem; margin-top: 2px; }
+
+        .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+        .card { background: white; border-radius: 14px; padding: 22px; margin-top: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .card-title { font-size: 1rem; font-weight: 700; color: #6e2c7c; margin-bottom: 16px; }
+
+        label { display: block; font-size: 0.82rem; font-weight: 600; color: #2b2d42; margin-bottom: 5px; }
+        .optional { color: #6b7280; font-weight: 400; }
+        input, select, textarea {
+            width: 100%; padding: 11px 13px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+            font-size: 0.92rem; color: #2b2d42; background: white; font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #6e2c7c; outline: none; box-shadow: 0 0 0 3px rgba(110,44,124,0.1); }
+        textarea { resize: vertical; min-height: 80px; }
+        .form-group { margin-bottom: 14px; }
+
+        .btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #6e2c7c, #e63946); color: white; box-shadow: 0 3px 12px rgba(110,44,124,0.35); margin-top: 8px; }
+        .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 2px solid #6e2c7c; color: #6e2c7c; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; width: auto; display: inline-block; font-family: inherit; }
+        .btn-outline:hover { background: #6e2c7c; color: white; }
+
+        .sizes-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .sizes-table th { font-size: 0.72rem; text-transform: uppercase; color: #6b7280; padding: 4px 6px; text-align: left; letter-spacing: 0.04em; }
+        .sizes-table td { padding: 3px 4px; }
+        .sizes-table input { padding: 8px 10px; }
+        .btn-remove { background: #fee2e2; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; color: #dc2626; font-size: 0.85rem; font-weight: 700; }
+        .btn-remove:hover { background: #fca5a5; }
+
+        .img-preview { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-top: 8px; display: none; border: 2px solid #e5e7eb; }
+
+        .hint { font-size: 0.78rem; color: #6b7280; margin-bottom: 6px; line-height: 1.4; }
+
+        .url-config { background: #f5eeff; border: 1.5px solid #6e2c7c; }
+        .url-note   { font-size: 0.78rem; color: #6b7280; margin-bottom: 10px; line-height: 1.4; }
+
+        .success-box { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px; text-align: center; margin-top: 18px; display: none; }
+        .success-box h3 { color: #166534; font-size: 1rem; margin-bottom: 4px; }
+        .success-box p  { color: #166534; font-size: 0.85rem; }
+
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 10px 22px; border-radius: 50px; font-size: 0.875rem; font-weight: 600; z-index: 999; display: none; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .toast.success { background: #16a34a; color: white; }
+        .toast.error   { background: #dc2626; color: white; }
+        .toast.info    { background: #6e2c7c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header" id="headerClicavel" onclick="contarClique()" style="cursor: default; user-select: none;">
+        <h1>🌿 TDA Açaí — Admin</h1>
+        <p>Gerenciamento</p>
+    </div>
+
+    <!-- ─── MODAL DE SENHA (oculto) ─── -->
+    <div id="modalSenha" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:16px; padding:28px 24px; width:90%; max-width:340px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+            <div style="font-size:2rem; margin-bottom:10px;">🔐</div>
+            <h3 style="color:#6e2c7c; margin-bottom:16px;">Acesso Admin</h3>
+            <input type="password" id="inputSenha" placeholder="Senha" class="form-input" style="margin-bottom:14px;" onkeydown="if(event.key==='Enter') verificarSenha()">
+            <button class="btn btn-primary" style="margin-top:0;" onclick="verificarSenha()">Entrar</button>
+            <br><button onclick="document.getElementById('modalSenha').style.display='none'" style="margin-top:12px; background:none; border:none; color:#6b7280; font-size:0.85rem; cursor:pointer;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- ─── FORMULÁRIO ─── -->
+    <div id="screenForm" class="container" style="display: none;">
+
+        <!-- Config URL -->
+        <div class="card url-config">
+            <div class="card-title">🔗 URL do Apps Script</div>
+            <p class="url-note">Cole aqui a URL do seu Google Apps Script (só precisa fazer isso uma vez).</p>
+            <div class="form-group">
+                <input type="url" id="adminUrl" placeholder="https://script.google.com/macros/s/...">
+            </div>
+            <button class="btn-outline" onclick="salvarUrl()">💾 Salvar URL</button>
+            <span id="urlStatus" style="font-size: 0.78rem; color: #6b7280; margin-left: 10px;"></span>
+        </div>
+
+        <!-- Formulário do produto -->
+        <div class="card">
+            <div class="card-title">➕ Novo Produto</div>
+
+            <div class="form-group">
+                <label>Nome do Produto *</label>
+                <input type="text" id="fNome" placeholder="Ex: Copo Especial">
+            </div>
+
+            <div class="form-group">
+                <label>Categoria *</label>
+                <select id="fCategoria">
+                    <option value="copos">Copos</option>
+                    <option value="combos">Combos</option>
+                    <option value="garrafas">Garrafas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Descrição *</label>
+                <textarea id="fDescricao" placeholder="Descreva o produto..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Imagem <span class="optional">(opcional)</span></label>
+                <p class="hint">📎 Cole o link do Google Drive <strong>ou</strong> faça upload da foto:</p>
+                <input type="url" id="fImagemUrl" placeholder="https://drive.google.com/..." oninput="previewUrl(this.value)">
+                <div style="text-align: center; margin: 8px 0; font-size: 0.78rem; color: #9ca3af;">— ou —</div>
+                <input type="file" id="fImagemFile" accept="image/*" onchange="previewFile(this)" style="font-size: 0.82rem;">
+                <img id="imgPreview" class="img-preview" alt="Preview da imagem">
+            </div>
+
+            <div class="form-group">
+                <label>Tamanhos e Preços *</label>
+                <table class="sizes-table">
+                    <thead><tr><th>Tamanho</th><th>Preço (R$)</th><th></th></tr></thead>
+                    <tbody id="sizesBody">
+                        <tr>
+                            <td><input type="text" placeholder="300ml"></td>
+                            <td><input type="number" placeholder="21.00" min="0" step="0.01" style="width:100px"></td>
+                            <td><button class="btn-remove" onclick="removerLinha(this)">✕</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn-outline" onclick="addLinha()">+ Tamanho</button>
+            </div>
+
+            <button class="btn btn-primary" id="btnSalvar" onclick="salvarProduto()">💾 Salvar Produto</button>
+        </div>
+
+        <!-- Sucesso -->
+        <div class="success-box" id="successBox">
+            <h3>✅ Produto salvo!</h3>
+            <p>O produto já aparece no site ao recarregar a página.</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: #6e2c7c; font-size: 0.85rem; font-weight: 600;">← Voltar ao site</a>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ─────────────────────────────────────────────
+        // CONFIGURAÇÃO
+        // ─────────────────────────────────────────────
+        const SENHA = 'tda2024';
+        const URL_KEY = 'tda_admin_url';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem(URL_KEY);
+            if (saved) {
+                document.getElementById('adminUrl').value = saved;
+                document.getElementById('urlStatus').textContent = '✅ URL configurada';
+            }
+        });
+
+        function getUrl() {
+            return document.getElementById('adminUrl').value.trim() || localStorage.getItem(URL_KEY) || '';
+        }
+
+        function salvarUrl() {
+            const url = document.getElementById('adminUrl').value.trim();
+            if (!url) { toast('Cole a URL do Apps Script!', 'error'); return; }
+            localStorage.setItem(URL_KEY, url);
+            document.getElementById('urlStatus').textContent = '✅ Salvo!';
+            toast('URL salva!');
+        }
+
+        // ─────────────────────────────────────────────
+        // ACESSO SECRETO (5 cliques no cabeçalho)
+        // ─────────────────────────────────────────────
+        let _clicks = 0, _clickTimer;
+        function contarClique() {
+            _clicks++;
+            clearTimeout(_clickTimer);
+            if (_clicks >= 5) {
+                _clicks = 0;
+                document.getElementById('modalSenha').style.display = 'flex';
+                setTimeout(() => document.getElementById('inputSenha').focus(), 100);
+            } else {
+                _clickTimer = setTimeout(() => { _clicks = 0; }, 2000);
+            }
+        }
+
+        function verificarSenha() {
+            const s = document.getElementById('inputSenha').value;
+            if (s === SENHA) {
+                document.getElementById('modalSenha').style.display = 'none';
+                document.getElementById('inputSenha').value = '';
+                document.getElementById('screenForm').style.display = '';
+            } else {
+                toast('Senha incorreta!', 'error');
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // IMAGEM
+        // ─────────────────────────────────────────────
+        function previewUrl(url) {
+            const img = document.getElementById('imgPreview');
+            img.style.display = url ? 'block' : 'none';
+            img.src = url;
+        }
+
+        function previewFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.getElementById('imgPreview');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                document.getElementById('fImagemUrl').value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function converterDriveUrl(url) {
+            if (!url) return '';
+            const m1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (m1) return `https://lh3.googleusercontent.com/d/${m1[1]}`;
+            const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (m2) return `https://lh3.googleusercontent.com/d/${m2[1]}`;
+            return url;
+        }
+
+        // ─────────────────────────────────────────────
+        // TAMANHOS
+        // ─────────────────────────────────────────────
+        function addLinha() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" placeholder="500ml"></td>
+                <td><input type="number" placeholder="26.00" min="0" step="0.01" style="width:100px"></td>
+                <td><button class="btn-remove" onclick="removerLinha(this)">✕</button></td>`;
+            document.getElementById('sizesBody').appendChild(tr);
+        }
+
+        function removerLinha(btn) {
+            const tbody = document.getElementById('sizesBody');
+            if (tbody.rows.length <= 1) { toast('Precisa de pelo menos 1 tamanho!', 'error'); return; }
+            btn.closest('tr').remove();
+        }
+
+        // ─────────────────────────────────────────────
+        // SALVAR PRODUTO
+        // ─────────────────────────────────────────────
+        async function salvarProduto() {
+            const appUrl = getUrl();
+            if (!appUrl) { toast('Configure a URL do Apps Script acima!', 'error'); return; }
+
+            const nome      = document.getElementById('fNome').value.trim();
+            const categoria = document.getElementById('fCategoria').value;
+            const descricao = document.getElementById('fDescricao').value.trim();
+
+            if (!nome)      { toast('Informe o nome do produto!', 'error'); return; }
+            if (!descricao) { toast('Informe a descrição!', 'error'); return; }
+
+            // Lê tamanhos
+            const tamanhos = [];
+            for (let row of document.getElementById('sizesBody').rows) {
+                const inputs = row.querySelectorAll('input');
+                const label  = inputs[0].value.trim();
+                const preco  = parseFloat(inputs[1].value);
+                if (!label || isNaN(preco) || preco <= 0) { toast('Preencha todos os tamanhos corretamente!', 'error'); return; }
+                tamanhos.push({ label, price: preco });
+            }
+
+            // Imagem
+            let imagem = converterDriveUrl(document.getElementById('fImagemUrl').value.trim());
+            const fileInput = document.getElementById('fImagemFile');
+
+            const btn = document.getElementById('btnSalvar');
+            btn.textContent = '⏳ Salvando...';
+            btn.disabled = true;
+
+            try {
+                // Upload de arquivo se necessário
+                if (!imagem && fileInput.files.length > 0) {
+                    toast('📤 Fazendo upload da imagem...', 'info');
+                    imagem = await uploadImagem(appUrl, fileInput.files[0]);
+                }
+
+                // Salva produto no Sheets
+                const payload = { tipo: 'novo_produto', produto: { nome, categoria, descricao, imagem, tamanhos } };
+                const res     = await fetch(appUrl, { method: 'POST', body: JSON.stringify(payload) });
+                const json    = await res.json();
+
+                if (json.status === 'ok') {
+                    document.getElementById('successBox').style.display = 'block';
+                    toast('Produto salvo com sucesso! 🎉');
+                    limpar();
+                } else {
+                    toast('Erro: ' + (json.msg || 'Tente novamente'), 'error');
+                }
+            } catch(e) {
+                toast('Erro de conexão. Verifique a URL e as permissões.', 'error');
+                console.error(e);
+            } finally {
+                btn.textContent = '💾 Salvar Produto';
+                btn.disabled = false;
+            }
+        }
+
+        async function uploadImagem(appUrl, file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async e => {
+                    try {
+                        const base64  = e.target.result.split(',')[1];
+                        const payload = { tipo: 'upload_imagem', imagem: { base64, nome: file.name, mime: file.type } };
+                        const res     = await fetch(appUrl, { method: 'POST', body: JSON.stringify(payload) });
+                        const json    = await res.json();
+                        if (json.status === 'ok') resolve(json.url);
+                        else reject(new Error(json.msg || 'Upload falhou'));
+                    } catch(err) { reject(err); }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function limpar() {
+            document.getElementById('fNome').value = '';
+            document.getElementById('fDescricao').value = '';
+            document.getElementById('fImagemUrl').value = '';
+            document.getElementById('fImagemFile').value = '';
+            document.getElementById('imgPreview').style.display = 'none';
+            document.getElementById('sizesBody').innerHTML = `<tr>
+                <td><input type="text" placeholder="300ml"></td>
+                <td><input type="number" placeholder="21.00" min="0" step="0.01" style="width:100px"></td>
+                <td><button class="btn-remove" onclick="removerLinha(this)">✕</button></td>
+            </tr>`;
+        }
+
+        // ─────────────────────────────────────────────
+        // TOAST
+        // ─────────────────────────────────────────────
+        let _toastTimer;
+        function toast(msg, type = 'success') {
+            clearTimeout(_toastTimer);
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type}`;
+            t.style.display = 'block';
+            _toastTimer = setTimeout(() => t.style.display = 'none', 3000);
+        }
+    </script>
+</body>
+</html>
