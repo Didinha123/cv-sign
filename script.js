@@ -161,8 +161,9 @@ function aplicarCardapio(produtos) {
     produtos.forEach(p => {
         const nome = (p.produto || '').trim();
         if (!mapa[nome]) {
-            mapa[nome] = { desc: '', indisponivel: true, sizes: [] };
-        }
+    mapa[nome] = { desc: '', imagem: '', indisponivel: true, sizes: [] };
+}
+if (p.imagem && p.imagem.trim()) mapa[nome].imagem = p.imagem.trim();
         if (p.disponivel) mapa[nome].indisponivel = false;
         if (p.descricao && p.descricao.trim()) mapa[nome].desc = p.descricao.trim();
         mapa[nome].sizes.push({
@@ -177,9 +178,10 @@ function aplicarCardapio(produtos) {
     Object.values(PRODUCTS).forEach(prod => {
         const dados = mapa[prod.name];
         if (!dados) return;
-        prod.desc         = dados.desc || prod.desc;
-        prod.indisponivel = dados.indisponivel;
-        prod.sizes        = dados.sizes;
+      prod.desc         = dados.desc || prod.desc;
+prod.indisponivel = dados.indisponivel;
+prod.sizes        = dados.sizes;
+if (dados.imagem) prod.image = dados.imagem;
     });
 
     atualizarTodosOsCards();
