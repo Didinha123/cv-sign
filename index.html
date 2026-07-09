@@ -8,20 +8,13 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
 
- 
-
   /* DASHBOARD */
-  #dashboard { display: none; min-height: 100vh; }
   .topbar {
     background: linear-gradient(135deg, #4a1942, #c0392b);
     color: white; padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between;
   }
   .topbar h2 { font-size: 1.1rem; }
-  .btn-logout {
-    background: rgba(255,255,255,0.2); color: white; border: none;
-    border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.85rem;
-  }
 
   /* TABS */
   .tabs {
@@ -87,7 +80,6 @@
   }
   .desc-save { margin-top: 6px; float: right; }
 
-  /* IMAGEM NO CARD */
   .img-preview-mini {
     width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
     border: 1px solid #eee;
@@ -134,7 +126,6 @@
   }
   .btn-salvar:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  /* LOADING / TOAST */
   .loading { text-align: center; padding: 40px; color: #888; }
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -151,22 +142,9 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-box">
-    <h1>🍇 TDA Açaí</h1>
-    <p>Painel do Estabelecimento</p>
-    <input type="password" id="senha-input" placeholder="Senha" onkeydown="if(event.key==='Enter')entrar()">
-    <button class="btn-login" onclick="entrar()">Entrar</button>
-    <div class="login-error" id="login-erro"></div>
-  </div>
-</div>
-
-<!-- DASHBOARD -->
 <div id="dashboard">
   <div class="topbar">
     <h2>🍇 TDA Açaí — Admin</h2>
-    <button class="btn-logout" onclick="sair()">Sair</button>
   </div>
 
   <div class="tabs">
@@ -235,34 +213,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-var imagemUrl = '';
 var imagemBase64 = '';
 var imagemMime = '';
 var imagemNome = '';
-
-// ─── LOGIN ───────────────────────────────────────────────────────────────────
-
-function entrar() {
-  var senha = document.getElementById('senha-input').value;
-  document.getElementById('login-erro').textContent = '';
-  google.script.run
-    .withSuccessHandler(function(ok) {
-      if (ok) {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        carregarProdutos();
-      } else {
-        document.getElementById('login-erro').textContent = 'Senha incorreta.';
-      }
-    })
-    .adminVerificarSenha(senha);
-}
-
-function sair() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('senha-input').value = '';
-}
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
 
@@ -292,7 +245,6 @@ function renderizarProdutos(produtos) {
   var lista = document.getElementById('lista-produtos');
   lista.innerHTML = '';
 
-  // Agrupar por nome
   var grupos = {};
   produtos.forEach(function(p) {
     if (!grupos[p.produto]) grupos[p.produto] = [];
@@ -368,15 +320,15 @@ function salvarPreco(rowIndex) {
   google.script.run
     .withSuccessHandler(function() { toast('Preço salvo!', 'sucesso'); })
     .withFailureHandler(function() { toast('Erro ao salvar', 'erro'); })
-    .adminAtualizarCelula(rowIndex, 3, formatado); // coluna C = índice 3
+    .adminAtualizarCelula(rowIndex, 3, formatado);
 }
 
-function salvarDesc(rowIndex, nome) {
+function salvarDesc(rowIndex) {
   var val = document.getElementById('desc-' + rowIndex).value;
   google.script.run
     .withSuccessHandler(function() { toast('Descrição salva!', 'sucesso'); })
     .withFailureHandler(function() { toast('Erro ao salvar', 'erro'); })
-    .adminAtualizarCelula(rowIndex, 6, val); // coluna F = índice 6
+    .adminAtualizarCelula(rowIndex, 6, val);
 }
 
 function deletarLinha(rowIndex, nome) {
@@ -420,7 +372,6 @@ function previewImagem(input) {
     document.getElementById('img-preview').src = dataUrl;
     document.getElementById('img-preview').style.display = 'block';
     document.getElementById('upload-placeholder').style.display = 'none';
-    imagemUrl = ''; // reseta até fazer upload
   };
   reader.readAsDataURL(file);
 }
@@ -494,7 +445,7 @@ function limparFormulario() {
   document.getElementById('img-preview').style.display = 'none';
   document.getElementById('upload-placeholder').style.display = 'block';
   document.getElementById('file-input').value = '';
-  imagemBase64 = ''; imagemUrl = '';
+  imagemBase64 = '';
 }
 
 // ─── TOAST ───────────────────────────────────────────────────────────────────
@@ -505,6 +456,9 @@ function toast(msg, tipo) {
   t.className = 'toast show ' + (tipo || '');
   setTimeout(function() { t.className = 'toast'; }, 2800);
 }
+
+// Inicia carregando os produtos
+carregarProdutos();
 </script>
 </body>
 </html>
