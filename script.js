@@ -2,21 +2,14 @@
  * TDA Açaí — Script Principal
  */
 
-// ─────────────────────────────────────────────────────────────
-// ⚠️  CONFIGURAÇÕES FIXAS — valem em TODOS os dispositivos
-// ─────────────────────────────────────────────────────────────
 const SHEETS_URL_FIXO   = 'https://script.google.com/macros/s/AKfycbxn3um0K22U7ykTRA5VPBntTmy_JiKuBS2IGujuyrt6V34jwmHg-JlfgdwSgf1PLBMR/exec';
 const TAXA_ENTREGA_FIXA = 2;
 const PIX_KEY_FIXA      = '8af2ba28-1c9c-47cd-82cc-3be69599d2d1';
 const PIX_NOME_FIXO     = 'TDA Acai';
 const PIX_CIDADE_FIXA   = 'Mogi Mirim';
 
-// Bairros/condomínios com frete grátis
 const FRETE_GRATIS_BAIRROS = ['manacas','manacás','condominio dos manacas','cond. dos manacas','Rua Maria Magdalena Urban','Maria Magdalena Urban','maria magdalena urban','rua maria magdalena urban','RUA MARIA MAGDALENA URBAN'];
 
-// ─────────────────────────────────────────────────────────────
-// PRODUTOS
-// ─────────────────────────────────────────────────────────────
 const PRODUCTS = {
     diego:   { id:'diego',   name:'Copo Diego',       cat:'copos',    image:'./Copo1.png',     desc:'Açaí cremoso com leite condensado, paçoca, amendoim e frutas frescas.',                                              sizes:[{label:'300ml',price:21},{label:'500ml',price:26},{label:'700ml',price:30}] },
     arthur:  { id:'arthur',  name:'Copo Arthur',      cat:'copos',    image:'./Copo2.png',     desc:'Morango fresco, creme de avelã e leite Ninho em açaí cremoso.',                                                      sizes:[{label:'300ml',price:22},{label:'500ml',price:27},{label:'700ml',price:31}] },
@@ -36,16 +29,13 @@ const ORDER_STATUSES = {
     cancelled: { label:'❌ Cancelado',              color:'#dc2626', bg:'#fee2e2' },
 };
 
-// ─────────────────────────────────────────────────────────────
-// MONTE SEU AÇAÍ — Tamanhos do copo e Adicionais
-// ─────────────────────────────────────────────────────────────
 const MONTE_TAMANHOS = [
     { id:'300ml', label:'300ml', price:12.99 },
     { id:'500ml', label:'500ml', price:15.99 },
     { id:'700ml', label:'700ml', price:19.99 },
 ];
 
-let monteTamanhoSelecionado = null; // id do tamanho escolhido
+let monteTamanhoSelecionado = null;
 
 const ADICIONAIS = [
     { id:'sucrilhos',    name:'Sucrilhos',        price:2.99, emoji:'🌾' },
@@ -60,12 +50,8 @@ const ADICIONAIS = [
     { id:'granola',      name:'Granola',          price:4.99, emoji:'🌰' },
 ];
 
-let monteSelecao = {}; // { id: quantidade }
+let monteSelecao = {};
 
-
-// ─────────────────────────────────────────────────────────────
-// ESTADO
-// ─────────────────────────────────────────────────────────────
 let cart        = JSON.parse(localStorage.getItem('tda_cart')     || '[]');
 let currentUser = JSON.parse(localStorage.getItem('tda_user')    || 'null');
 let settings    = JSON.parse(localStorage.getItem('tda_settings') || 'null');
@@ -81,9 +67,6 @@ if (!settings) {
 }
 function saveSettings() { localStorage.setItem('tda_settings', JSON.stringify(settings)); }
 
-// ─────────────────────────────────────────────────────────────
-// TAXA DE ENTREGA
-// ─────────────────────────────────────────────────────────────
 function getTaxaEntrega() {
     if (_freteGratis) return 0;
     return TAXA_ENTREGA_FIXA > 0 ? TAXA_ENTREGA_FIXA : settings.deliveryFee;
@@ -116,9 +99,6 @@ function onManacasToggle(checked) {
     showToast(checked ? '🎉 Frete grátis aplicado!' : 'Frete: ' + formatCurrency(getTaxaEntrega()));
 }
 
-// ─────────────────────────────────────────────────────────────
-// DOM READY
-// ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     updateUserUI();
     updateCartBadge();
@@ -127,11 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarTodosOsCards();
     renderPromocoes();
     carregarPrecosDoSheets();
+    carregarAdicionaisDoSheets(); // ← NOVO: carrega ingredientes do Sheets
     const el = document.getElementById('siTaxaEntrega');
     if (el) el.textContent = formatCurrency(getTaxaEntrega());
     setInterval(checkStoreOpen, 60000);
     iniciarPollingStatus();
-    // Rastreamento de visitas
     (function() {
         try {
             var url = (SHEETS_URL_FIXO || settings.sheetsUrl || '').trim();
@@ -150,9 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 });
 
-// ─────────────────────────────────────────────────────────────
-// STATUS DA LOJA
-// ─────────────────────────────────────────────────────────────
 function checkStoreOpen() {
     const el = document.getElementById('storeStatus'); if (!el) return;
     const now = new Date(), day = now.getDay(), t = now.getHours()*60+now.getMinutes();
@@ -175,9 +152,6 @@ function initWhatsApp() {
     document.querySelectorAll('a[href*="wa.me"]').forEach(l => { if(!l.href.includes('text=')) l.href+=`?text=${msg}`; });
 }
 
-// ─────────────────────────────────────────────────────────────
-// UTILITÁRIOS
-// ─────────────────────────────────────────────────────────────
 function showToast(msg,type='success') {
     const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast toast--${type} toast--show`; setTimeout(()=>t.classList.remove('toast--show'),3000);
 }
@@ -200,29 +174,80 @@ async function carregarPrecosDoSheets() {
         if (json.status==='ok' && Array.isArray(json.produtos)) aplicarPrecos(json.produtos);
     } catch(e) { console.warn('Preços do Sheets indisponíveis:',e.message); }
 }
+
+// ─────────────────────────────────────────────────────────────
+// ADICIONAIS DO GOOGLE SHEETS (Monte seu Açaí)
+// ─────────────────────────────────────────────────────────────
+async function carregarAdicionaisDoSheets() {
+    const url = (SHEETS_URL_FIXO || settings.sheetsUrl || '').trim();
+    if (!url) return;
+    try {
+        const res  = await fetch(`${url}?d=${encodeURIComponent(JSON.stringify({tipo:'adicionais'}))}`);
+        const json = await res.json();
+        if (json.status === 'ok' && Array.isArray(json.adicionais) && json.adicionais.length > 0) {
+            // Substitui a lista local pelo que vier do Sheets
+            ADICIONAIS.length = 0;
+            json.adicionais.forEach(a => ADICIONAIS.push({
+                id:    a.id,
+                name:  a.name,
+                price: a.price,
+                emoji: a.emoji || '🍓',
+            }));
+        }
+    } catch(e) { console.warn('Adicionais do Sheets indisponíveis:', e.message); }
+}
+
 function aplicarPrecos(produtos) {
+    // Agrupa disponibilidade e descrição por nome de produto
+    const disponibilidade = {};
+    const descricoes      = {};
+
+    produtos.forEach(p => {
+        const nomeProd = (p.produto || '').trim();
+        if (disponibilidade[nomeProd] === undefined) disponibilidade[nomeProd] = false;
+        if (p.disponivel) disponibilidade[nomeProd] = true;
+        if (p.descricao && p.descricao.trim()) descricoes[nomeProd] = p.descricao.trim();
+    });
+
+    // Mapa de preços por produto+tamanho
     const mapa = {};
     produtos.forEach(p => {
-        const chave = (p.produto+'-'+p.tamanho).toLowerCase().trim();
-        mapa[chave] = { preco: p.preco, precoOriginal: p.precoOriginal||0 };
+        const chave = (p.produto + '-' + p.tamanho).toLowerCase().trim();
+        mapa[chave] = {
+            preco:         p.preco,
+            precoOriginal: p.precoOriginal || 0,
+            disponivel:    p.disponivel,
+        };
     });
+
     Object.values(PRODUCTS).forEach(prod => {
+        // Aplica descrição vinda do Sheets
+        if (descricoes[prod.name]) prod.desc = descricoes[prod.name];
+
+        // Disponibilidade geral do produto
+        const dispGeral = disponibilidade[prod.name];
+        prod.indisponivel = dispGeral === false;
+
+        // Preço e disponibilidade por tamanho
         prod.sizes.forEach(size => {
-            const chave = (prod.name+'-'+size.label).toLowerCase().trim();
+            const chave = (prod.name + '-' + size.label).toLowerCase().trim();
             if (mapa[chave]) {
-                const sheets = mapa[chave];
-                if (sheets.precoOriginal > 0) {
-                    size.price         = sheets.preco;
-                    size.originalPrice = sheets.precoOriginal;
-                } else if (sheets.preco > 0) {
-                    if (!size.originalPrice) size.price = sheets.preco;
+                const s = mapa[chave];
+                if (s.precoOriginal > 0) {
+                    size.price         = s.preco;
+                    size.originalPrice = s.precoOriginal;
+                } else if (s.preco > 0) {
+                    size.price = s.preco;
                 }
+                size.indisponivel = !s.disponivel;
             }
         });
     });
+
     atualizarTodosOsCards();
     renderPromocoes();
 }
+
 function atualizarTodosOsCards() {
     document.querySelectorAll('.product-card[data-product]').forEach(card => {
         const prod = PRODUCTS[card.dataset.product]; if (prod) atualizarPrecoCard(card,prod);
@@ -236,7 +261,8 @@ function renderPromocoes() {
     const sec  = document.getElementById('sec-promocoes');
     const pill = document.querySelector('.cat-pill[data-cat="promocoes"]');
     const promos = Object.values(PRODUCTS).filter(prod =>
-        prod.sizes.some(s => s.originalPrice && s.originalPrice > s.price)
+        !prod.indisponivel &&
+        prod.sizes.some(s => !s.indisponivel && s.originalPrice && s.originalPrice > s.price)
     );
     if (promos.length === 0) {
         if (sec)  sec.style.display  = 'none';
@@ -249,12 +275,12 @@ function renderPromocoes() {
     sec.innerHTML = `
         <h2 class="prod-section-title promo-section-title">🔥 Promoções</h2>
         ${promos.map(prod => {
-            const sizesComPromo = prod.sizes.filter(s => s.originalPrice && s.originalPrice > s.price);
+            const sizesComPromo = prod.sizes.filter(s => !s.indisponivel && s.originalPrice && s.originalPrice > s.price);
             const menorPromo    = sizesComPromo.reduce((a,b) => a.price <= b.price ? a : b);
             const precoNovo     = menorPromo.price;
             const precoAntigo   = menorPromo.originalPrice;
             const pct           = Math.round((1 - precoNovo / precoAntigo) * 100);
-            const prefixo       = prod.sizes.length > 1 ? 'a partir de ' : '';
+            const prefixo       = prod.sizes.filter(s=>!s.indisponivel).length > 1 ? 'a partir de ' : '';
             return `
             <div class="product-card promo-destaque" data-product="${prod.id}" onclick="openProductModal('${prod.id}')">
                 <div class="product-info">
@@ -273,22 +299,46 @@ function renderPromocoes() {
         }).join('')}
     `;
 }
+
 function atualizarPrecoCard(card, prod) {
     const priceEl = card.querySelector('.product-price');
     if (!priceEl) return;
-    const minPrice    = Math.min(...prod.sizes.map(s => s.price));
-    const temPromocao = prod.sizes.some(s => s.originalPrice && s.originalPrice > s.price);
+
+    // Produto inteiro indisponível
+    if (prod.indisponivel) {
+        card.style.opacity       = '0.5';
+        card.style.pointerEvents = 'none';
+        card.style.filter        = 'grayscale(0.6)';
+        priceEl.innerHTML = '<span style="color:#dc2626;font-weight:700">❌ Indisponível</span>';
+        const addBtn = card.querySelector('.product-add-btn');
+        if (addBtn) addBtn.style.display = 'none';
+        return;
+    }
+
+    // Restaura visual caso tenha voltado a ficar disponível
+    card.style.opacity       = '';
+    card.style.pointerEvents = '';
+    card.style.filter        = '';
+    const addBtn = card.querySelector('.product-add-btn');
+    if (addBtn) addBtn.style.display = '';
+
+    const availSizes = prod.sizes.filter(s => !s.indisponivel);
+    if (!availSizes.length) return;
+
+    const minPrice    = Math.min(...availSizes.map(s => s.price));
+    const temPromocao = availSizes.some(s => s.originalPrice && s.originalPrice > s.price);
+
     if (temPromocao) {
-        const menorSize = prod.sizes.reduce((a, b) => a.price <= b.price ? a : b);
-        const precoOrig = menorSize.originalPrice || Math.max(...prod.sizes.map(s => s.originalPrice || 0));
+        const menorSize = availSizes.reduce((a, b) => a.price <= b.price ? a : b);
+        const precoOrig = menorSize.originalPrice || Math.max(...availSizes.map(s => s.originalPrice || 0));
         const pct       = precoOrig > 0 ? Math.round((1 - minPrice / precoOrig) * 100) : 0;
-        const prefixo   = prod.sizes.length > 1 ? 'a partir de ' : '';
+        const prefixo   = availSizes.length > 1 ? 'a partir de ' : '';
         priceEl.innerHTML =
             `<span class="price-old">${formatCurrency(precoOrig)}</span> ` +
             `<strong class="price-new">${prefixo}${formatCurrency(minPrice)}</strong> ` +
             `<span class="discount-badge">-${pct}%</span>`;
     } else {
-        priceEl.innerHTML = prod.sizes.length > 1
+        priceEl.innerHTML = availSizes.length > 1
             ? `A partir de <strong>${formatCurrency(minPrice)}</strong>`
             : `<strong>${formatCurrency(minPrice)}</strong>`;
     }
@@ -307,12 +357,10 @@ function renderMonteSeuAcai() {
         return sum + (item ? item.price * qty : 0);
     }, 0);
     const totalGeral = (tamanho ? tamanho.price : 0) + totalAdicionais;
-    const temItens   = monteTamanhoSelecionado && Object.keys(monteSelecao).length > 0;
 
     sec.innerHTML = `
         <h2 class="prod-section-title" style="background:linear-gradient(135deg,#f5eeff,#ede9fe);color:#4c1d95;border-left:4px solid #7c3aed;">🍧 Monte seu Açaí</h2>
 
-        <!-- STEP 1: Tamanho do copo -->
         <div style="padding:14px 16px 6px;">
             <div style="font-size:.82rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">1. Escolha o tamanho do copo 🥤</div>
             <div class="monte-tamanhos">
@@ -324,7 +372,6 @@ function renderMonteSeuAcai() {
             </div>
         </div>
 
-        <!-- STEP 2: Adicionais -->
         <div style="padding:14px 16px 6px;">
             <div style="font-size:.82rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">2. Escolha os adicionais 🍓</div>
         </div>
@@ -345,7 +392,6 @@ function renderMonteSeuAcai() {
             }).join('')}
         </div>
 
-        <!-- RESUMO -->
         ${monteTamanhoSelecionado ? `
         <div class="monte-resumo">
             <div class="monte-resumo-title">📋 Resumo da montagem</div>
@@ -408,7 +454,7 @@ function monteAdicionarCarrinho() {
 
     saveCart();
     updateCartBadge();
-    monteSelecao           = {};
+    monteSelecao            = {};
     monteTamanhoSelecionado = null;
     renderMonteSeuAcai();
     showToast('Adicionado ao carrinho! 🛒');
@@ -423,13 +469,11 @@ function filterCat(cat, btn) {
     const inp = document.getElementById('searchInput'); if (inp) inp.value = '';
     document.querySelectorAll('.product-card').forEach(c=>c.style.display='');
 
-    // Seções normais
     document.querySelectorAll('.prod-section').forEach(s => {
-        if (s.id === 'sec-monte') return; // tratado abaixo
+        if (s.id === 'sec-monte') return;
         s.classList.toggle('hidden', cat !== 'all' && s.dataset.cat !== cat);
     });
 
-    // Seção Monte seu Açaí
     const secMonte = document.getElementById('sec-monte');
     if (secMonte) {
         const mostrar = cat === 'monte' || cat === 'all';
@@ -472,16 +516,33 @@ function openProductModal(productId) {
     document.getElementById('prodQtyVal').textContent    = '1';
     const sizesEl = document.getElementById('prodModalSizes');
     document.getElementById('prodSizesTitle').style.display = product.sizes.length > 1 ? '' : 'none';
-    sizesEl.innerHTML = product.sizes.map((s,i) => {
-        const temPromo = s.originalPrice && s.originalPrice > s.price;
-        const pct      = temPromo ? Math.round((1-s.price/s.originalPrice)*100) : 0;
-        return `<div class="prod-size-opt ${i===0?'selected':''}" onclick="selectSize(${i})">
-            <span class="pso-label">${s.label}${temPromo?` <span class="discount-badge">-${pct}%</span>`:''}</span>
-            <div class="pso-prices">${temPromo?`<span class="pso-price-old">${formatCurrency(s.originalPrice)}</span>`:''}<span class="pso-price">${formatCurrency(s.price)}</span></div>
+
+    sizesEl.innerHTML = product.sizes.map((s, i) => {
+        const indisp   = s.indisponivel;
+        const temPromo = !indisp && s.originalPrice && s.originalPrice > s.price;
+        const pct      = temPromo ? Math.round((1 - s.price / s.originalPrice) * 100) : 0;
+        return `<div class="prod-size-opt ${indisp ? 'prod-size-indisp' : ''}"
+                     style="${indisp ? 'opacity:0.45;cursor:not-allowed' : ''}"
+                     onclick="${indisp ? "showToast('Tamanho indisponível','error')" : 'selectSize(' + i + ')'}">
+            <span class="pso-label">
+                ${s.label}
+                ${temPromo ? `<span class="discount-badge">-${pct}%</span>` : ''}
+                ${indisp ? '<span style="color:#dc2626;font-size:.72rem;font-weight:600"> Indisponível</span>' : ''}
+            </span>
+            <div class="pso-prices">
+                ${temPromo ? `<span class="pso-price-old">${formatCurrency(s.originalPrice)}</span>` : ''}
+                <span class="pso-price" ${indisp ? 'style="color:#9ca3af"' : ''}>${indisp ? '—' : formatCurrency(s.price)}</span>
+            </div>
         </div>`;
     }).join('');
-    updateProdAddBtn(); openModal('modalProduct');
+
+    // Seleciona automaticamente o primeiro tamanho disponível
+    const primeiroDisp = product.sizes.findIndex(s => !s.indisponivel);
+    if (primeiroDisp >= 0) selectSize(primeiroDisp);
+
+    openModal('modalProduct');
 }
+
 function selectSize(idx) {
     _selectedSizeIdx = idx;
     document.querySelectorAll('.prod-size-opt').forEach((el,i)=>el.classList.toggle('selected',i===idx));
