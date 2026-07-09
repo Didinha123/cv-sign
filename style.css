@@ -400,4 +400,6 @@ button { cursor:pointer; font-family:inherit; }
     .banner-frete-gratis { font-size:0.8rem; padding:8px 12px; gap:8px; }
     .banner-tag { display:none; }
     .monte-grid { grid-template-columns:repeat(2,1fr); }
-}
+} ; /**
+ * TDA Açaí — Script Principal
+ */
