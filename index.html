@@ -8,15 +8,13 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
 
-  /* DASHBOARD */
   .topbar {
     background: linear-gradient(135deg, #4a1942, #c0392b);
     color: white; padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .topbar h2 { font-size: 1.1rem; }
+  .topbar h2 { font-size: 1.1rem; cursor: pointer; user-select: none; }
 
-  /* TABS */
   .tabs {
     display: flex; background: white; border-bottom: 2px solid #eee; position: sticky; top: 0; z-index: 10;
   }
@@ -26,11 +24,11 @@
     transition: all 0.2s;
   }
   .tab.ativo { color: #4a1942; border-bottom-color: #4a1942; }
+  .tab.oculto { display: none; }
 
   .tab-content { display: none; padding: 16px; }
   .tab-content.ativo { display: block; }
 
-  /* CARDS DE PRODUTO */
   .produto-card {
     background: white; border-radius: 12px; margin-bottom: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;
@@ -81,8 +79,7 @@
   .desc-save { margin-top: 6px; float: right; }
 
   .img-preview-mini {
-    width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
-    border: 1px solid #eee;
+    width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid #eee;
   }
   .sem-img { font-size: 1.4rem; }
 
@@ -93,9 +90,7 @@
     width: 100%; padding: 10px 14px; border: 2px solid #eee; border-radius: 10px;
     font-size: 0.95rem; outline: none;
   }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: #4a1942;
-  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #4a1942; }
 
   .tamanho-linha {
     display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px;
@@ -111,8 +106,7 @@
 
   .img-upload-area {
     border: 2px dashed #ccc; border-radius: 12px; padding: 24px;
-    text-align: center; cursor: pointer; transition: border-color 0.2s;
-    position: relative;
+    text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative;
   }
   .img-upload-area:hover { border-color: #4a1942; }
   .img-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
@@ -130,35 +124,57 @@
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #333; color: white; padding: 12px 24px; border-radius: 10px;
-    font-size: 0.9rem; z-index: 999; opacity: 0; transition: opacity 0.3s;
-    pointer-events: none;
+    font-size: 0.9rem; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none;
   }
   .toast.show { opacity: 1; }
   .toast.sucesso { background: #27ae60; }
   .toast.erro { background: #c0392b; }
 
   .tamanho-label { font-size: 0.75rem; color: #888; text-align: center; }
+
+  /* MODAL SENHA */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: white; border-radius: 16px; padding: 32px 24px;
+    width: 100%; max-width: 320px; text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .modal-box h3 { color: #4a1942; margin-bottom: 8px; }
+  .modal-box p { color: #888; font-size: 0.85rem; margin-bottom: 20px; }
+  .modal-box input {
+    width: 100%; padding: 10px 14px; border: 2px solid #eee; border-radius: 10px;
+    font-size: 1rem; outline: none; margin-bottom: 12px; text-align: center;
+  }
+  .modal-box input:focus { border-color: #4a1942; }
+  .modal-btn {
+    width: 100%; padding: 11px; background: #4a1942; color: white;
+    border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;
+  }
+  .modal-erro { color: #c0392b; font-size: 0.85rem; margin-top: 8px; }
+  .modal-cancel { color: #888; font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: block; }
 </style>
 </head>
 <body>
 
 <div id="dashboard">
   <div class="topbar">
-    <h2>🍇 TDA Açaí — Admin</h2>
+    <h2 id="titulo-admin" onclick="cliqueTitulo()">🍇 TDA Açaí — Admin</h2>
   </div>
 
   <div class="tabs">
-    <div class="tab ativo" onclick="mudarTab('produtos')">📋 Produtos</div>
-    <div class="tab" onclick="mudarTab('novo')">➕ Novo Produto</div>
+    <div class="tab ativo" id="tab-btn-produtos" onclick="mudarTab('produtos')">📋 Produtos</div>
+    <div class="tab oculto" id="tab-btn-novo" onclick="mudarTab('novo')">➕ Novo Produto</div>
   </div>
 
-  <!-- ABA PRODUTOS -->
   <div class="tab-content ativo" id="tab-produtos">
     <div class="loading" id="loading-produtos">Carregando produtos...</div>
     <div id="lista-produtos"></div>
   </div>
 
-  <!-- ABA NOVO PRODUTO -->
   <div class="tab-content" id="tab-novo">
     <div class="form-group">
       <label>Nome do Produto</label>
@@ -210,19 +226,67 @@
   </div>
 </div>
 
+<!-- MODAL SENHA -->
+<div class="modal-overlay" id="modal-senha">
+  <div class="modal-box">
+    <h3>🔒 Área Restrita</h3>
+    <p>Digite a senha para adicionar produtos</p>
+    <input type="password" id="modal-senha-input" placeholder="Senha" onkeydown="if(event.key==='Enter')verificarSenhaModal()">
+    <button class="modal-btn" onclick="verificarSenhaModal()">Entrar</button>
+    <div class="modal-erro" id="modal-erro"></div>
+    <span class="modal-cancel" onclick="fecharModal()">Cancelar</span>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 var imagemBase64 = '';
 var imagemMime = '';
 var imagemNome = '';
+var cliquesNoTitulo = 0;
+var timerCliques;
+
+// ─── ACESSO SECRETO ──────────────────────────────────────────────────────────
+
+function cliqueTitulo() {
+  cliquesNoTitulo++;
+  clearTimeout(timerCliques);
+  timerCliques = setTimeout(function() { cliquesNoTitulo = 0; }, 2000);
+  if (cliquesNoTitulo >= 5) {
+    cliquesNoTitulo = 0;
+    document.getElementById('modal-senha').classList.add('show');
+    setTimeout(function() { document.getElementById('modal-senha-input').focus(); }, 100);
+  }
+}
+
+function verificarSenhaModal() {
+  var senha = document.getElementById('modal-senha-input').value;
+  google.script.run
+    .withSuccessHandler(function(ok) {
+      if (ok) {
+        fecharModal();
+        document.getElementById('tab-btn-novo').classList.remove('oculto');
+        mudarTab('novo');
+        toast('Bem-vindo, admin!', 'sucesso');
+      } else {
+        document.getElementById('modal-erro').textContent = 'Senha incorreta.';
+      }
+    })
+    .adminVerificarSenha(senha);
+}
+
+function fecharModal() {
+  document.getElementById('modal-senha').classList.remove('show');
+  document.getElementById('modal-senha-input').value = '';
+  document.getElementById('modal-erro').textContent = '';
+}
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
 
 function mudarTab(tab) {
-  document.querySelectorAll('.tab').forEach(function(t, i) {
-    t.classList.toggle('ativo', (i === 0 && tab === 'produtos') || (i === 1 && tab === 'novo'));
-  });
+  document.getElementById('tab-btn-produtos').classList.toggle('ativo', tab === 'produtos');
+  document.getElementById('tab-btn-novo').classList.toggle('ativo', tab === 'novo');
   document.getElementById('tab-produtos').classList.toggle('ativo', tab === 'produtos');
   document.getElementById('tab-novo').classList.toggle('ativo', tab === 'novo');
 }
@@ -288,7 +352,7 @@ function renderizarProdutos(produtos) {
         '<div class="desc-row">' +
           '<textarea class="desc-input" rows="2" id="desc-' + primeiraLinha.rowIndex + '">' +
             (primeiraLinha.descricao || '') + '</textarea>' +
-          '<button class="save-btn desc-save" onclick="salvarDesc(' + primeiraLinha.rowIndex + ', \'' + nome.replace(/'/g, '') + '\')">💾 Descrição</button>' +
+          '<button class="save-btn desc-save" onclick="salvarDesc(' + primeiraLinha.rowIndex + ')">💾 Descrição</button>' +
         '</div>' +
       '</div>';
 
@@ -457,7 +521,6 @@ function toast(msg, tipo) {
   setTimeout(function() { t.className = 'toast'; }, 2800);
 }
 
-// Inicia carregando os produtos
 carregarProdutos();
 </script>
 </body>
